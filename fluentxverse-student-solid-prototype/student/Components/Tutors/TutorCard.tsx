@@ -2,14 +2,15 @@ import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useCont
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../../utils/cssStyle";
 import type { Tutor } from '../../types/tutor.types';
+import { tutorPublicName } from '../../../../shared/tutorPublicName';
 import ProfileAvatar from '../Common/ProfileAvatar';
 import './TutorCard.css';
 interface TutorCardProps {
     tutor: Tutor;
 }
 export const TutorCard = (_props0: TutorCardProps) => {
-    const displayName = createMemo(() => _props0["tutor"].displayName || `${_props0["tutor"].firstName} ${_props0["tutor"].lastName}`);
-    const initials = createMemo(() => `${_props0["tutor"].firstName?.[0] || ''}${_props0["tutor"].lastName?.[0] || ''}`.toUpperCase());
+    const displayName = createMemo(() => tutorPublicName(_props0["tutor"]));
+    const initials = createMemo(() => displayName().split(' ').map(part => part[0]).slice(0, 2).join('').toUpperCase());
     const hourlyRate = createMemo(() => _props0["tutor"].hourlyRate ? `₱${_props0["tutor"].hourlyRate}/hr` : 'Rate not set');
     const rating = createMemo(() => _props0["tutor"].rating ? _props0["tutor"].rating.toFixed(1) : 'New');
     const reviewCount = createMemo(() => _props0["tutor"].totalReviews || 0);

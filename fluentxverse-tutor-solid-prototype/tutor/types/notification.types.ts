@@ -30,6 +30,7 @@ export interface Notification {
         amount?: number;
         rating?: number;
         link?: string;
+        actionUnavailable?: boolean;
     };
 }
 export interface NotificationStore {

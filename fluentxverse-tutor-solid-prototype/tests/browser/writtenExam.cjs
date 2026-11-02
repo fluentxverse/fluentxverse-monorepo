@@ -48,6 +48,20 @@ const makeExam = () => ({ examId: 'written-ui-fixture', title: 'Written Proficie
       await page.screenshot({ path: `${output}/${width}-${theme}-intro.png`, fullPage: true });
       await page.getByRole('button', { name: 'Start Exam', exact: true }).click();
       await expect(page.getByRole('button', { name: 'Question 30, unanswered', exact: true })).toBeVisible();
+      const insets = await page.evaluate(() => {
+        const inset = (parent, children) => {
+          const frame = document.querySelector(parent).getBoundingClientRect();
+          return [...document.querySelectorAll(children)].map(el => {
+            const box = el.getBoundingClientRect();
+            return {left:box.left-frame.left,right:frame.right-box.right,top:box.top-frame.top,bottom:frame.bottom-box.bottom};
+          });
+        };
+        return {header:inset('.exam-header','.exam-timer,.exam-progress'),navigation:inset('.question-nav','.question-nav-btn'),question:inset('.question-card','.question-meta,.answer-option')};
+      });
+      for (const [area, boxes] of Object.entries(insets)) for (const box of boxes) {
+        assert.ok(box.left >= 12 && box.right >= 12, `${area} retains horizontal breathing room: ${JSON.stringify(box)}`);
+        assert.ok(box.top >= 12 && box.bottom >= 12, `${area} content stays inside its frame: ${JSON.stringify(box)}`);
+      }
       await page.getByRole('button', { name: 'Question 13, unanswered', exact: true }).click();
       await page.getByRole('button', { name: /A demolished/ }).click();
       await expect(page.getByRole('button', { name: /A demolished/ })).toHaveAttribute('aria-pressed', 'true');

@@ -8,6 +8,7 @@ export interface TutorProfileData {
   firstName: string;
   lastName: string;
   displayName?: string;
+  nickname?: string;
   email: string;
   phoneNumber?: string;
   country?: string;
@@ -20,6 +21,9 @@ export interface TutorProfileData {
   education?: string[];
   schoolAttended?: string;
   major?: string;
+  educationalAttainment?: string;
+  teachingExperience?: string;
+  teachingQualifications?: string[];
   certifications?: string[];
   experienceYears?: number;
   hourlyRate?: number;
@@ -32,7 +36,7 @@ export interface TutorProfileData {
   videoIntroUrl?: string;
   profileStatus?: 'incomplete' | 'pending_review' | 'approved' | 'rejected';
   profileSubmittedAt?: string;
-  profileItemStatuses?: Partial<Record<'profilePicture' | 'videoIntro' | 'bio' | 'education' | 'interests', ProfileItemStatus>>;
+  profileItemStatuses?: Partial<Record<'nickname' | 'profilePicture' | 'videoIntro' | 'bio' | 'education' | 'interests', ProfileItemStatus>>;
   profileRejectionReason?: string;
   pendingProfileChanges?: { itemKey: string; fieldKey?: string; newValue: any; status: 'pending' | 'approved' | 'rejected'; rejectionReason?: string; submittedAt: string }[];
   hasPendingChanges?: boolean;

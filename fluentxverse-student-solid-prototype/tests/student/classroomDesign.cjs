@@ -79,6 +79,10 @@ const id = 'classroom-design-fixture';
           assert.equal(await modal.count(), 0, 'Unavailable status must not show a loading banner or unverified consent prompt');
           assert.equal(await page.locator('.classroom-recording-notice').count(), 0);
         }
+        await page.getByRole('button', { name: 'Recording preferences', exact: true }).waitFor();
+        assert.equal(await modal.count(), 0, 'Joining must not automatically open recording preferences');
+        assert.equal(saves.length, 0, 'A notice does not grant recording permission');
+        await page.getByRole('button', { name: 'Recording preferences', exact: true }).click();
         await modal.waitFor();
         assert.equal(await page.locator('.classroom-recording-notice').count(), 0);
         assert.equal(await modal.getByRole('button', { name: 'Agree', exact: true }).isDisabled(), true);

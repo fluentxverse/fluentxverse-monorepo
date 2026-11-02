@@ -19,6 +19,9 @@ const user = { userId: 'teaching-desk-fixture', role: 'tutor', firstName: 'Alex'
                 const ok = data => route.fulfill({ json: { success: true, data } });
                 if (!['GET', 'OPTIONS'].includes(request.method())) { writes.push(path); return route.fulfill({ json: { success: false } }); }
                 if (path === '/tutor/me') return route.fulfill({ json: { success: true, user } });
+                if (path.replace(/\/$/, '') === '/tutor/email-verification') return ok({ verified: true });
+                if (path === '/proof/tutor-certification/me') return ok({ snapshot: { writtenPassed: true, speakingPassed: true, interviewPassed: true, profileApproved: true, profileStatus: 'approved', missingRequirements: [] }, credential: { status: 'retired' } });
+                if (path === '/interview/my-booking') return ok({ result: 'pass', status: 'completed' });
                 if (path.startsWith('/exam/')) { await new Promise(resolve => setTimeout(resolve, 120)); return route.fulfill({ json: { success: true, status: { passed: true, percentage: 95, attemptsThisMonth: 1, maxAttemptsPerMonth: 2 } } }); }
                 if (path === '/schedule/week') {
                     if (failAll) return route.fulfill({ status: 503, json: { success: false } });

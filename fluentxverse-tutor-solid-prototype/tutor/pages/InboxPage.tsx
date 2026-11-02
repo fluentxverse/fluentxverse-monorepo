@@ -8,6 +8,9 @@ import SideBar from '../Components/IndexOne/SideBar';
 import { inboxApi, SystemMessage, MessageCategory } from '../api/inbox.api';
 import { useAuthContext } from '../context/AuthContext';
 import './InboxPage.css';
+import LessonIssueThreads from '../Components/LessonIssueThreads';
+import DisputeInbox from '../../../shared/ui/DisputeInbox';
+import { client } from '../api/utils';
 const categoryInfo = {
     announcement: { icon: 'fa-bullhorn', color: '#0245ae', label: 'Announcement' },
     update: { icon: 'fa-rocket', color: '#10b981', label: 'Update' },
@@ -163,6 +166,8 @@ export default function InboxPage() {
             </button>)}
         </div>
 
+        <LessonIssueThreads/>
+        <DisputeInbox client={client} role="tutor"/>
         <div class={`inbox-error-slot ${error() ? 'has-error' : ''}`} aria-live="polite">
           {error() && (<div class="inbox-error">
               <TutorIcon name="fas fa-exclamation-circle"/>
@@ -195,11 +200,11 @@ export default function InboxPage() {
                 <p>Loading messages...</p>
               </div>) : sortedMessages().length === 0 ? (<div class="inbox-empty">
                 <TutorIcon name="fas fa-inbox"/>
-                <p>No messages</p>
+                <p>No platform messages</p>
                 <span>
                   {filter() === 'unread' ? 'All caught up!' :
                 filter() === 'pinned' ? 'No pinned messages' :
-                    'Your inbox is empty'}
+                    'No platform announcements to display'}
                 </span>
               </div>) : (sortedMessages().map(message => {
             const catInfo = categoryInfo[message.category];

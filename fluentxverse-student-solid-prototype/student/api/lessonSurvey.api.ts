@@ -2,7 +2,6 @@ import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useCont
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
 import { client } from './utils';
-import type { AnonymousReviewEnrollment } from '../shared/anonymousReviews';
 export interface LessonSurveyInput {
     rating: number;
     positive: string[];
@@ -10,8 +9,6 @@ export interface LessonSurveyInput {
     comment: string;
 }
 export interface LessonSurveyState {
-    mode?: 'anonymous';
-    enrollment?: AnonymousReviewEnrollment;
     eligible: boolean;
     reason: string | null;
     endsAt: string | null;

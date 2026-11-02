@@ -90,4 +90,4 @@ The initial hosted Actions attempts for the student and tutor repositories repor
 - Server checks validate TypeScript. Integration tests require isolated backing services; the full Compose file references sibling apps.
 - Mobile Android/iOS setup remains platform-specific. Linux does not validate iOS signing or SwiftUI compilation.
 - Go code is an independently inspectable migration workstream, not a declaration of production route parity.
-- Source availability does not grant a license where no root license file exists. Do not manufacture an open-source license or claim grant approval, KYC completion, audit completion, or mainnet activation in repository metadata.
+- FluentXVerse's original source code is licensed under MIT, as explicitly authorized by the owner. Each app export includes the root `LICENSE`; third-party components retain their own licenses and notices. Licensing does not imply grant approval, KYC completion, audit completion, or mainnet activation.

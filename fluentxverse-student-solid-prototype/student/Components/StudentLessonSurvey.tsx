@@ -5,7 +5,6 @@ import { lessonSurveyApi, type LessonSurveyState } from '../api/lessonSurvey.api
 import { useCurrentTime } from '../hooks/useCurrentTime';
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, CircleAlert, Star } from "lucide-solid";
 import './StudentLessonSurvey.css';
-import AnonymousLessonReview from './AnonymousLessonReview';
 const ratingNames = ['Very dissatisfied', 'Dissatisfied', 'Okay', 'Satisfied', 'Very satisfied'];
 interface Props {
     bookingId: string;
@@ -147,8 +146,6 @@ export default function StudentLessonSurvey(_props0: Props) {
         }
     };
     return createMemo(() => {
-        if (data()?.mode === 'anonymous' && data()?.enrollment)
-            return <AnonymousLessonReview bookingId={_props0.bookingId} enrollment={data()!.enrollment!} onBusyChange={_props0.onBusyChange}/>;
         if (data() && !data().survey && ['not_ended', 'unavailable', 'absent'].includes(data().reason || '')) {
             return (_props0["mode"] === undefined ? 'inline' : _props0["mode"]) === 'inline' ? null : <p class="lesson-survey-muted">{data().reason === 'not_ended' ? 'Lesson feedback is not available yet.' : 'Lesson feedback is not available for this lesson.'}</p>;
         }

@@ -6,7 +6,7 @@ const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const base = process.env.STUDENT_TEST_URL || 'http://127.0.0.1:5176';
 const root = path.resolve(__dirname, '../..');
-const fixture = JSON.parse(execFileSync('node', [path.join(root, 'contracts/anonymous-reviews/fixture.mjs')], { encoding: 'utf8', timeout: 120_000 }));
+const fixture = JSON.parse(execFileSync('node', [path.join(root, 'fluentxverse-server/tests/fixtures/anonymousReviewProof.mjs')], { encoding: 'utf8', timeout: 120_000 }));
 const protocol = 'fluentxverse.anonymous-reviews.v1';
 
 (async () => {

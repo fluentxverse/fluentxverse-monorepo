@@ -56,6 +56,7 @@ const ConfirmEmailPage = lazyRoute(() => import('./pages/ConfirmEmailPage'));
 const ContactUsPage = lazyRoute(() => import('./pages/ContactUsPage'));
 const AboutUsPage = lazyRoute(() => import('./pages/AboutUsPage'));
 const BecomeTutorPage = lazyRoute(() => import('./pages/BecomeTutorPage'));
+const InterviewGuidePage = lazyRoute(() => import('./pages/InterviewGuidePage'));
 const PrivacyPolicy = lazyRoute(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazyRoute(() => import('./pages/TermsOfService'));
 const NotFoundPage = lazyRoute(() => import('./pages/NotFoundPage'));
@@ -158,6 +159,7 @@ export function AppInner() {
 							<Route path="/exam/written" component={withVerifiedEmail(ExamPage)}/>
 							<Route path="/exam/speaking" component={withVerifiedEmail(SpeakingExamPage)}/>
 							<Route path="/interview" component={withProtected(InterviewBookingPage)}/>
+                            <Route path="/interview-guide" component={withProtected(InterviewGuidePage)}/>
 							<Route path="/interview/room/:interviewId?" component={withProtected(InterviewRoomPage)}/>
 							<Route path="/notifications" component={withProtected(NotificationsPage)}/>
 							<Route path="/materials" component={withCertified(MaterialsPage)}/>

@@ -13,3 +13,16 @@ test('other notifications and bookings without an identifier preserve their link
   expect(notificationLink({ type: 'booking_new', data: { link: '/schedule' } })).toBe('/schedule');
   expect(notificationLink({ type: 'system' })).toBeUndefined();
 });
+
+test('unavailable lessons are history, not navigation targets', () => {
+  expect(notificationLink({type:'booking_new',data:{bookingId:'archived',link:'/lesson/archived',actionUnavailable:true}})).toBeUndefined();
+});
+
+test('notification links cannot navigate to an external or script URL', () => {
+  for(const link of ['javascript:alert(1)','https://example.test/','//example.test/','/\\example.test','/lesson/with spaces'])
+    expect(notificationLink({type:'system',data:{link}})).toBeUndefined();
+});
+
+test('malformed legacy link fields cannot crash the inbox', () => {
+  expect(notificationLink({type:'system',data:{link:{} as any}})).toBeUndefined();
+});

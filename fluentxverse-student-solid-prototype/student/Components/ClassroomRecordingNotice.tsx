@@ -17,6 +17,8 @@ export function ClassroomRecordingNotice(_props0: {
     provider?: string;
     openRevision?: number;
     onAvailabilityChange?: (available: boolean) => void;
+    autoPrompt?: boolean;
+    onStatusChange?: (status: string) => void;
 }) {
     const [state, setState] = createSignal<RecordingState | null>(null);
     const [open, setOpen] = createSignal(false);
@@ -60,7 +62,7 @@ export function ClassroomRecordingNotice(_props0: {
                 return;
             let checking = false;
             const refresh = () => {
-                if (!_props0["socket"].connected || checking || busy.current || stateRef.current)
+                if (!_props0["socket"].connected || checking || busy.current)
                     return;
                 checking = true;
                 lastRequest.current = Date.now();
@@ -73,8 +75,9 @@ export function ClassroomRecordingNotice(_props0: {
                         return;
                     stateRef.current = result;
                     setState(result);
+                    _props0.onStatusChange?.(result.status);
                     setError('');
-                    if (result.enabled && result.accepted === null && !prompted.current) {
+                    if (_props0.autoPrompt !== false && result.enabled && result.accepted === null && !prompted.current) {
                         prompted.current = true;
                         setOpen(true);
                     }
@@ -157,6 +160,7 @@ export function ClassroomRecordingNotice(_props0: {
                 }
                 stateRef.current = result;
                 setState(result);
+                _props0.onStatusChange?.(result.status);
                 setError('');
                 setOpen(false);
             });

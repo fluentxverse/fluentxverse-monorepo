@@ -1,4 +1,4 @@
-import { createEffect, createSignal, onCleanup, Show } from 'solid-js';
+import { createEffect, createSignal, on, onCleanup, Show } from 'solid-js';
 import { Check, Download, RefreshCw, ShieldCheck, Star, Upload } from 'lucide-solid';
 import { useAuthContext } from '../context/AuthContext';
 import { anonymousReviewsApi, type ReviewAcknowledgment } from '../api/anonymousReviews.api';
@@ -19,11 +19,16 @@ export default function AnonymousLessonReview(props: { enrollment: AnonymousRevi
   onCleanup(() => controller.abort());
   createEffect(() => props.onBusyChange?.(busy()));
   const account = () => auth.user?.userId || '';
-  const cacheKey = () => `fxv:review-result:${account()}:${enrollment().groupId}`;
+  const identitySlot = () => enrollment().entitlementId || enrollment().groupId;
+  const cacheKey = () => `fxv:review-result:${account()}:${identitySlot()}`;
+  const sessionKey = () => `${account()}:${enrollment().groupId}:${identitySlot()}`;
+  createEffect(on(() => props.enrollment, value => {
+    setEnrollment(value); setAck(null); setGroup(null); setLocked(false); setRating(0); setPositive([]); setImprovement([]); setError('');
+  }));
   const date = (value: string) => new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   const refresh = async () => {
     setError('');
-    const user = account(), groupId = enrollment().groupId;
+    const user = account(), groupId = enrollment().groupId, session = sessionKey();
     try {
       const saved = localStorage.getItem(cacheKey());
       if (saved) setAck(JSON.parse(saved));
@@ -32,7 +37,7 @@ export default function AnonymousLessonReview(props: { enrollment: AnonymousRevi
         const { content } = JSON.parse(pending); setRating(content.rating); setPositive(content.positive); setImprovement(content.improvement); setLocked(true);
       }
       const result = await anonymousReviewsApi.group(groupId, controller.signal);
-      if (account() === user && enrollment().groupId === groupId && !controller.signal.aborted) setGroup(result);
+      if (sessionKey() === session && !controller.signal.aborted) setGroup(result);
     } catch (error) { if (!controller.signal.aborted) setError((error as Error).message); }
   };
   createEffect(() => { if (enrollment().enrolled) void refresh(); });
@@ -43,10 +48,10 @@ export default function AnonymousLessonReview(props: { enrollment: AnonymousRevi
   };
   const enroll = () => run(async () => {
     if (!props.bookingId || !account()) throw new Error('Student authentication required');
-    const user = account(), groupId = enrollment().groupId;
-    const identity = loadReviewIdentity(user, groupId, enrollment().commitment);
+    const user = account(), groupId = enrollment().groupId, session = sessionKey();
+    const identity = loadReviewIdentity(user, groupId, enrollment().commitment, identitySlot());
     const result = await anonymousReviewsApi.enroll(props.bookingId, identity.commitment.toString());
-    if (account() !== user || enrollment().groupId !== groupId) throw new Error('Student session changed. Reload feedback to continue.');
+    if (sessionKey() !== session) throw new Error('Student session changed. Reload feedback to continue.');
     setEnrollment(result);
   });
   const toggle = (kind: 'positive' | 'improvement', id: string, checked: boolean) => {
@@ -58,9 +63,9 @@ export default function AnonymousLessonReview(props: { enrollment: AnonymousRevi
     event.preventDefault();
     void run(async () => {
       if (!rating() || !group() || !enrollment().commitment) throw new Error('Choose an overall rating');
-      const user = account(), groupId = enrollment().groupId, resultKey = cacheKey();
+      const user = account(), groupId = enrollment().groupId, resultKey = cacheKey(), session = sessionKey(), entitlementId = identitySlot();
       const checkSession = () => {
-        if (account() !== user || enrollment().groupId !== groupId) throw new Error('Student session changed. Reload feedback to continue.');
+        if (sessionKey() !== session) throw new Error('Student session changed. Reload feedback to continue.');
       };
       const pendingKey = `${resultKey}:pending`;
       let pending: { content: AnonymousReviewContent; proof: AnonymousReviewProof };
@@ -69,9 +74,9 @@ export default function AnonymousLessonReview(props: { enrollment: AnonymousRevi
       else {
         const salt = Array.from(crypto.getRandomValues(new Uint8Array(32)), byte => byte.toString(16).padStart(2, '0')).join('');
         const content = { rating: rating(), positive: positive(), improvement: improvement(), salt };
-        setPhase('Preparing proof...');
+        setPhase('Preparing feedback...');
         const { generateAnonymousReview } = await import('../utils/anonymousReviewProof');
-        const proof = await generateAnonymousReview(user, enrollment().commitment!, group()!, content, controller.signal);
+        const proof = await generateAnonymousReview(user, enrollment().commitment!, group()!, content, controller.signal, entitlementId);
         checkSession();
         pending = { content, proof }; localStorage.setItem(pendingKey, JSON.stringify(pending)); setLocked(true);
       }
@@ -84,28 +89,30 @@ export default function AnonymousLessonReview(props: { enrollment: AnonymousRevi
   };
   let input!: HTMLInputElement;
   const restore = (event: Event) => run(async () => {
-    const user = account(), groupId = enrollment().groupId, commitment = enrollment().commitment;
+    const user = account(), groupId = enrollment().groupId, commitment = enrollment().commitment, session = sessionKey(), entitlementId = identitySlot();
     const file = (event.currentTarget as HTMLInputElement).files?.[0];
     if (!file || file.size > 4096 || !commitment) throw new Error('Choose a valid review key backup');
     const json = await file.text();
-    if (account() !== user || enrollment().groupId !== groupId) throw new Error('Student session changed. Reload feedback to continue.');
-    restoreReviewIdentity(user, groupId, commitment, json);
+    if (sessionKey() !== session) throw new Error('Student session changed. Reload feedback to continue.');
+    restoreReviewIdentity(user, groupId, commitment, json, entitlementId);
     input.value = '';
   });
   return <section class="anonymous-lesson-review" aria-label="Anonymous tutor feedback">
-    <header><ShieldCheck size={20}/><div><h3>Anonymous tutor feedback</h3><span>{enrollment().period}</span></div></header>
+    <header><ShieldCheck size={20}/><div><h3>Anonymous tutor feedback</h3><span>{enrollment().lessonStartsAt
+      ? new Date(enrollment().lessonStartsAt!).toLocaleString('en-US', { timeZone: 'Asia/Tokyo', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' JST'
+      : enrollment().period}</span></div></header>
     <Show when={error()}><p role="alert" class="anonymous-review-error">{error()}</p></Show>
     <Show when={!enrollment().enrolled} fallback={<>
       <div class="anonymous-review-tools">
-        <button type="button" title="Download private review key backup" aria-label="Download private review key backup" disabled={busy()} onClick={() => void run(async () => backupReviewIdentity(account(), enrollment().groupId, enrollment().commitment))}><Download size={17}/></button>
+        <button type="button" title="Download private review key backup" aria-label="Download private review key backup" disabled={busy()} onClick={() => void run(async () => backupReviewIdentity(account(), enrollment().groupId, enrollment().commitment, identitySlot()))}><Download size={17}/></button>
         <button type="button" title="Restore private review key" aria-label="Restore private review key" disabled={busy()} onClick={() => input.click()}><Upload size={17}/></button>
         <button type="button" title="Refresh review status" aria-label="Refresh review status" disabled={busy()} onClick={() => void run(async () => {
-          const user = account(), groupId = enrollment().groupId, resultKey = cacheKey();
+          const resultKey = cacheKey(), session = sessionKey();
           await refresh();
-          if (account() !== user || enrollment().groupId !== groupId) throw new Error('Student session changed. Reload feedback to continue.');
+          if (sessionKey() !== session) throw new Error('Student session changed. Reload feedback to continue.');
           if (ack()) {
             const result = await anonymousReviewsApi.status(ack()!.id);
-            if (account() !== user || enrollment().groupId !== groupId) throw new Error('Student session changed. Reload feedback to continue.');
+            if (sessionKey() !== session) throw new Error('Student session changed. Reload feedback to continue.');
             localStorage.setItem(resultKey, JSON.stringify(result)); setAck(result);
           }
         })}><RefreshCw size={17}/></button>
@@ -117,9 +124,9 @@ export default function AnonymousLessonReview(props: { enrollment: AnonymousRevi
           : group()?.state === 'awaiting_activation' ? 'Waiting for review group activation.' : `Feedback opens ${date(enrollment().opensAt)}.`}
       </p>}>
         <form onSubmit={submit}>
-          <fieldset disabled={busy() || locked()}><legend>How were your lessons with this tutor?</legend>
+          <fieldset disabled={busy() || locked()}><legend>{enrollment().enrollmentPolicy === 'per_lesson' ? 'How was this lesson with your tutor?' : 'How were your lessons with this tutor?'}</legend>
             <div class="anonymous-review-stars">{labels.map((label, index) => <label title={`${index + 1} / 5 - ${label}`}>
-              <input type="radio" name={`anonymous-rating-${enrollment().groupId}`} checked={rating() === index + 1} onChange={() => setRating(index + 1)} aria-label={`${index + 1} star${index ? 's' : ''} - ${label}`}/>
+              <input type="radio" name={`anonymous-rating-${identitySlot()}`} checked={rating() === index + 1} onChange={() => setRating(index + 1)} aria-label={`${index + 1} star${index ? 's' : ''} - ${label}`}/>
               <Star size={26} fill={rating() > index ? 'currentColor' : 'none'}/>
             </label>)}</div><p>{rating() ? labels[rating() - 1] : 'Overall rating'}</p>
           </fieldset>
@@ -129,7 +136,7 @@ export default function AnonymousLessonReview(props: { enrollment: AnonymousRevi
               <input type="checkbox" checked={(kind === 'positive' ? positive() : improvement()).includes(topic.id)} onChange={event => toggle(kind, topic.id, event.currentTarget.checked)}/><span>{topic.label}</span>
             </label>)}
           </fieldset>)}</div>
-          <p class="anonymous-review-notice">One review per tutor each month. Published only in a batch of at least five reviews. Small groups or outside information can still reveal who gave feedback.</p>
+          <p class="anonymous-review-notice">{enrollment().enrollmentPolicy === 'per_lesson' ? 'One review per completed lesson. Ratings are lesson-weighted.' : 'Historical monthly feedback.'} Published only in a batch of at least five reviews. Small groups or outside information can still reveal who gave feedback.</p>
           <footer><span>Closes {date(enrollment().closesAt)}</span><button type="submit" disabled={busy() || !rating()}><Check size={17}/>{busy() ? phase() || 'Working...' : 'Submit feedback'}</button></footer>
         </form>
       </Show>}>
@@ -138,7 +145,7 @@ export default function AnonymousLessonReview(props: { enrollment: AnonymousRevi
     </>}>
       <p class="anonymous-review-notice">FluentXVerse records your eligibility, but feedback is submitted separately without your account or booking ID. Network metadata and small groups can still identify you.</p>
       <Show when={enrollment().canEnroll && props.bookingId} fallback={<p role="status">Enrollment is not available for this lesson.</p>}>
-        <button type="button" class="anonymous-review-primary" disabled={busy()} onClick={enroll}><ShieldCheck size={17}/>{busy() ? 'Enrolling...' : 'Enroll for monthly feedback'}</button>
+        <button type="button" class="anonymous-review-primary" disabled={busy()} onClick={enroll}><ShieldCheck size={17}/>{busy() ? 'Enrolling...' : 'Enable lesson feedback'}</button>
       </Show>
     </Show>
   </section>;

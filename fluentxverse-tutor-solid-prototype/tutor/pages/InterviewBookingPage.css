@@ -5,6 +5,52 @@
   min-height: 100vh;
 }
 
+/* Booking workspace uses actual availability rather than an empty weekly grid. */
+.App.tutor-workspace .interview-booking-page .container { width: 100%; }
+.booking-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 32px; margin-top: 28px; }
+.booking-availability { min-width: 0; }
+.booking-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.booking-section-heading h2, .booking-preparation h2 { font-size: 18px; line-height: 1.4; margin: 0 0 6px; color: var(--td-text); }
+.booking-section-heading .interview-timezone { font-size: 13px; margin: 0; }
+.booking-refresh { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--td-border); border-radius: 6px; background: var(--td-surface); color: var(--td-accent); cursor: pointer; }
+.booking-guide-link { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--td-accent); text-decoration: none; }
+.booking-guide-link:hover { text-decoration: underline; }
+.booking-workspace .interview-calendar-toolbar { padding: 12px 0; margin: 0; border-top: 1px solid var(--td-border); border-bottom: 1px solid var(--td-border); }
+.booking-week-reset { border: 0; background: transparent; color: var(--td-accent); font-size: 13px; cursor: pointer; padding: 8px 0; }
+.booking-date-row { display: grid; grid-template-columns: 115px minmax(0, 1fr); gap: 16px; padding: 22px 0; border-bottom: 1px solid var(--td-border); }
+.booking-date-label strong, .booking-date-label span { display: block; font-size: 13px; color: var(--td-text); }
+.booking-date-label span { color: var(--td-muted); margin-top: 4px; }
+.booking-time-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.booking-time { min-width: 116px; min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; border: 1px solid var(--td-border); border-radius: 6px; color: var(--td-accent); background: var(--td-surface); cursor: pointer; }
+.booking-time:hover { border-color: var(--td-accent); background: var(--td-tint); }
+.booking-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 36px 16px; }
+.booking-empty h3 { color: var(--td-text); font-size: 17px; margin: 16px 0 8px; }
+.booking-empty p { color: var(--td-muted); font-size: 14px; line-height: 1.7; max-width: 390px; margin: 0 0 20px; }
+.booking-preparation { border-left: 1px solid var(--td-border); padding-left: 28px; }
+.booking-preparation h2 { font-size: 16px; margin-top: 14px; }
+.booking-preparation ul { margin: 16px 0; padding-left: 18px; }
+.booking-preparation li, .booking-preparation p { color: var(--td-muted); font-size: 13px; line-height: 1.7; margin-bottom: 12px; }
+.interview-booking-page .identity-accepted-summary { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 20px; padding: 18px 0; }
+.interview-booking-page .identity-accepted-summary h2 { margin: 0; font-size: 14px; }
+.identity-accepted-summary .identity-status > strong { color: #087546; }
+.interview-booking-page .identity-section { color: var(--td-text); border-color: var(--td-border); }
+.interview-booking-page .identity-section h2 { color: var(--td-text); }
+.interview-booking-page .identity-section p { color: var(--td-muted); }
+[data-theme='dark'] .identity-accepted-summary .identity-status > strong { color: #82ddb0; }
+.interview-booking-page :is(.booking-refresh,.booking-time,.booking-week-reset,.booking-guide-link):focus-visible { outline: 2px solid var(--td-accent); outline-offset: 3px; }
+.interview-booking-page button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 800px) {
+  .booking-workspace { grid-template-columns: 1fr; gap: 24px; }
+  .booking-preparation { padding: 22px 0 0; border-left: 0; border-top: 1px solid var(--td-border); }
+}
+@media (max-width: 600px) {
+  .interview-booking-page .identity-accepted-summary { grid-template-columns: 1fr; gap: 10px; }
+  .booking-date-row { grid-template-columns: 1fr; gap: 12px; }
+  .booking-date-label { display: flex; gap: 8px; align-items: baseline; }
+  .booking-time { min-height: 44px; flex: 1 0 110px; }
+  .booking-workspace .interview-calendar-toolbar { gap: 6px; }
+}
+
 .interview-booking-page .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -499,7 +545,7 @@
   border-radius: 12px;
   font-size: 14px;
   font-weight: 700;
-  cursor: pointer;
+  cursor: default;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
@@ -1137,4 +1183,61 @@
   .interview-booking-page .time-label { position: sticky; left: 0; z-index: 1; background: var(--td-surface, #fff); }
   .interview-booking-page .time-header { left: 0; z-index: 3; }
   .interview-booking-page .day-header { padding: 8px 4px; }
+}
+.App.tutor-workspace .interview-appointment {
+  padding: 24px;
+  margin-bottom: 24px;
+  color: var(--td-text);
+}
+
+.interview-appointment::before,
+.interview-appointment::after { display: none; }
+
+.interview-appointment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+.interview-appointment-eyebrow { color: var(--td-muted); font-size: 12px; font-weight: 600; }
+.interview-appointment-status { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 4px; background: var(--td-tint); color: var(--td-accent); font-size: 12px; font-weight: 600; }
+.interview-appointment-status.passed { color: #087546; background: #e7f5ed; }
+.interview-appointment-status.failed { color: #b42318; background: #fff0ed; }
+.interview-appointment-status.pending { color: #8a5400; background: #fff5dc; }
+.interview-appointment-body { display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: 22px; }
+.interview-appointment-date { display: flex; flex-direction: column; align-items: center; align-self: start; border-right: 1px solid var(--td-border); padding-right: 20px; color: var(--td-accent); }
+.interview-appointment-date span { font-size: 12px; font-weight: 700; text-transform: uppercase; }
+.interview-appointment-date strong { font-size: 32px; line-height: 1.3; }
+.interview-appointment .interview-appointment-title { display: block; margin: 0 0 4px; color: var(--td-text); font-size: 20px; line-height: 1.35; }
+.interview-appointment .interview-appointment-full-date { color: var(--td-text); font-size: 14px; font-weight: 500; margin: 0 0 8px; }
+.interview-appointment .interview-appointment-description { color: var(--td-muted); font-size: 13px; line-height: 1.6; margin: 0; }
+.interview-appointment-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: 20px 0 0; }
+.interview-appointment-meta dt { display: flex; align-items: center; gap: 6px; color: var(--td-muted); font-size: 12px; font-weight: 500; margin-bottom: 6px; }
+.interview-appointment-meta dd { color: var(--td-text); font-size: 14px; font-weight: 600; margin: 0; }
+.interview-appointment-meta dd span { display: block; color: var(--td-muted); font-size: 12px; font-weight: 400; margin-top: 3px; }
+.interview-appointment-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 20px; margin-top: 22px; border-top: 1px solid var(--td-border); }
+.interview-appointment-action { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 9px 14px; border: 1px solid var(--td-border); border-radius: 6px; font-size: 13px; font-weight: 600; line-height: 1.5; text-decoration: none; cursor: pointer; }
+.interview-appointment-action.primary { color: var(--td-surface); background: var(--td-accent); border-color: var(--td-accent); }
+.interview-appointment-action.secondary { color: var(--td-text); background: var(--td-surface); }
+.interview-appointment-action.cancel { margin-left: auto; color: #b42318; background: transparent; border-color: transparent; }
+.interview-appointment-action:hover { filter: brightness(.94); }
+.tutor-interview-dialog .modal-dialog { pointer-events: auto; width: 100%; max-width: none; margin: 0; background: transparent; box-shadow: none; }
+[data-theme='dark'] .interview-appointment-status.passed { color: #82ddb0; background: #183b2a; }
+[data-theme='dark'] .interview-appointment-status.failed { color: #ffaaa2; background: #462622; }
+[data-theme='dark'] .interview-appointment-status.pending { color: #f3cf84; background: #40351f; }
+[data-theme='dark'] .interview-appointment-action.cancel { color: #ffaaa2; }
+
+@media (max-width: 600px) {
+  .App.tutor-workspace .interview-appointment { padding: 18px; }
+  .interview-appointment-header { margin-bottom: 18px; }
+  .interview-appointment-body { grid-template-columns: 48px minmax(0, 1fr); gap: 14px; }
+  .interview-appointment-date { padding-right: 12px; }
+  .interview-appointment-date strong { font-size: 28px; }
+  .interview-appointment .interview-appointment-title { font-size: 18px; }
+  .interview-appointment-meta { grid-template-columns: 1fr; gap: 14px; }
+  .interview-appointment-action { width: 100%; min-height: 44px; }
+  .interview-appointment-action.cancel { margin-left: 0; }
 }

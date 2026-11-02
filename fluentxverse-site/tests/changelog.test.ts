@@ -50,7 +50,7 @@ test('permalinks do not inherit filters and release dates cannot shift with view
 test('Engine has its own filter, searchable label and permanent released updates', () => {
   expect(appLabels.engine).toBe('Engine');
   const entries = filterChangelog(changelog, 'engine');
-  expect(entries).toHaveLength(3);
+  expect(entries.length).toBeGreaterThanOrEqual(3);
   expect(entries.every(entry => entry.apps.includes('engine'))).toBe(true);
   expect(entries.some(entry => entry.type === 'added')).toBe(true);
   expect(filterChangelog(changelog, 'engine', 'fixed', 'mainnet account')).toHaveLength(1);

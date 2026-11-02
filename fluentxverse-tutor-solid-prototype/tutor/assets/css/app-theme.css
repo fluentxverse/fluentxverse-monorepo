@@ -11,8 +11,8 @@
   --fxv-border: rgba(15, 23, 42, 0.11);
   --fxv-border-strong: rgba(2, 69, 174, 0.18);
   --fxv-text: #0f172a;
-  --fxv-text-muted: #64748b;
-  --fxv-text-soft: #94a3b8;
+  --fxv-text-muted: #53647c;
+  --fxv-text-soft: var(--fxv-text-muted);
   --fxv-shadow-sm: 0 8px 24px rgba(15, 23, 42, 0.08);
   --fxv-shadow-md: 0 18px 42px rgba(2, 69, 174, 0.14);
   --fxv-shadow-lg: 0 26px 60px rgba(2, 69, 174, 0.16);
@@ -44,7 +44,7 @@
   --fxv-border-strong: rgba(124, 184, 255, 0.24);
   --fxv-text: #f3f4f6;
   --fxv-text-muted: #a3a3a3;
-  --fxv-text-soft: #737373;
+  --fxv-text-soft: var(--fxv-text-muted);
   --fxv-shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.16);
   --fxv-shadow-md: 0 10px 26px rgba(0, 0, 0, 0.22);
   --fxv-shadow-lg: 0 18px 42px rgba(0, 0, 0, 0.28);

@@ -14,10 +14,12 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR
         const path = new URL(route.request().url()).pathname.replace(/\/$/, '');
         const user = { userId: 'media-tutor', firstName: 'Paul', lastName: 'Arriola', email: 'paulanthonyarriola@gmail.com', role: 'tutor', profilePicture: photo };
         let json = { success: true, user, data: [] };
+        if (path === '/tutor/email-verification') json.data = { verified: true };
+        if (path === '/proof/tutor-certification/me') json.data = { snapshot: { writtenPassed: true, speakingPassed: true, interviewPassed: true, profileApproved: true, missingRequirements: [] }, credential: { status: 'retired' } };
         if (path.startsWith('/lesson/files/user/')) return path.endsWith('/new.png') || valid
           ? route.fulfill({ contentType: 'image/png', body: png })
           : route.fulfill({ status: 404, json: { error: 'File not found' } });
-        if (path === '/tutor/profile') json.data = { profilePicture: photo, bio: '', education: [], interests: [] };
+        if (path === '/tutor/profile') json.data = { profileStatus: 'approved', profilePicture: photo, bio: '', education: [], interests: [] };
         if (path === '/tutor/user/personal-info') json.data = { firstName: 'Paul', lastName: 'Arriola' };
         if (path === '/notifications') json.data = { notifications: [], unreadCount: 0 };
         if (path === '/notifications/unread-count') json.data = { unreadCount: 0 };
@@ -56,7 +58,8 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR
       assert.equal(requests.filter(url => url.includes('/profile/photo.png')).length, before, 'Failed photos do not retry in a loop');
       assert.ok(!requests.some(url => url.includes('via.placeholder.com') || url.includes('fluentxverse-seaweed-filer') || new URL(url).hostname === 'api.fluentxverse.xyz'), 'Browser never requests retired API, Docker storage or external placeholders');
       await page.screenshot({ path: `../output/screenshots/profile-media-${width}-${valid ? 'valid' : 'missing'}.png` });
-      await page.locator('.settings-avatar input[type="file"]').setInputFiles({ name: 'new.png', mimeType: 'image/png', buffer: png });
+      const replacement = await page.evaluate(() => { const canvas = document.createElement('canvas'); canvas.width = canvas.height = 600; const ctx = canvas.getContext('2d'); ctx.fillStyle = '#c8c8c8'; ctx.fillRect(0, 0, 600, 600); return canvas.toDataURL('image/jpeg').split(',')[1]; });
+      await page.locator('.settings-avatar input[type="file"]').setInputFiles({ name: 'new.jpg', mimeType: 'image/jpeg', buffer: Buffer.from(replacement, 'base64') });
       await page.waitForFunction(() => {
         const el = document.querySelector('.settings-avatar img');
         return el?.src.includes('/lesson/files/user/media-tutor/profile/new.png') && el.complete && el.naturalWidth > 0;

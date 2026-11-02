@@ -22,6 +22,8 @@ export interface WeekSchedule {
         reservationExpiresAt?: string;
         slotId?: string;
         bookingId?: string;
+        lessonEndsAt?: string;
+        notesStatus?: 'draft' | 'changes_pending' | 'submitted' | 'not_required';
         bookedAt?: string;
         attendanceWindowOpenedAt?: string;
         tutorRoomEnteredAt?: string;

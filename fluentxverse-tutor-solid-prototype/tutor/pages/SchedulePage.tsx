@@ -13,6 +13,8 @@ import { scheduleApi, type AbsenceReason } from '../api/schedule.api';
 import { initSocket, getSocket, connectSocket, disconnectSocket } from '../client/socket/socket.client';
 import type { Notification } from '../types/notification.types';
 import { getSchedulePeriod } from '../utils/schedulePeriod';
+import { slotNotesIndicator, type SlotNotesStatus } from '../utils/slotNotesIndicator';
+import { ClipboardCheck, ClipboardX } from 'lucide-solid';
 // Penalty code types
 type PenaltyCode = '301' | '302' | '303' | '401' | '501' | '502' | '601';
 interface SlotPenalty {
@@ -66,6 +68,8 @@ const SchedulePage = () => {
         bookingId: string;
         studentName?: string;
         attendanceWindowOpenedAt?: string;
+        lessonEndsAt?: string;
+        notesStatus?: SlotNotesStatus;
     }
     // Initialize booked slots map
     const [bookedSlots, setBookedSlots] = createSignal<Map<string, BookedSlotInfo>>(new Map()); // Map of slot key to booking info
@@ -419,7 +423,9 @@ const SchedulePage = () => {
                                     studentId: slot.studentId,
                                     bookingId: slot.bookingId,
                                     studentName: slot.studentName,
-                                    attendanceWindowOpenedAt: slot.attendanceWindowOpenedAt
+                                    attendanceWindowOpenedAt: slot.attendanceWindowOpenedAt,
+                                    lessonEndsAt: slot.lessonEndsAt,
+                                    notesStatus: slot.notesStatus
                                 });
                             }
                             else {
@@ -1444,6 +1450,8 @@ const SchedulePage = () => {
                     const isBooked = bookedSlots().has(key);
                     const isReserved = reservedTimeSlots().has(key);
                     const bookingInfo = bookedSlots().get(key);
+                    const notesIndicator = slotNotesIndicator(bookingInfo?.lessonEndsAt, bookingInfo?.notesStatus, nowMs());
+                    const showNotesStatus = notesIndicator === 'complete' || notesIndicator === 'incomplete';
                     const isSelected = selectedTimeSlots().has(key);
                     const hasStarted = attendanceStartMs(date, time) <= nowMs();
                     const isClosed = closedTimeSlots().has(key) || (isSelected && !isBooked && hasStarted);
@@ -1626,25 +1634,25 @@ const SchedulePage = () => {
                                 {isBooked && <TutorIcon name="fas fa-book-open" aria-hidden="true" style={cssStyle({ marginRight: '3px', fontSize: '10px' })}/>}
                                 {slotLabel}
                                 </button>
-                                {isBooked && (<button type="button" onClick={() => handleSlotClick(dayIdx, time)} disabled={!canSelectAttendanceSlot(dayIdx, time)} aria-label={`Update attendance for ${bookingInfo?.studentName || bookingInfo?.studentId || 'student'} at ${time}`} aria-pressed={isPendingSelection} title={canSelectAttendanceSlot(dayIdx, time) ? `Update attendance${attendanceBySlot().has(key) ? ` (currently ${attendanceBySlot().get(key)})` : ''}` : 'Attendance updates are available 35 to 11 minutes before the first lesson'} style={cssStyle({
+                                {isBooked && (<button type="button" data-notes-status={showNotesStatus ? notesIndicator : undefined} onClick={() => showNotesStatus ? openBookedLesson(dayIdx, time) : handleSlotClick(dayIdx, time)} disabled={!showNotesStatus && !canSelectAttendanceSlot(dayIdx, time)} aria-label={showNotesStatus ? `Lesson notes ${notesIndicator} for ${bookingInfo?.studentName || bookingInfo?.studentId || 'student'} at ${time}` : `Update attendance for ${bookingInfo?.studentName || bookingInfo?.studentId || 'student'} at ${time}`} aria-pressed={showNotesStatus ? undefined : isPendingSelection} title={showNotesStatus ? notesIndicator === 'complete' ? 'Notes submitted. Open lesson notes' : bookingInfo?.notesStatus === 'changes_pending' ? 'Notes have unsubmitted changes. Open lesson notes' : 'Notes not submitted. Open lesson notes' : notesIndicator === 'not_required' ? 'Lesson notes are not required for an absent lesson' : canSelectAttendanceSlot(dayIdx, time) ? `Update attendance${attendanceBySlot().has(key) ? ` (currently ${attendanceBySlot().get(key)})` : ''}` : 'Attendance updates are available 35 to 11 minutes before the first lesson'} style={cssStyle({
                                 width: '32px',
                                 height: '38px',
                                 flexShrink: 0,
                                 boxSizing: 'border-box',
                                 borderRadius: '8px',
                                 get border() {
-                                    return isPendingSelection ? '2px solid #fbbf24' : (isDarkMode() ? '2px solid #60a5fa' : '2px solid #3b82f6');
+                                    return showNotesStatus ? `2px solid ${notesIndicator === 'complete' ? '#10b981' : '#ef4444'}` : isPendingSelection ? '2px solid #fbbf24' : (isDarkMode() ? '2px solid #60a5fa' : '2px solid #3b82f6');
                                 },
                                 get background() {
-                                    return isPendingSelection ? '#b45309' : (isDarkMode() ? '#26384f' : '#e8f1ff');
+                                    return showNotesStatus ? notesIndicator === 'complete' ? (isDarkMode() ? '#103b30' : '#ecfdf5') : (isDarkMode() ? '#452225' : '#fef2f2') : isPendingSelection ? '#b45309' : (isDarkMode() ? '#26384f' : '#e8f1ff');
                                 },
                                 get color() {
-                                    return isPendingSelection ? '#fff' : (isDarkMode() ? '#bfdbfe' : '#1d4ed8');
+                                    return showNotesStatus ? notesIndicator === 'complete' ? (isDarkMode() ? '#6ee7b7' : '#047857') : (isDarkMode() ? '#fca5a5' : '#b91c1c') : isPendingSelection ? '#fff' : (isDarkMode() ? '#bfdbfe' : '#1d4ed8');
                                 },
-                                cursor: canSelectAttendanceSlot(dayIdx, time) ? 'pointer' : 'not-allowed',
-                                opacity: canSelectAttendanceSlot(dayIdx, time) ? 1 : 0.5
+                                cursor: showNotesStatus || canSelectAttendanceSlot(dayIdx, time) ? 'pointer' : 'not-allowed',
+                                opacity: showNotesStatus || canSelectAttendanceSlot(dayIdx, time) ? 1 : 0.5
                             })}>
-                                  <TutorIcon name="fas fa-clipboard-check" aria-hidden="true"/>
+                                  {showNotesStatus ? notesIndicator === 'complete' ? <ClipboardCheck size={18} aria-hidden="true"/> : <ClipboardX size={18} aria-hidden="true"/> : <TutorIcon name="fas fa-clipboard-check" aria-hidden="true"/>}
                                 </button>)}
                               </div>
                             </td>);

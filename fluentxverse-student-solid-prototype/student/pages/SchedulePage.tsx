@@ -1,7 +1,7 @@
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
-import { ArrowRight, CalendarDays, Clock, History, Globe, UserRound, X, RefreshCw, Search, TriangleAlert, Ticket, LoaderCircle, ShieldCheck, ExternalLink, CheckCircle } from "lucide-solid";
+import { ArrowRight, CalendarDays, Clock, History, Globe, UserRound, X, RefreshCw, Search, TriangleAlert, Ticket, LoaderCircle, CheckCircle } from "lucide-solid";
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import PastLessonCalendar from '../Components/PastLessonCalendar';
@@ -10,8 +10,6 @@ import { useCurrentTime } from '../hooks/useCurrentTime';
 import { canCancelLesson } from '../utils/lessonCancellation';
 import { useAuthContext } from '../context/AuthContext';
 import { scheduleApi, type StudentBooking } from '../api/schedule.api';
-import { lessonProofApi, type LessonProof } from '../api/lessonProof.api';
-import { API_BASE_URL } from '../config/api';
 import './SchedulePage.css';
 interface Booking {
     id: string;
@@ -96,9 +94,6 @@ const SchedulePage = () => {
     const [error, setError] = createSignal<string | null>(null);
     const [activeTab, setActiveTab] = createSignal<'upcoming' | 'past'>(new URLSearchParams(window.location.search).get('tab') === 'past' ? 'past' : 'upcoming');
     const currentTime = useCurrentTime();
-    const [lessonProofs, setLessonProofs] = createSignal<Record<string, LessonProof>>({});
-    const [proofLoading, setProofLoading] = createSignal<string | null>(null);
-    const [proofError, setProofError] = createSignal<Record<string, string>>({});
     // Cancel modal state
     const [cancelModalOpen, setCancelModalOpen] = createSignal(false);
     const [bookingToCancel, setBookingToCancel] = createSignal<Booking | null>(null);
@@ -215,12 +210,7 @@ const SchedulePage = () => {
                 try {
                     setLoading(true);
                     setError(null);
-                    const [data, proofResult] = await Promise.all([
-                        scheduleApi.getStudentBookings(),
-                        lessonProofApi.list().catch(() => null),
-                    ]);
-                    if (proofResult)
-                        setLessonProofs(Object.fromEntries(proofResult.map(proof => [proof.bookingId, proof])));
+                    const data = await scheduleApi.getStudentBookings();
                     const LESSON_DURATION_MS = 25 * 60 * 1000; // 25 minutes
                     const transformedBookings: Booking[] = data.map((booking: StudentBooking) => {
                         const { date: jstDate, time: jstTime, dateObj } = convertPHTtoJST(booking.slotDate, booking.slotTime);
@@ -269,20 +259,6 @@ const SchedulePage = () => {
         if (typeof _cleanup5 === "function")
             onCleanup(_cleanup5);
     }));
-    const claimLessonProof = async (bookingId: string) => {
-        setProofLoading(bookingId);
-        setProofError(previous => ({ ...previous, [bookingId]: '' }));
-        try {
-            const proof = await lessonProofApi.claim(bookingId);
-            setLessonProofs(previous => ({ ...previous, [bookingId]: { ...proof, eligible: true } }));
-        }
-        catch (err) {
-            setProofError(previous => ({ ...previous, [bookingId]: err instanceof Error ? err.message : 'Could not generate proof' }));
-        }
-        finally {
-            setProofLoading(null);
-        }
-    };
     const LESSON_DURATION_MS = 25 * 60 * 1000; // 25 minutes in milliseconds
     // Helper to check if lesson is still ongoing (within 25 minutes of start)
     const isLessonOngoing = createMemo(on(() => [], () => (lessonDate: Date): boolean => {
@@ -428,13 +404,7 @@ const SchedulePage = () => {
         const lesson = _state2().pastLessons.find(item => item.id === bookingId);
         if (!lesson)
             return null;
-        const proof = lessonProofs()[bookingId];
         return <>
-      {proof?.eligible && ['ready', 'failed'].includes(proof.status) && <button class="action-btn primary" disabled={proofLoading() === bookingId} onClick={() => claimLessonProof(bookingId)}><ShieldCheck size={16}/>{proofLoading() === bookingId ? 'Generating...' : proof.status === 'failed' ? 'Retry proof' : 'Claim proof'}</button>}
-      {proof?.eligible && proof.status === 'local_proof_generated' && (proof.submissionAvailable ? <button class="action-btn primary" disabled={proofLoading() === bookingId} onClick={() => claimLessonProof(bookingId)}><ShieldCheck size={16}/>{proofLoading() === bookingId ? 'Submitting...' : 'Submit proof'}</button> : <span class="lesson-proof-pending">Local proof ready</span>)}
-      {proof?.commitment && <a class="action-btn secondary" target="_blank" rel="noopener noreferrer" href={`${API_BASE_URL}/proof/student-lessons/public/${proof.commitment}`}><ExternalLink size={16}/>{proof.status === 'verified' ? 'Verified proof' : 'View proof status'}</a>}
-      {proof && !proof.eligible && proof.status === 'ready' && <span class="lesson-proof-pending">Attendance verification pending</span>}
-      {proofError()[bookingId] && <span role="alert" class="lesson-proof-error">{proofError()[bookingId]}</span>}
       <a href={`/tutor/${lesson.tutorId}`} class="action-btn secondary"><RefreshCw size={16}/>Book Again</a>
     </>;
     };

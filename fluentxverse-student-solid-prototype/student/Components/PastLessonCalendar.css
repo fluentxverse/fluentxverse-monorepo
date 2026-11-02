@@ -38,7 +38,6 @@
 .past-calendar-layout .past-calendar-open-lesson { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; padding: 8px 0; border-top: 1px solid var(--pc-border); color: var(--pc-accent); font-size: 13px; font-weight: 600; }
 .past-calendar-lesson-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .past-calendar-lesson-actions .action-btn { font-size: 11px; padding: 7px 9px; border-radius: 4px; }
-.past-calendar-lesson-actions :is(.lesson-proof-error, .lesson-proof-pending) { width: 100%; font-size: 11px; overflow-wrap: anywhere; }
 .past-calendar-empty { padding: 20px 0; }
 .past-calendar-layout :is(button, a, input, select):focus-visible, .past-calendar-agenda:focus-visible { outline: 2px solid var(--pc-accent); outline-offset: 2px; }
 [data-theme='dark'] .past-calendar-layout { --pc-surface: #242424; --pc-soft: #202020; --pc-border: #454545; --pc-text: #f1f1f1; --pc-muted: #aaa; --pc-accent: #79b5ff; --pc-selected: #293846; color-scheme: dark; }

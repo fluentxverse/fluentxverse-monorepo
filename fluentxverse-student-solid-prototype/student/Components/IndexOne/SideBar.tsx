@@ -3,7 +3,7 @@ import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../../utils/cssStyle";
 import { useLocation } from "../../routing";
 import { JSX } from "solid-js";
-import { BookOpen, CalendarDays, House, Settings, Ticket, UserRound, ShieldCheck } from "lucide-solid";
+import { BookOpen, CalendarDays, House, Settings, Ticket, UserRound } from "lucide-solid";
 import { useAuthContext } from '../../context/AuthContext';
 import SettingsModal from '../Settings/SettingsModal';
 import { TICKETING_VISIBLE } from '../../config/launch';
@@ -18,7 +18,6 @@ const menuItems: MenuItem[] = [
     { href: "/schedule", label: "Schedule", icon: CalendarDays },
     ...(TICKETING_VISIBLE ? [{ href: "/tickets", label: "Tickets", icon: Ticket }] : []),
     { href: "/materials", label: "Materials", icon: BookOpen },
-    { href: "/reviews", label: "Feedback", icon: ShieldCheck },
     { href: "/profile", label: "Profile", icon: UserRound }
 ];
 const SideBar = (): JSX.Element | null => {

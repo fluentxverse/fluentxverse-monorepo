@@ -2,7 +2,10 @@ import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useCont
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
 import TutorIcon from "../Components/Common/TutorIcon";
-import { getSocket, connectSocket, initSocket } from '../client/socket/socket.client';
+import { getSocket, connectSocket, initSocket, disconnectSocket } from '../client/socket/socket.client';
+import { ArrowLeft } from 'lucide-solid';
+import InterviewChat from '../Components/InterviewChat';
+import type { InterviewMessage } from '../../../shared/interviewChat';
 import './InterviewRoomPage.css';
 import { useParams } from '@solidjs/router';
 import { InterviewCall } from '../../../shared/interviewCall';
@@ -21,6 +24,8 @@ const InterviewRoomPage = (_props0: InterviewRoomProps) => {
     const [roomReady, setRoomReady] = createSignal(false);
     const [recording, setRecording] = createSignal(false);
     const [ended, setEnded] = createSignal(false);
+    const [messages, setMessages] = createSignal<InterviewMessage[]>([]);
+    const [chatReady, setChatReady] = createSignal(false);
     // Media states
     const [localStream, setLocalStream] = createSignal<MediaStream | null>(null);
     const [remoteStream, setRemoteStream] = createSignal<MediaStream | null>(null);
@@ -63,8 +68,10 @@ const InterviewRoomPage = (_props0: InterviewRoomProps) => {
                 try {
                     const response = await fetch(`${API_BASE_URL}/interview/room/${encodeURIComponent(interviewId || '')}`, { credentials: 'include' });
                     const data = await response.json();
-                    if (!response.ok || !data.success || data.data.status !== 'booked' || data.data.mediaClosed) throw Error(data.error || 'Interview is not available to join.');
+                    if (!response.ok || !data.success) throw Error(data.error || 'Interview is not available to join.');
                     if (disposed) return;
+                    if (data.data.status === 'completed' || data.data.mediaClosed) { setEnded(true); setSetupComplete(true); return; }
+                    if (data.data.status !== 'booked') throw Error('Interview is not available to join.');
                     setRoomReady(true);
                     // Request permissions and get initial stream
                     const initialStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -170,6 +177,8 @@ const InterviewRoomPage = (_props0: InterviewRoomProps) => {
                 },
                 onError: message => { if (!disposed) { setError(message); setIsConnecting(false); } },
                 onEnded: () => handleEndCall(false),
+                onChatReady: ready => { if (!disposed) setChatReady(ready); },
+                onMessage: message => { if (!disposed) setMessages(previous => [...previous.slice(-199), message]); },
             });
             const ready = call.start();
             connectSocket();
@@ -233,6 +242,11 @@ const InterviewRoomPage = (_props0: InterviewRoomProps) => {
         setIsConnecting(false); setWaitingForAdmin(false); setRecording(false);
     };
     // Cleanup on unmount
+    const returnHome = () => {
+        if (setupComplete() && !ended() && !window.confirm('Leave the interview and return home?')) return;
+        mediaVersion++; call?.close(); stopCallTimer(); stopPreview(); disconnectSocket();
+        window.location.assign('/home');
+    };
     createEffect(on(() => [], () => {
         const _cleanup3 = untrack(() => {
             return () => {
@@ -244,7 +258,7 @@ const InterviewRoomPage = (_props0: InterviewRoomProps) => {
         if (typeof _cleanup3 === "function")
             onCleanup(_cleanup3);
     }));
-    createEffect(on(setupComplete, active => {
+    createEffect(on(() => setupComplete() && !ended(), active => {
         if (!active) return;
         const socket = getSocket();
         const status = (data: { recording: boolean }) => setRecording(data.recording);
@@ -361,9 +375,9 @@ const InterviewRoomPage = (_props0: InterviewRoomProps) => {
 
             {/* Setup Actions */}
             <div class="setup-actions">
-              <button class="btn-back" onClick={() => window.location.href = '/interview'}>
-                <TutorIcon name="ri-arrow-left-line"/>
-                Back
+              <button class="interview-return-home" onClick={returnHome}>
+                <ArrowLeft size={18}/>
+                Return Home
               </button>
               <button class="btn-join" onClick={joinRoom} disabled={!deviceTestPassed() || isConnecting() || !roomReady() || ended()}>
                 {isConnecting() ? (<>
@@ -392,6 +406,7 @@ const InterviewRoomPage = (_props0: InterviewRoomProps) => {
         <div class="interview-call">
           {/* Call Header */}
           <div class="call-header">
+            <button class="interview-return-home" onClick={returnHome}><ArrowLeft size={18}/>Return Home</button>
             <div class="call-info">
               <span class="call-status">
                 {ended() ? 'Interview ended' : isConnected() ? (<><TutorIcon name="ri-record-circle-fill live"/> Live</>) : waitingForAdmin() ? (<><TutorIcon name="ri-time-line"/> Waiting for interviewer...</>) : (<><TutorIcon name="ri-loader-4-line ri-spin"/> Connecting...</>)}
@@ -405,14 +420,14 @@ const InterviewRoomPage = (_props0: InterviewRoomProps) => {
           </div>
 
           {/* Video Grid */}
-          <div class="video-grid">
+          <div class="interview-candidate-body"><div class="interview-candidate-media"><div class="video-grid">
             {/* Remote Video (Admin/Interviewer) */}
             <div class="video-container remote">
               {remoteStream() ? (<video ref={element => { remoteVideoRef.current = element; element.srcObject = remoteStream(); void element.play().catch(() => {}); }} autoplay playsinline/>) : (<div class="video-placeholder">
                   <div class="avatar-placeholder">
                     <TutorIcon name="ri-user-line"/>
                   </div>
-                  <p>{waitingForAdmin() ? 'Waiting for interviewer...' : 'Connecting...'}</p>
+                  <p>{ended() ? 'Interview ended' : waitingForAdmin() ? 'Waiting for interviewer...' : 'Connecting...'}</p>
                 </div>)}
               <div class="video-label">Interviewer</div>
             </div>
@@ -442,7 +457,8 @@ const InterviewRoomPage = (_props0: InterviewRoomProps) => {
               <TutorIcon name="ri-phone-line"/>
             </button>
           </div>
-          <div class="interview-recording-notice" role="status">{ended() ? <a href="/interview">Back to interviews</a> : recording() ? 'Recording for screening and quality review' : 'This interview may be recorded for screening and quality review.'}</div>
+          <div class="interview-recording-notice" role="status">{ended() ? 'Interview ended' : recording() ? 'Recording for screening and quality review' : 'This interview may be recorded for screening and quality review.'}</div>
+          </div><InterviewChat messages={messages()} ready={chatReady()} ended={ended()} send={text => { if (!call) throw Error('Chat is not connected.'); call.sendText(text); }}/></div>
         </div>)}
     </div>);
 };

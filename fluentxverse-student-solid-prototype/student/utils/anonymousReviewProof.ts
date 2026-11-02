@@ -14,10 +14,10 @@ async function artifact(url: string, pin: string, limit: number, signal: AbortSi
   return bytes;
 }
 export async function generateAnonymousReview(accountId: string, commitment: string, group: AnonymousReviewGroup,
-  content: AnonymousReviewContent, signal: AbortSignal): Promise<AnonymousReviewProof> {
+  content: AnonymousReviewContent, signal: AbortSignal, entitlementId = group.id): Promise<AnonymousReviewProof> {
   if (group.state !== 'open' || !group.root || group.depth !== REVIEW_DEPTH || group.members.length < REVIEW_MIN_BATCH)
     throw new Error('Review cohort is not open');
-  const identity = loadReviewIdentity(accountId, group.id, commitment);
+  const identity = loadReviewIdentity(accountId, group.id, commitment, entitlementId);
   const wasm = await artifact(group.artifacts.wasmUrl, group.artifacts.wasmSha256, 16 * 1024 * 1024, signal);
   const zkey = await artifact(group.artifacts.zkeyUrl, group.artifacts.zkeySha256, 64 * 1024 * 1024, signal);
   if (signal.aborted) throw new Error('Proof generation cancelled');

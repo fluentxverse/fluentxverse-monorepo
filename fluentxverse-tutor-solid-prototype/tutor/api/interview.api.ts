@@ -12,6 +12,7 @@ export interface InterviewSlot {
     bookedAt?: string;
 }
 export interface MyInterview {
+    mediaClosed?: boolean;
     id: string;
     date: string;
     time: string;

@@ -79,4 +79,5 @@ These additions do not introduce custom contracts or claim ZK-verified attendanc
 
 ## Licensing
 
-  license file is currently present. Do not infer an MIT or other license from public repository availability. Contact support@fluentxverse.com for licensing terms; third-party components retain their own licenses.
+FluentXVerse's original source code is licensed under the [MIT License](LICENSE).
+Third-party components retain their own licenses and copyright notices.

@@ -5,6 +5,7 @@ import { client } from "./utils";
 export type MetricsPeriod = "month" | "30days" | "all";
 export type MetricOutcome = "attended" | "tutor_absent" | "student_absent" | "awaiting_verification" | "upcoming" | "ongoing" | "cancelled" | "unclassified";
 export interface TutorPerformance {
+    punctuality?: {checked:number;lateAtTwoMinutes:number;noEntryWithinFiveMinutes:number};
     period: {
         period: MetricsPeriod;
         month: string | null;

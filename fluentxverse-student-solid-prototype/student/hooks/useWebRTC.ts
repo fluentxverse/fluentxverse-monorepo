@@ -300,18 +300,22 @@ export const useWebRTC = (_props0: UseWebRTCProps = {}) => {
         }
         startingLocalStreamRef.current = (async () => {
             const generation = mediaGenerationRef.current;
+            setError(null);
             try {
                 let stream: MediaStream;
                 try {
                     stream = await navigator.mediaDevices.getUserMedia(buildMediaConstraints()(audio, video));
                 }
                 catch (err: any) {
+                    if (generation !== mediaGenerationRef.current)
+                        throw err;
                     if (!video) {
                         throw err;
                     }
                     console.warn('Camera unavailable, retrying with microphone only:', err);
                     stream = await navigator.mediaDevices.getUserMedia(buildMediaConstraints()(audio, false));
-                    setError('Camera is unavailable. Joined with microphone only.');
+                    if (generation === mediaGenerationRef.current)
+                        setError('Camera is unavailable. Microphone is ready.');
                 }
                 if (generation !== mediaGenerationRef.current) {
                     stream.getTracks().forEach(track => track.stop());
@@ -324,12 +328,15 @@ export const useWebRTC = (_props0: UseWebRTCProps = {}) => {
                 return stream;
             }
             catch (err) {
+                if (generation !== mediaGenerationRef.current)
+                    throw err;
                 console.error('❌ Error accessing media devices:', err);
                 setError('Failed to access camera or microphone');
                 throw err;
             }
             finally {
-                startingLocalStreamRef.current = null;
+                if (generation === mediaGenerationRef.current)
+                    startingLocalStreamRef.current = null;
             }
         })();
         return startingLocalStreamRef.current;
@@ -465,11 +472,16 @@ export const useWebRTC = (_props0: UseWebRTCProps = {}) => {
         }
     }));
     const switchMediaDevices = createMemo(on(() => [addLocalTracksToPeerConnection(), buildMediaConstraints(), createOffer(), createPeerConnection(), _props0["initiator"] === undefined ? false : _props0["initiator"]], () => async (devices: MediaDeviceSelection) => {
+        const generation = mediaGenerationRef.current;
         deviceSelectionRef.current = devices;
         const previousStream = localStreamRef.current;
         const shouldKeepVideo = Boolean(previousStream?.getVideoTracks().some(track => track.readyState === 'live'));
         try {
             const stream = await navigator.mediaDevices.getUserMedia(buildMediaConstraints()(true, shouldKeepVideo, devices));
+            if (generation !== mediaGenerationRef.current) {
+                stream.getTracks().forEach(track => track.stop());
+                throw new DOMException('Device change was cancelled', 'AbortError');
+            }
             localStreamRef.current = stream;
             setLocalStream(stream);
             if (!enabledRef.current) {
@@ -491,6 +503,8 @@ export const useWebRTC = (_props0: UseWebRTCProps = {}) => {
             }
         }
         catch (err) {
+            if (generation !== mediaGenerationRef.current)
+                throw err;
             console.error('❌ Error switching media devices:', err);
             setError('Failed to switch camera or microphone');
             throw err;

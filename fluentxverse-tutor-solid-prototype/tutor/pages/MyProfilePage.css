@@ -310,6 +310,11 @@
   }
 }
 
+.profile-nickname-heading { display:flex; align-items:center; gap:12px; min-width:0; }
+.profile-nickname-heading .profile-name { overflow-wrap:anywhere; margin:0; }
+.profile-nickname-heading .btn-edit-name { flex:none; width:36px; height:36px; display:grid; place-items:center; }
+.profile-nickname-note { font-size:12px; color:var(--td-muted); margin:6px 0 12px; }
+.profile-nickname-feedback { font-size:13px; color:var(--td-text); border-left:3px solid #d08a12; padding-left:10px; }
 .profile-header-right {
   flex: 1;
 }
@@ -1742,6 +1747,37 @@
   border-top: 1px solid #e2e8f0;
 }
 
+dialog.tutor-dialog.tutor-profile-edit-dialog {
+  padding: 20px;
+  overflow: hidden;
+}
+dialog.tutor-dialog.tutor-profile-edit-dialog > .edit-modal {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 76px) !important;
+  border-radius: 8px;
+}
+.tutor-profile-edit-dialog .edit-modal-header,
+.tutor-profile-edit-dialog .edit-modal-footer { flex-shrink: 0; }
+dialog.tutor-dialog.tutor-profile-edit-dialog .edit-modal-body {
+  overflow-y: auto;
+  min-height: 0;
+  padding: 20px 4px;
+}
+.tutor-profile-edit-dialog .edit-modal-body[hidden] { display: none; }
+.tutor-profile-edit-dialog .edit-modal-footer { flex-wrap: wrap; }
+.profile-field-error,
+.tutor-dialog .profile-field-error {
+  color: var(--td-text, #202636);
+  border-left: 3px solid #e05252;
+  padding: 8px 10px;
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.edit-modal-footer .profile-field-error { flex: 0 0 100%; margin: 0; }
+
 .btn-cancel {
   padding: 10px 20px;
   background: white;
@@ -1784,6 +1820,23 @@
 /* ================================
    Interests Chip Editor
    ================================ */
+.profile-guidelines-reminder {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 18px;
+  border: 1px solid var(--td-border, #dbe3ee);
+  border-left: 3px solid var(--td-accent, #1554ab);
+  border-radius: 6px;
+  background: var(--td-tint, #edf4ff);
+  color: var(--td-text, #202636);
+}
+.profile-guidelines-reminder > :first-child { flex-shrink: 0; }
+.profile-guidelines-reminder > div { min-width: 0; }
+.profile-guidelines-reminder h2 { margin: 0 0 6px; font-size: 16px; line-height: 1.4; color: var(--td-text, #202636); }
+.profile-guidelines-reminder p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--td-text, #202636); overflow-wrap: anywhere; }
+
 .interests-editor {
   display: flex;
   flex-direction: column;
@@ -1806,12 +1859,24 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  background: #1554ab;
   color: white;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 500;
   animation: chipIn 0.2s ease-out;
+}
+
+dialog.tutor-profile-edit-dialog .interest-chip,
+dialog.tutor-profile-edit-dialog .interest-chip :is(span,button,svg) {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+[data-theme="dark"] dialog.tutor-profile-edit-dialog .interest-chip { background: #b9d9ff; }
+[data-theme="dark"] dialog.tutor-profile-edit-dialog .interest-chip,
+[data-theme="dark"] dialog.tutor-profile-edit-dialog .interest-chip :is(span,button,svg) {
+  color: #13283e !important;
+  -webkit-text-fill-color: #13283e !important;
 }
 
 @keyframes chipIn {
@@ -2373,6 +2438,16 @@
   display: flex;
   flex-direction: column;
 }
+
+.my-profile-page .hero-video-container {
+  width: 100%;
+  max-width: 560px;
+}
+
+.my-profile-page button.missing-item { cursor: pointer; font: inherit; font-size: 12px; }
+.my-profile-page .education-empty { color: var(--td-text-secondary, #64748b); margin: 0; }
+.education-editor { display: grid; gap: 10px; }
+.education-editor label { font-size: 13px; font-weight: 600; }
 
 .hero-video-container .fxv-video-player {
   width: 100%;

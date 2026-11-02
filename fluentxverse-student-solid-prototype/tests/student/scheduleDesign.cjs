@@ -8,6 +8,7 @@ const base = process.env.STUDENT_TEST_URL || 'http://127.0.0.1:5176';
       const context = await browser.newContext({ viewport: { width, height: 950 }, timezoneId: 'Pacific/Auckland', reducedMotion: 'reduce' });
       await context.addInitScript(theme => localStorage.setItem('theme-storage', JSON.stringify({ state: { themeMode: theme, isDarkMode: theme === 'dark' }, version: 2 })), theme);
       let empty = false, failed = false;
+      const proofRequests = [];
       const bookings = [
         { bookingId: 'future', slotDate: '2026-10-10', slotTime: '11:30 PM', status: 'confirmed' },
         { bookingId: 'deadline', slotDate: '2026-10-10', slotTime: '10:03 PM', status: 'confirmed' },
@@ -17,6 +18,7 @@ const base = process.env.STUDENT_TEST_URL || 'http://127.0.0.1:5176';
       ].map(item => ({ ...item, tutorId: 'tutor-fixture', tutorName: 'Christopher Alexandra Montgomery', durationMinutes: 25 }));
       await context.route(/^(http:\/\/(localhost|127\.0\.0\.1):(?:8765|8780)|https:\/\/api\.fluentxverse\.(?:com|xyz))\//, route => {
         const path = new URL(route.request().url()).pathname;
+        if (path.startsWith('/proof/student-lessons') || path.endsWith('/outcome-proof')) proofRequests.push(path);
         if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204 });
         if (path === '/student/me') return route.fulfill({ json: { success: true, user: { userId: 'schedule-fixture', role: 'student', givenName: 'Mika', walletAddress: '0x' + 'a'.repeat(40) } } });
         if (path === '/schedule/student-bookings' && failed) return route.fulfill({ status: 503, json: { success: false } });
@@ -52,6 +54,9 @@ const base = process.env.STUDENT_TEST_URL || 'http://127.0.0.1:5176';
       await page.getByRole('button', { name: 'Friday, October 9, 2026: 2 lessons' }).click();
       assert.equal(await page.locator('.past-calendar-lesson').count(), 2);
       assert.equal(await page.locator('a[href="/lesson/past-single"]').count(), 1);
+      assert.equal(await page.getByRole('button', { name: /Claim proof|Submit proof|Retry proof|Generate completion proof/ }).count(), 0);
+      assert.equal(await page.locator('a[href*="/proof/student-lessons"]').count(), 0);
+      assert.deepEqual(proofRequests, []);
       await checkLayout('past');
       empty = true;
       await page.goto(base + '/schedule');

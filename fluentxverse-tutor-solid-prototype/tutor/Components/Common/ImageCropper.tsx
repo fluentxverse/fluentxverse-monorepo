@@ -3,6 +3,7 @@ import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../../utils/cssStyle";
 import TutorDialog from "./TutorDialog";
 import TutorIcon from ".//TutorIcon";
+import ProfileGuidelines from './ProfileGuidelines';
 import './ImageCropper.css';
 interface ImageCropperProps {
     imageSrc: string;
@@ -115,7 +116,7 @@ export const ImageCropper = (_props0: ImageCropperProps) => {
         if (!ctx)
             return;
         const img = imageRef.current;
-        const outputSize = 400; // Output image size
+        const outputSize = 600;
         canvas.width = outputSize;
         canvas.height = outputSize;
         // Calculate the visible area
@@ -139,11 +140,9 @@ export const ImageCropper = (_props0: ImageCropperProps) => {
         const sourceY = ((cropAreaTop - imgTop) / imgDisplayHeight) * img.naturalHeight;
         const sourceWidth = (CROP_SIZE() / imgDisplayWidth) * img.naturalWidth;
         const sourceHeight = (CROP_SIZE() / imgDisplayHeight) * img.naturalHeight;
-        // Draw circular clip
-        ctx.beginPath();
-        ctx.arc(outputSize / 2, outputSize / 2, outputSize / 2, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
+        // Keep a full square JPEG; the avatar's circular mask belongs in presentation only.
+        ctx.fillStyle = '#C8C8C8';
+        ctx.fillRect(0, 0, outputSize, outputSize);
         // Draw the cropped image
         ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputSize, outputSize);
         // Convert to blob
@@ -164,6 +163,7 @@ export const ImageCropper = (_props0: ImageCropperProps) => {
         </div>
 
         <div class="cropper-body">
+          <ProfileGuidelines kind="photo" expanded/>
           <div ref={_element => containerRef.current = _element} class="cropper-container" onMouseDown={handleMouseDown} onTouchStart={handleTouchStart}>
             {imageLoaded() && imageRef.current && (<img src={_props0["imageSrc"]} alt="Crop preview" class="cropper-image" style={cssStyle({
                 get transform() {

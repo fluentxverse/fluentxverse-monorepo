@@ -39,24 +39,24 @@
 .written-exam-page button::before,.written-exam-page button::after { display: none; }
 .written-exam-page button svg { flex-shrink: 0; }
 .written-exam-page .exam-container { max-width: 880px; }
-.App.tutor-workspace .written-exam-page .exam-header { background: transparent; box-shadow: none; border-radius: 0; padding: 0 0 20px; margin: 0 0 20px; border-bottom: 1px solid var(--td-border); gap: 24px; }
+.App.tutor-workspace .written-exam-page .exam-header { background: var(--td-surface); box-shadow: none; border-radius: 8px; padding: 16px 20px; margin: 0 0 20px; border: 1px solid var(--td-border); gap: 24px; }
 .written-exam-page .exam-timer { display: inline-flex; align-items: center; gap: 8px; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; background: var(--td-surface); border: 1px solid var(--td-border); border-radius: 6px; padding: 10px 14px; }
 .written-exam-page .exam-timer svg { width: 20px; height: 20px; }
 .App.tutor-workspace .written-exam-page .exam-timer { color: var(--td-accent); -webkit-text-fill-color: currentColor; background-clip: border-box; }
 .App.tutor-workspace .written-exam-page .exam-timer.is-low { color: #dc4b4b; }
-.written-exam-page .exam-progress { min-width: 0; }
+.written-exam-page .exam-progress { min-width: 0; width: 180px; }
 .App.tutor-workspace .written-exam-page .exam-progress span { color: var(--td-muted); font-size: 12px; }
-.written-exam-page .progress-bar { height: 5px; background: var(--td-border); margin-top: 8px; }
+.written-exam-page .progress-bar { width: 100%; height: 5px; background: var(--td-border); margin-top: 8px; }
 .written-exam-page .progress-fill { background: var(--td-accent); }
 .written-exam-page .section-labels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
 .App.tutor-workspace .written-exam-page .section-label { background: transparent; padding: 8px 0; border-radius: 0; border-width: 0 0 2px; box-shadow: none; }
 .App.tutor-workspace .written-exam-page .section-label span { color: var(--td-text); font-size: 12px; }
 .App.tutor-workspace .written-exam-page .section-label small { color: var(--td-muted); font-size: 11px; }
-.App.tutor-workspace .written-exam-page .question-nav { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 7px; background: transparent; padding: 0; margin-bottom: 24px; box-shadow: none; border-radius: 0; }
+.App.tutor-workspace .written-exam-page .question-nav { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 7px; background: var(--td-surface); border: 1px solid var(--td-border); padding: 14px; margin-bottom: 24px; box-shadow: none; border-radius: 8px; }
 .App.tutor-workspace .written-exam-page .question-nav-btn { width: 100%; min-width: 0; height: 40px; margin: 0; border: 1px solid var(--td-border); border-radius: 5px; color: var(--td-muted); background: var(--td-surface); font-size: 12px; transform: none; }
 .App.tutor-workspace .written-exam-page .question-nav-btn.answered { color: #17704d; background: #e6f3ee; border-color: #a2cbb8; }
 .App.tutor-workspace .written-exam-page .question-nav-btn.active { color: #fff; border-color: transparent; box-shadow: none; }
-.App.tutor-workspace .written-exam-page .question-card { border: 0; border-top: 1px solid var(--td-border); padding: 24px 0 0; background: transparent; box-shadow: none; border-radius: 0; margin: 0; }
+.App.tutor-workspace .written-exam-page .question-card { border: 1px solid var(--td-border); padding: 24px; background: var(--td-surface); box-shadow: none; border-radius: 8px; margin: 0; }
 .written-exam-page .question-card::before { display: none; }
 .written-exam-page .question-meta { margin-bottom: 18px; gap: 10px; }
 .written-exam-page .question-category { border-radius: 5px; padding: 6px 10px; font-size: 11px; box-shadow: none; color: #fff; }
@@ -115,7 +115,9 @@
   .written-exam-page .written-section p { font-size: 11px; }
   .written-exam-page .written-intro-actions { flex-direction: column; align-items: stretch; gap: 16px; }
   .written-exam-page .written-intro-actions button { justify-content: center; min-height: 46px; }
-  .App.tutor-workspace .written-exam-page .exam-header { flex-direction: row; align-items: center; gap: 16px; }
+  .App.tutor-workspace .written-exam-page .exam-header { flex-direction: row; align-items: center; gap: 12px; padding: 16px; }
+  .App.tutor-workspace .written-exam-page .question-nav { padding: 12px; }
+  .App.tutor-workspace .written-exam-page .question-card { padding: 18px 16px; }
   .written-exam-page .exam-timer { font-size: 19px; padding: 8px 10px; }
   .written-exam-page .exam-timer svg { width: 17px; }
   .written-exam-page .exam-progress { flex: 1; }

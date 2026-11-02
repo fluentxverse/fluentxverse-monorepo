@@ -7,13 +7,14 @@ import TutorDialog from './Common/TutorDialog';
 import './TutorLessonIssueReport.css';
 export type TroubleDuration = 'up_to_ten' | 'over_ten';
 export type TroubleReason = 'connection' | 'audio' | 'hardware' | 'emergency' | 'power' | 'student';
-export type TutorStudentIssue = 'asked_to_cancel' | 'late';
+export type TutorStudentIssue = 'asked_to_cancel' | 'late' | 'other';
 const studentIssues: {
     value: TutorStudentIssue;
     label: string;
 }[] = [
     { value: 'asked_to_cancel', label: 'Student asked to cancel' },
-    { value: 'late', label: 'Student is late' }
+    { value: 'late', label: 'Student is late' },
+    { value: 'other', label: 'Other' }
 ];
 const troubleReasons: {
     value: TroubleReason;
@@ -74,6 +75,7 @@ export function TutorLessonIssueReportDialog(_props0: Props) {
                   <div class="trouble-report-options">
                     {studentIssues.map(issue => <button type="button" disabled={_props0["reportSubmitting"]} class={_props0["reportStudentIssue"] === issue.value ? 'selected' : ''} aria-pressed={_props0["reportStudentIssue"] === issue.value} onClick={() => { _props0["setReportStudentIssue"](issue.value); _props0["setReportSubmitError"](null); }}>{issue.label}</button>)}
                   </div>
+                  {_props0.reportStudentIssue === 'other' && <p role="note">An inbox message will ask for your explanation. Reply within 24 hours of that message or this lesson will be marked TA-301.</p>}
                 </>) : (<>
                   <h3 ref={_element => reportStepHeadingRef.current = _element} tabIndex={-1}>What interrupted the lesson?</h3>
                   <div class="trouble-report-options trouble-report-reasons">

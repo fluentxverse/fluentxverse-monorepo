@@ -1,0 +1,10 @@
+.tutor-media-upload-dialog .media-upload-layout { display:flex; flex-direction:column; max-height:calc(100dvh - 90px); min-height:0; }
+.media-upload-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:16px; border-bottom:1px solid var(--td-border); flex-shrink:0; }
+.media-upload-header h3 { margin:0; font-size:18px; line-height:1.4; }
+.media-upload-header button { display:grid; place-items:center; width:36px; height:36px; flex-shrink:0; background:transparent; border:1px solid var(--td-border); color:var(--td-text); }
+.media-upload-body { overflow-y:auto; min-height:0; padding:0 4px; }
+.media-upload-body .profile-guidelines { border:0; }
+.media-upload-footer { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:10px; border-top:1px solid var(--td-border); padding-top:16px; flex-shrink:0; }
+.media-upload-footer button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:8px 12px; background:transparent; border:1px solid var(--td-border); color:var(--td-text); font-size:14px; }
+.media-upload-footer .media-upload-choose { background:#155bc3; border-color:#155bc3; color:#fff; }
+.tutor-dialog .media-upload-error { flex:0 0 100%; margin:0; padding-left:10px; border-left:3px solid #e05252; color:var(--td-text); font-size:14px; }

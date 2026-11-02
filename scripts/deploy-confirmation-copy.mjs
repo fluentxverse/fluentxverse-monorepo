@@ -1,0 +1,16 @@
+import {execFileSync} from 'node:child_process';
+import {cpSync,mkdirSync,symlinkSync,existsSync,readFileSync,writeFileSync,realpathSync} from 'node:fs';
+import {join} from 'node:path';
+const root=process.cwd(),app='fluentxverse-tutor-solid-prototype',release=join(root,'output/release/confirmation-copy-20261031'),base=join(root,'output/release/tutor-guide-classroom-20261030/tutor/frontend'),cwd=join(release,'frontend',app),previous='c87f5601-a4db-4dd3-8b91-d1a93eed4f5c';
+const run=(cmd,args)=>execFileSync(cmd,args,{cwd,env:{...process.env,CI:'1'},encoding:'utf8',maxBuffer:5e6});
+const wrangler=args=>run('bunx',['--bun','wrangler@4.152.0',...args,'--config','wrangler.jsonc']);
+if(!process.argv.includes('--deploy'))throw Error('Use --deploy');
+mkdirSync(release,{recursive:true});cpSync(base,join(release,'frontend'),{recursive:true,verbatimSymlinks:true,filter:p=>!['node_modules','dist','.wrangler'].includes(p.split('/').at(-1))&&!p.split('/').at(-1).startsWith('.env')});
+symlinkSync(realpathSync(join(base,app,'node_modules')),join(cwd,'node_modules'),'dir');
+const file=join(cwd,'tutor/pages/ConfirmEmailPage.tsx'),old=readFileSync(file,'utf8'),from='</strong>. Check your spam folder if it has not arrived.',to='</strong> and may take 1-2 minutes to arrive. Check your spam folder if it has not arrived.';
+if(old.split(from).length!==2)throw Error('Unexpected copy baseline');
+const patch='*** Begin Patch\n*** Update File: '+file+'\n@@\n-'+old.split('\n').find(l=>l.includes(from))+'\n+'+old.split('\n').find(l=>l.includes(from)).replace(from,to)+'\n*** End Patch';
+execFileSync('apply_patch',[patch]);
+const guard=()=>{const d=JSON.parse(wrangler(['deployments','list','--json'])).sort((a,b)=>Date.parse(b.created_on)-Date.parse(a.created_on))[0];if(d.versions.length!==1||d.versions[0].version_id!==previous)throw Error('Live baseline changed');};
+guard();console.log(run('bun',['run','build']));guard();
+const output=wrangler(['deploy']);console.log(output);writeFileSync(join(release,'deployment.json'),JSON.stringify({previous,output,copy:'may take 1-2 minutes to arrive',apiUnchanged:true},null,2));

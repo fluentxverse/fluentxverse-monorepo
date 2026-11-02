@@ -1,6 +1,7 @@
 {
   "name": "fluentxverse-monorepo",
   "version": "1.0.0",
+  "license": "MIT",
   "private": true,
   "workspaces": [
     "fluentxverse-tutor-solid-prototype",

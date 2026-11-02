@@ -344,6 +344,8 @@ export const PerformanceMetricsPage = () => {
 											<Count label="Present" value={ready().attendance.present} tone="green"/>
 											<Count label="Absent" value={ready().attendance.absent} tone="red"/>
 											<Count label="Unverified" value={ready().attendance.unverified}/>
+											<Count label="Not joined by 2 minutes" value={ready().punctuality?.lateAtTwoMinutes ?? 0}/>
+											<Count label="No entry within 5 minutes" value={ready().punctuality?.noEntryWithinFiveMinutes ?? 0}/>
 											<Count label="Verified attendance rate" value={percent(ready().attendance.rate)}/>
 										</div>
 									</section>

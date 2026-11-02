@@ -1,0 +1,20 @@
+.student-dialog.student-notification-dialog {
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  border-color: var(--sd-border);
+}
+.student-dialog.student-notification-dialog a,
+.student-dialog.student-notification-dialog a.is-read {
+  opacity: 1;
+  color: var(--sd-text);
+  border-color: var(--sd-border);
+  text-decoration: none;
+}
+.student-dialog.student-notification-dialog h2,
+.student-dialog.student-notification-dialog a strong { color: var(--sd-text); }
+.student-dialog.student-notification-dialog a strong { font-size: 14px; line-height: 1.5; font-weight: 700; }
+.student-dialog.student-notification-dialog a.is-read strong { font-weight: 600; }
+.student-dialog.student-notification-dialog a > span { color: var(--sd-text); font-size: 13px; line-height: 1.6; }
+.student-dialog.student-notification-dialog time { color: var(--sd-muted); font-size: 12px; line-height: 1.5; }
+.student-dialog.student-notification-dialog header button { color: var(--sd-text); }
+.student-dialog.student-notification-dialog a:focus-visible { outline: 2px solid var(--sd-accent); outline-offset: 3px; }

@@ -37,7 +37,8 @@ const topics = [
             return route.fulfill({ json: { success: true, data: survey } });
           }
           checks++;
-          if (failLoad) { failLoad = false; return route.fulfill({ status: 503, json: { success: false } }); }
+          // Keep the outage active across the client's automatic GET retry.
+          if (failLoad) return route.fulfill({ status: 503, json: { success: false } });
           return route.fulfill({ json: { success: true, data: { eligible: eligible && !survey, reason: survey ? 'submitted' : eligible ? null : 'not_ended', readyAt,
             endsAt, closesAt: new Date(Date.parse(endsAt) + 48 * 3600000).toISOString(), survey, topics } } });
         }
@@ -79,6 +80,7 @@ const topics = [
       await page.waitForTimeout(100); assert.equal(await dialog.count(), 0, 'Signals are lesson-scoped');
       failLoad = true; emit('session:survey-ready', { sessionId: id, reason: 'ended' });
       await dialog.getByRole('alert').waitFor();
+      failLoad = false;
       await dialog.getByRole('button', { name: 'Try again', exact: true }).click();
       await dialog.getByLabel('Step 1 of 3', { exact: true }).waitFor();
       await page.keyboard.press('Escape'); await dialog.waitFor({ state: 'hidden' });

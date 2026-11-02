@@ -1,5 +1,10 @@
 # TODO
 
+- [ ] Implement the revised student attendance reporting and tutor response policy.
+  See [lesson dispute rules TODO](docs/lesson-dispute-rules-todo.md) for the
+  two-minute reporting threshold, separate five-minute no-entry record, six
+  response reasons, automatic TA-301 and support-ticket reconsideration.
+
 - [x] Deploy the administrator Worker at `dashboard.fluentxverse.com`, retain its
   old Worker domain and switch server-generated dashboard links to `.com`.
   Desktop/mobile login UI, actual API/CORS, private-access rejection and deep-link
@@ -55,3 +60,24 @@
   production lessons. UDP-only did not connect on the local test network;
   investigate that path on another network. TLS-only port 443 passed locally.
   See [video-call infrastructure](docs/video-call-infrastructure.md).
+
+## Tutor Identity Verification
+
+- [x] Implement opt-in Memgraph identity review, private encrypted ID uploads, all 16 ID types,
+  age 18+ checks, 84-hour acceptance-to-booking deadline, rolling three-day interview slots,
+  cancellation/no-show resets, live match/mismatch UI, and scheduled image/key deletion.
+- [x] Verify the identity lifecycle on an empty local Memgraph and the applicant/admin screens
+  at desktop and mobile widths. Synthetic fixtures only; no real IDs or chain transactions.
+- [x] Deploy the scoped identity API and both app changes with ID collection disabled.
+- [ ] Configure the private no-backup volume, swap/core-dump policy and worker monitoring;
+  verify provider snapshot exclusions before enabling ID collection.
+- [x] Enable closed-test ID uploads using root-configured non-swappable RAM storage; disable
+  disk swap and API core dumps, verify synthetic HTTP upload/encrypted readback/private access.
+  Pending images are ephemeral; document restart/resubmission behavior before wider rollout.
+- [x] Replace the above temporary RAM-retention approach with encrypted private SeaweedFS and
+  persistent keys. Remove its RAM mount/boot dependency, restore original disk swap, preserve
+  all ID deletion deadlines, and verify persistence and deletion. See docs/tutor-identity-storage.md.
+- [ ] Implement the identity-specific ZK circuit/proving release and Engine worker, followed
+  by verified receipt-bound non-transferable wallet issuance. No expiry, but revocable;
+  wallet-control checks, recovery and duplicate-safe reconciliation remain required.
+  See [identity implementation and remaining work](docs/tutor-identity-verification.md).

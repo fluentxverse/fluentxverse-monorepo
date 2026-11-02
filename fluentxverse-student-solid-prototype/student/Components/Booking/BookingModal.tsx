@@ -60,11 +60,8 @@ export const BookingModal = (_props0: BookingModalProps) => {
     const [connectedAccount, setConnectedAccount] = createSignal<WalletAccount | null>(appWallet.getAccount());
     const [profileWalletAddress, setProfileWalletAddress] = createSignal<string | null>(null);
     const [creditMode, setCreditMode] = createSignal<PassMode>();
-    createEffect(on(() => _props0.isOpen, async open => {
-        if (!open) return;
-        setCreditMode(undefined);
-        try { setCreditMode(await lessonPassApi.mode()); } catch (e) { setError((e as Error).message); }
-    }));
+    let availabilityRequest = 0;
+    onCleanup(() => { availabilityRequest++; });
     const [isWalletConnecting, setIsWalletConnecting] = createSignal(false);
     const [isWalletAutoConnecting, setIsWalletAutoConnecting] = createSignal(true);
     const walletAddress = createMemo(() => _state1.user?.walletAddress || _state1.user?.smartWalletAddress || profileWalletAddress() || connectedAccount()?.address);
@@ -88,27 +85,6 @@ export const BookingModal = (_props0: BookingModalProps) => {
         });
         if (typeof _cleanup3 === "function")
             onCleanup(_cleanup3);
-    }));
-    createEffect(on(() => [_props0["isOpen"], _state1.isAuthenticated], () => {
-        const _cleanup4 = untrack(() => {
-            if (!_props0["isOpen"] || !_state1.isAuthenticated)
-                return;
-            let cancelled = false;
-            _state1.ensureSession()
-                .then((student) => {
-                if (!cancelled)
-                    setProfileWalletAddress(student.walletAddress || null);
-            })
-                .catch((err) => {
-                if (!cancelled) {
-                    setProfileWalletAddress(null);
-                    setError(getErrorMessage(err));
-                }
-            });
-            return () => { cancelled = true; };
-        });
-        if (typeof _cleanup4 === "function")
-            onCleanup(_cleanup4);
     }));
     const reconnectWallet = async () => {
         setError(null);
@@ -239,8 +215,9 @@ export const BookingModal = (_props0: BookingModalProps) => {
         const result = convertToJapaneseTimeWithDate('2000-01-01', phTimeString);
         return result.time;
     };
-    createEffect(on(() => [_props0["isOpen"], _props0["tutorId"]], () => {
+    createEffect(on(() => [_props0["isOpen"], _props0["tutorId"], _props0.filterDate, _state1.isAuthenticated], () => {
         const _cleanup7 = untrack(() => {
+            availabilityRequest++;
             if (_props0["isOpen"] && _props0["tutorId"]) {
                 fetchAvailableSlots();
             }
@@ -276,15 +253,30 @@ export const BookingModal = (_props0: BookingModalProps) => {
         return slotDate === targetPHTDate;
     };
     const fetchAvailableSlots = async () => {
+        const request = ++availabilityRequest;
+        const tutorId = _props0.tutorId;
+        const filterDate = _props0.filterDate;
+        const current = () => request === availabilityRequest && _props0.isOpen;
         setLoading(true);
+        setCreditMode(undefined);
+        setAvailableSlots([]);
         if (!readPendingTransfer())
             setError(null);
         try {
+            if (_state1.isAuthenticated) {
+                const student = await _state1.ensureSession();
+                if (!current()) return;
+                setProfileWalletAddress(student.walletAddress || null);
+            }
             // filterDate is a PHT date (same as tutor's timezone)
             // We fetch slots for that exact PHT date
-            const startDate = _props0["filterDate"] || new Date().toISOString().split('T')[0];
-            const endDate = _props0["filterDate"] || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-            const slots = await scheduleApi.getAvailableSlots(_props0["tutorId"], startDate, endDate);
+            const startDate = filterDate || new Date().toISOString().split('T')[0];
+            const endDate = filterDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            const [mode, slots] = await Promise.all([
+                _state1.isAuthenticated ? lessonPassApi.mode() : Promise.resolve(undefined),
+                scheduleApi.getAvailableSlots(tutorId, startDate, endDate),
+            ]);
+            if (!current()) return;
             // Debug: Log conversion for each slot
             if (_props0["filterDate"]) {
                 slots.forEach(slot => {
@@ -301,12 +293,13 @@ export const BookingModal = (_props0: BookingModalProps) => {
             })
                 : slots;
             setAvailableSlots(filteredSlots);
+            setCreditMode(mode);
         }
         catch (err: any) {
-            setError(getErrorMessage(err));
+            if (current()) setError(getErrorMessage(err));
         }
         finally {
-            setLoading(false);
+            if (current()) setLoading(false);
         }
     };
     const completeBooking = (wallet?: string) => {
@@ -356,12 +349,12 @@ export const BookingModal = (_props0: BookingModalProps) => {
         }
     };
     const handleBookSlot = async () => {
-        if (!selectedSlot())
-            return;
         if (!_state1.isAuthenticated) {
             setShowLoginModal(true);
             return;
         }
+        if (!selectedSlot())
+            return;
         if (!creditMode()) { setError('Lesson credit configuration is unavailable. Reopen this booking.'); return; }
         if (creditMode()?.mode === 'trial') {
             setBooking(true); setError(null);
@@ -728,7 +721,7 @@ export const BookingModal = (_props0: BookingModalProps) => {
                     : <strong class="booking-modal-unselected">Not selected</strong>}
                   <span class="booking-modal-credit">{bookingCost()}</span>
                 </output>
-                <button class="booking-modal-confirm" onClick={handleBookSlot} disabled={!selectedSlot() || booking() || !creditMode() || (creditMode()?.mode === 'legacy_erc1155' && _state1.isAuthenticated && (ticketLoading() || isWalletConnecting() || isWalletAutoConnecting()))}>
+                <button class="booking-modal-confirm" onClick={handleBookSlot} disabled={booking() || (_state1.isAuthenticated && (!selectedSlot() || !creditMode() || (creditMode()?.mode === 'legacy_erc1155' && (ticketLoading() || isWalletConnecting() || isWalletAutoConnecting()))))}>
                   {booking() ? (<>
                       <span class="booking-modal-spinner-small"></span>
                       Booking...

@@ -332,6 +332,9 @@
   font-size: 30px;
 }
 
+.App.tutor-workspace .home-page-container .test-icon--artwork { background:transparent !important; border-radius:0 !important; box-shadow:none !important; }
+.home-page-container .test-icon--artwork img { display:block; }
+
 .test-content {
   flex: 1;
 }
@@ -944,4 +947,17 @@
 [data-theme='dark'] .test-status-badge.pending {
   background: rgba(124, 184, 255, 0.12);
   color: #cfe4ff;
+}
+
+.home-status-placeholder { padding-top:8px; }
+.home-status-placeholder-heading,
+.home-status-placeholder-shortcuts span,
+.home-status-placeholder-body { background:rgba(148,163,184,.14); border-radius:6px; }
+.home-status-placeholder-heading { width:280px; max-width:75%; height:32px; margin-bottom:30px; }
+.home-status-placeholder-shortcuts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; margin-bottom:28px; }
+.home-status-placeholder-shortcuts span { height:86px; }
+.home-status-placeholder-body { height:280px; }
+@media(max-width:600px) {
+  .home-status-placeholder-shortcuts { grid-template-columns:1fr; gap:12px; }
+  .home-status-placeholder-shortcuts span { height:60px; }
 }

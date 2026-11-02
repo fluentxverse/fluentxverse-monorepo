@@ -1,0 +1,18 @@
+.qualification-fields { display: grid; gap: 20px; min-width: 0; }
+.qualification-field { display: grid; gap: 8px; min-width: 0; }
+.qualification-field > label,.qualification-checkboxes legend { font-size: 13px; font-weight: 600; color: var(--td-text, #202636); }
+.qualification-field :is(input,select,.qualification-school-trigger) { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; font: inherit; font-size: 13px; color: var(--td-text, #202636); background: var(--td-surface, #fff); border: 1px solid var(--td-border, #dbe3ee); border-radius: 6px; box-sizing: border-box; }
+.qualification-field :is(input,select,button):focus-visible,.qualification-checkboxes input:focus-visible { outline: 2px solid #3984f5; outline-offset: 2px; }
+.qualification-school-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; cursor: pointer; }
+.qualification-school-trigger span { overflow-wrap: anywhere; }
+.qualification-school-trigger svg { flex-shrink: 0; }
+.qualification-school-panel { padding: 6px; border: 1px solid var(--td-border, #dbe3ee); border-radius: 6px; background: var(--td-surface, #fff); min-width: 0; }
+.qualification-school-search { display: flex; align-items: center; gap: 8px; padding: 4px; }
+.qualification-school-options { max-height: 180px; overflow-y: auto; padding: 4px; overscroll-behavior: contain; }
+.qualification-school-options button { display: block; width: 100%; border: 0; border-radius: 4px; background: transparent; color: var(--td-text, #202636); text-align: left; padding: 10px; font: inherit; font-size: 13px; white-space: normal; cursor: pointer; }
+.qualification-school-options button:is(:hover,[aria-selected=true]) { background: var(--td-bg-accent, #edf3ff); color: var(--td-accent, #0245ae); }
+.qualification-school-options p { padding: 8px; font-size: 13px; }
+.qualification-checkboxes { min-width: 0; margin: 0; padding: 12px; border: 1px solid var(--td-border, #dbe3ee); border-radius: 6px; }
+.qualification-checkboxes legend { float: none; width: auto; margin: 0; padding: 0 4px; }
+.qualification-checkboxes label { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; margin: 0; font-size: 13px; line-height: 1.5; color: var(--td-text, #202636); cursor: pointer; }
+.qualification-checkboxes input { flex: 0 0 16px; width: 16px; height: 16px; margin: 2px 0 0; accent-color: #0245ae; }

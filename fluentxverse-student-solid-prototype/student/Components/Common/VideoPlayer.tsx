@@ -1,4 +1,4 @@
-import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
+import { createSignal, createMemo, createEffect, on, onMount, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../../utils/cssStyle";
 import StudentDialog from './StudentDialog';
@@ -30,12 +30,26 @@ export const VideoPlayer = (_props0: VideoPlayerProps) => {
     const controlsTimeoutRef = { current: null } as {
         current: (number | null) | null;
     };
+    onMount(() => {
+        createEffect(on(() => _props0.src, () => {
+            const video = videoRef.current;
+            if (!video) return;
+            setPlayError('');
+            setIsPlaying(false);
+            setCurrentTime(0);
+            setDuration(0);
+            setIsLoading(true);
+            // Template-created media can fail before it is attached to the document.
+            video.load();
+        }));
+    });
     createEffect(on(() => [], () => {
         const _cleanup1 = untrack(() => {
             const video = videoRef.current;
             if (!video)
                 return;
             const handleLoadedMetadata = () => {
+                setPlayError('');
                 setDuration(video.duration);
                 setIsLoading(false);
             };

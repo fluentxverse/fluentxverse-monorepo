@@ -1,3 +1,4 @@
+@import './NotificationContrast.css';
 .student-notification-bell { position:relative; display:flex; align-items:center; justify-content:center; width:36px; height:36px; flex:none; background:transparent; color:inherit; border:1px solid var(--border-color,#dce4ef); border-radius:6px; }
 .student-notification-bell span { position:absolute; right:-5px; top:-6px; background:#bc2449; color:#fff; border-radius:50%; font-size:10px; min-width:16px; height:16px; display:grid; place-items:center; }
 .student-notification-dialog { position:fixed; inset:0; margin:auto; width:min(420px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); padding:20px; border:1px solid #dce4ef; border-radius:8px; background:#fff; color:#222; overflow:auto; }

@@ -1,0 +1,71 @@
+.interview-booking-page .tutor-identity { border:0; margin:0; padding:0; color:var(--td-text); }
+.tutor-identity .identity-journey { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); padding:22px 0; margin:0 0 32px; list-style:none; border-bottom:1px solid var(--td-border); gap:20px; }
+.identity-journey li { display:flex; align-items:center; gap:12px; min-width:0; color:var(--td-muted); }
+.identity-journey li > span { display:grid; place-items:center; width:32px; height:32px; flex:0 0 32px; border:1px solid var(--td-border); border-radius:50%; font-size:13px; font-weight:600; }
+.identity-journey li strong,.identity-journey li small { display:block; font-size:13px; line-height:1.5; }
+.identity-journey li small { font-size:12px; margin-top:2px; font-weight:400; }
+.identity-journey li.active { color:var(--td-text); }
+.identity-journey li.active > span { color:#fff; background:#1254ba; border-color:#1254ba; }
+.identity-journey li.complete > span { color:#087546; background:#e7f5ed; border-color:#b3ddc7; }
+.tutor-identity .identity-status { padding:0; }
+.tutor-identity-status-label { display:inline-flex; font-size:12px; font-weight:600; padding:5px 9px; border-radius:4px; background:var(--td-tint); color:var(--td-accent); margin-bottom:18px; }
+.tutor-identity .identity-pending-review { display:grid; grid-template-columns:minmax(0,1fr) 260px; max-width:none; gap:36px; padding:8px 0 32px; }
+.identity-review-overview { display:flex; gap:22px; align-items:flex-start; min-width:0; }
+.identity-review-overview > div { min-width:0; }
+.tutor-identity .identity-pending-review h3 { font-size:24px; line-height:1.35; margin:0 0 12px; color:var(--td-text); }
+.tutor-identity .identity-pending-review p { font-size:14px; line-height:1.8; color:var(--td-muted); margin:0 0 18px; }
+.identity-review-time { display:flex; gap:10px; align-items:center; padding:16px 0; margin-bottom:16px; color:var(--td-accent); }
+.identity-review-time span { font-size:12px; color:var(--td-muted); }
+.identity-review-time strong { display:block; font-size:18px; color:var(--td-text); line-height:1.5; margin-top:4px; }
+.identity-next-update { border-left:1px solid var(--td-border); padding-left:28px; color:var(--td-accent); }
+.identity-next-update h4 { margin:14px 0 10px; font-size:15px; color:var(--td-text); }
+.identity-next-update strong { overflow-wrap:anywhere; color:var(--td-text); }
+.tutor-identity .identity-actions { align-items:center; gap:12px 20px; }
+.tutor-identity .identity-actions a,.identity-upload-checklist a { display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--td-accent); font-weight:600; text-decoration:none; }
+.tutor-identity .identity-actions a:hover,.identity-upload-checklist a:hover { text-decoration:underline; }
+.tutor-identity button { font-size:13px; border-color:var(--td-border); color:var(--td-text); background:var(--td-surface); }
+.identity-upload-workspace { display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:40px; padding:12px 0 28px; }
+.tutor-identity .identity-form { max-width:none; gap:20px; }
+.tutor-identity .identity-upload-heading h3 { font-size:20px; margin:0 0 8px; color:var(--td-text); }
+.tutor-identity .identity-upload-heading p { margin:0; color:var(--td-muted); }
+.identity-field-row { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:16px; }
+.tutor-identity .identity-form label { font-size:13px; gap:8px; color:var(--td-text); }
+.tutor-identity .identity-form :is(select,input:not([type=checkbox])) { min-height:44px; border-color:var(--td-border); color:var(--td-text); background:var(--td-surface); font-size:13px; }
+.tutor-identity .identity-file-picker { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:220px; padding:24px; border:1px dashed var(--td-border); border-radius:8px; background:var(--td-surface); cursor:pointer; text-align:center; color:var(--td-accent); overflow:hidden; }
+.tutor-identity .identity-file-picker:hover { border-color:var(--td-accent); }
+.tutor-identity .identity-file-picker:focus-within { outline:2px solid var(--td-accent); outline-offset:3px; }
+.tutor-identity .identity-file-picker input { position:absolute; inset:0; opacity:0; width:100%; height:100%; cursor:pointer; }
+.identity-file-picker > strong { display:block; color:var(--td-text); font-size:14px; margin-top:10px; overflow-wrap:anywhere; max-width:100%; }
+.identity-file-picker > span { font-size:12px; color:var(--td-muted); }
+.identity-file-picker .identity-file-command { display:inline-flex; align-items:center; gap:8px; margin-top:14px; padding:8px 12px; border:1px solid var(--td-border); border-radius:6px; color:var(--td-accent); }
+.identity-file-picker img { max-width:100%; max-height:220px; object-fit:contain; display:block; border-radius:4px; }
+.tutor-identity .identity-remove-file { justify-self:start; min-height:30px; padding:4px 0; border:0; background:transparent; color:var(--td-muted); margin-top:-10px; }
+.identity-retention { font-size:12px; border-block:1px solid var(--td-border); padding:14px 0; }
+.identity-retention summary { display:flex; align-items:center; gap:8px; color:var(--td-text); cursor:pointer; font-size:13px; font-weight:600; }
+.tutor-identity .identity-retention p { font-size:12px; line-height:1.8; margin:12px 0 0; }
+.tutor-identity .identity-form .identity-check { font-size:12px; line-height:1.8; font-weight:400; }
+.tutor-identity .identity-submit-action { justify-self:start; min-height:44px; padding:10px 18px; background:#1254ba; border-color:#1254ba; color:#fff; font-weight:600; }
+.identity-upload-checklist { border-left:1px solid var(--td-border); padding-left:28px; }
+.tutor-identity .identity-upload-checklist h3 { font-size:16px; margin:18px 0; color:var(--td-text); }
+.identity-upload-checklist ul { list-style:none; padding:0; margin:0 0 20px; display:grid; gap:18px; }
+.identity-upload-checklist li { display:flex; align-items:flex-start; gap:10px; font-size:13px; line-height:1.7; color:var(--td-muted); }
+.identity-upload-checklist li svg { flex:0 0 16px; margin-top:3px; color:var(--td-accent); }
+.tutor-identity .identity-upload-checklist p { font-size:12px; line-height:1.7; margin-bottom:20px; }
+.interview-booking-page .identity-accepted-summary.tutor-identity { padding:20px 0; border-bottom:1px solid var(--td-border); }
+@media(max-width:900px) {
+ .tutor-identity .identity-pending-review,.identity-upload-workspace { grid-template-columns:minmax(0,1fr); gap:28px; }
+ .identity-next-update,.identity-upload-checklist { border-left:0; padding:24px 0 0; border-top:1px solid var(--td-border); }
+ .identity-review-overview { gap:16px; }
+}
+@media(max-width:600px) {
+ .tutor-identity .identity-journey { gap:10px; margin-bottom:24px; padding:18px 0; }
+ .identity-journey li { flex-direction:column; align-items:flex-start; gap:8px; }
+ .identity-journey li strong { font-size:11px; }
+ .identity-journey li small { display:none; }
+ .identity-review-overview { flex-direction:column; }
+ .tutor-identity .identity-pending-review h3 { font-size:22px; }
+ .identity-field-row { grid-template-columns:minmax(0,1fr); }
+ .tutor-identity .identity-file-picker { min-height:200px; padding:20px 12px; }
+ .tutor-identity .identity-submit-action { width:100%; }
+ .tutor-identity .identity-actions { align-items:flex-start; flex-direction:column; }
+}

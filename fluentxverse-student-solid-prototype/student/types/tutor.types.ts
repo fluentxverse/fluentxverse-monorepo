@@ -3,6 +3,7 @@ import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
 // Tutor-related types and interfaces
 export interface Tutor {
+    nickname?: string;
     userId: string;
     email: string;
     firstName: string;

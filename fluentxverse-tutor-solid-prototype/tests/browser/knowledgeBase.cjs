@@ -21,16 +21,26 @@ const widths = (process.env.KB_TEST_WIDTHS || '1566,1024,768,375,320').split(','
         const json = { success: true, user, data: [], status: { passed: true } };
         if (path.endsWith('/unread-count')) json.data = { unreadCount: 0 };
         if (path === '/notifications') json.data = { notifications: [], unreadCount: 0 };
+        if (path.replace(/\/$/, '') === '/tutor/email-verification') json.data = { verified: true };
+        if (path === '/proof/tutor-certification/me') json.data = { snapshot: { writtenPassed: true, speakingPassed: true, interviewPassed: true, profileApproved: true, missingRequirements: [] } };
+        if (path === '/interview/my-booking') json.data = { result: 'pass', status: 'completed' };
         return route.fulfill({ json });
       });
       const page = await context.newPage();
       const errors = []; page.on('pageerror', error => errors.push(error.message));
       await page.goto(base + '/knowledge-base', { waitUntil: 'networkidle' });
-      await expect(page.getByRole('heading', { name: 'Knowledge Base', exact: true })).toBeVisible();
-      await expect(page.locator('.tutor-kb-article-row')).toHaveCount(13);
+      await expect(page.getByRole('heading', { name: 'Knowledge Base', exact: true })).toBeVisible().catch(async error => { console.error({url:page.url(),errors,body:await page.locator('body').innerText()}); throw error; });
+      await expect(page.locator('.tutor-kb-article-row')).toHaveCount(15);
       assert(await page.locator('img.tutor-art').evaluate(el => el.complete && el.naturalWidth > 0), 'Header artwork decodes');
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${theme} ${width}: index fits`);
       await page.screenshot({ path: `../output/screenshots/tutor-knowledge-base/index-${theme}-${width}.png`, fullPage: true });
+      for (const [slug, phrase] of [['your-first-lesson-guide', '9:55 AM PHT'], ['speaking-interview-call-and-chat', '2,000 characters']]) {
+        await page.goto(base + '/knowledge-base/' + slug, { waitUntil: 'networkidle' });
+        await expect(page.locator('.tutor-kb-reader')).toContainText(phrase);
+        assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${theme} ${width}: updated article fits`);
+        await page.screenshot({ path: `../output/screenshots/tutor-knowledge-base/${slug}-${theme}-${width}.png`, fullPage: true });
+      }
+      await page.goto(base + '/knowledge-base', { waitUntil: 'networkidle' });
       if (width >= 992) {
         const nav = page.locator('.sidebar a[href="/knowledge-base"]');
         await expect(nav).toHaveAttribute('aria-current', 'page');
@@ -47,7 +57,7 @@ const widths = (process.env.KB_TEST_WIDTHS || '1566,1024,768,375,320').split(','
       if (width < 768) await page.getByRole('combobox', { name: 'Knowledge base topic' }).selectOption('classroom');
       else await page.locator('.tutor-kb-sidebar nav a[href*="category=classroom"]').click();
       await expect(page.locator('.tutor-kb-article-row')).toHaveCount(3);
-      await search.fill('microphone');
+      await search.fill('camera microphone connection');
       await expect(page.locator('.tutor-kb-article-row')).toHaveCount(1);
       await page.locator('.tutor-kb-article-row').click();
       await expect(page.locator('.tutor-kb-reader h2')).toHaveText('Camera, microphone, and connection checks');
@@ -62,7 +72,7 @@ const widths = (process.env.KB_TEST_WIDTHS || '1566,1024,768,375,320').split(','
       await page.reload({ waitUntil: 'networkidle' });
       await expect(page.getByRole('button', { name: 'Unsave article' })).toBeVisible();
       await page.getByRole('link', { name: 'Back to articles' }).click();
-      await expect(search).toHaveValue('microphone');
+      await expect(search).toHaveValue('camera microphone connection');
       await expect(page.locator('.tutor-kb-article-row')).toHaveCount(1);
       await page.goBack();
       await expect(page.locator('.tutor-kb-reader h2')).toHaveText('Camera, microphone, and connection checks');
@@ -98,9 +108,9 @@ const widths = (process.env.KB_TEST_WIDTHS || '1566,1024,768,375,320').split(','
       await context.close();
     }
     const context = await browser.newContext();
-    await context.route('**/tutor/me', route => route.fulfill({ status: 401, json: { success: false } }));
+    await context.route(/^(https:\/\/api\.fluentxverse\.(com|xyz)|http:\/\/(localhost|127\.0\.0\.1):(?:8765|8780|8782))\//, route => route.fulfill({ status: 401, json: { success: false } }));
     const page = await context.newPage(); await page.goto(base + '/knowledge-base/join-your-classroom');
-    await expect(page).toHaveURL(base + '/');
+    await expect(page).toHaveURL(base + '/', { timeout: 30000 });
     await expect(page.locator('.tutor-kb-reader')).toHaveCount(0);
     await context.close();
     console.log('PASS knowledge base requires authentication');

@@ -1,7 +1,7 @@
+import ClassroomChatPanels, { ClassroomChatTools } from '../../../shared/ui/ClassroomChatPanels';
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
-import TutorDialog from "../Components/Common/TutorDialog";
 import TutorIcon from "../Components/Common/TutorIcon";
 import TutorArt from "../Components/Common/TutorArt";
 import { JSX } from "solid-js";
@@ -37,6 +37,9 @@ import { API_BASE_URL } from '../config/api';
 import BusinessEnglishPreviewPage from './BusinessEnglishPreviewPage';
 import { cacheBusinessEnglishLesson, cacheBusinessEnglishLessonList, readCachedBusinessEnglishLesson, readCachedBusinessEnglishLessonList, } from '../utils/businessEnglishCache';
 import './ClassroomPage.css';
+import '../../../shared/ui/classroom-student-base.css';
+import '../../../shared/ui/classroom-layout.css';
+import ClassroomRecordingFlag from '../../../shared/ui/ClassroomRecordingFlag';
 // Conversational Skills lesson interface for viewing
 interface ConversationalLesson {
     id: string;
@@ -402,6 +405,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
     // Socket state for passing to child components
     const [socketInstance, setSocketInstance] = createSignal<Socket | null>(null);
     const [signalingConnected, setSignalingConnected] = createSignal(false);
+    const [classroomJoined, setClassroomJoined] = createSignal(false);
     const [signalingError, setSignalingError] = createSignal<string | null>(null);
     // Extract sessionId from router params or query string, fallback to pathname
     const routeSessionId = createMemo(() => (_state2.route as any)?.params?.sessionId as string | undefined);
@@ -475,6 +479,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
             setSocketInstance(socket);
             // Wait for connection before joining
             const onConnect = () => {
+                setClassroomJoined(false);
                 setSignalingConnected(true);
                 setSignalingError(null);
                 socket.emit('session:join', { get sessionId() {
@@ -482,6 +487,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
                     } });
             };
             const onDisconnect = () => {
+                setClassroomJoined(false);
                 setSignalingConnected(false);
                 setIsConnecting(true);
             };
@@ -622,6 +628,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
             const onSessionState = (data: any) => {
                 if (data.sessionId !== currentSessionId())
                     return;
+                setClassroomJoined(true);
                 setMediaProvider(previous => data.mediaProvider || previous || 'webrtc');
                 socket.emit('chat:request-history', { get sessionId() {
                         return currentSessionId();
@@ -646,6 +653,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
             const onSessionError = (data: {
                 message: string;
             }) => {
+                setClassroomJoined(false);
                 setSignalingError(data.message);
                 toast.error(data.message);
             };
@@ -772,6 +780,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
     const [activityLogs, setActivityLogs] = createSignal<ClassroomActivityLogData[]>([]);
     const [isSettingsOpen, setIsSettingsOpen] = createSignal(false);
     const [recordingAvailable, setRecordingAvailable] = createSignal(false);
+    const [recordingStatus, setRecordingStatus] = createSignal('');
     const [recordingRevision, setRecordingRevision] = createSignal(0);
     const [audioInputDevices, setAudioInputDevices] = createSignal<MediaDeviceInfo[]>([]);
     const [videoInputDevices, setVideoInputDevices] = createSignal<MediaDeviceInfo[]>([]);
@@ -2226,7 +2235,9 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
         }, get socket() {
             return socketInstance();
         }, initiator: true, get enabled() {
-            return lessonStart.live;
+            return classroomJoined() && lessonStart.live;
+        }, get prepare() {
+            return classroomJoined() && !lessonStart.closed;
         } });
     createEffect(on(() => [lessonStart.closed, _state4.cleanup], () => {
         const _cleanup23 = untrack(() => {
@@ -2774,13 +2785,13 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
         });
         setLessonEndedSent(true);
     };
-    return (<div class="classroom-container">
+    return (<div class="classroom-container classroom-standardized classroom-role-tutor">
       {/* Left Panel - Video & Chat */}
       <div class="classroom-left">
         {/* Header Bar */}
         <div class="classroom-header">
           <div class="classroom-logo">
-            <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse" style={cssStyle({ height: '32px' })}/>
+            <img src="/assets/img/logo/icon_logo.webp" alt="FluentXVerse" style={cssStyle({ height: '32px' })}/>
             <span>FluentXVerse</span>
           </div>
           <div class="classroom-header-actions">
@@ -2795,10 +2806,15 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
 
         {currentSessionId() && <TutorClassroomIssueReport bookingId={currentSessionId()}/>}
         {!lessonStart.live && <div class="classroom-start-wait" role={signalingError() ? 'alert' : 'status'}>{lessonStart.closed ? lessonStart.message : signalingError() || lessonStart.message}</div>}
+        {classroomJoined() && !lessonStart.live && !lessonStart.closed && <div class="classroom-device-preview" role="status">
+            <span>{_state4.error || (_state4.localStream ? 'Device preview is private. Audio and video are shared only when the lesson starts.' : 'Preparing your camera and microphone...')}</span>
+            {_state4.error && <button type="button" onClick={() => void _state4.retryDevices().catch(() => {})}>Retry devices</button>}
+        </div>}
         {lessonStart.wrapUp && <div class="classroom-start-wait" role="status">{lessonStart.wrapUpMessage}</div>}
 
         {/* Video Area */}
-        <ClassroomRecordingNotice socket={socketInstance()} provider={mediaProvider()} openRevision={recordingRevision()} onAvailabilityChange={setRecordingAvailable}/>
+        <ClassroomRecordingNotice socket={socketInstance()} provider={mediaProvider()} openRevision={recordingRevision()} onAvailabilityChange={setRecordingAvailable} autoPrompt={false} onStatusChange={setRecordingStatus}/>
+        <ClassroomRecordingFlag available={recordingAvailable()} status={recordingStatus()} onPreferences={() => setRecordingRevision(value => value + 1)}/>
         <div class="video-section">
           {/* Main Video */}
           <div class="video-main">
@@ -2892,96 +2908,24 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
         {/* Chat Section */}
         <div class="chat-section">
           <div class="chat-header">
-            <TutorIcon name="fi fi-sr-comment-alt"/>
+            <TutorArt name="community" size={30}/>
             <span>Chat</span>
-            <div class="chat-header-actions" aria-label="Chat tools">
-              <button type="button" class="chat-tool-btn" title="Classroom history" aria-label="Classroom history" onClick={requestActivityHistory}>
-                <TutorIcon name="fi fi-sr-time-past"/>
-              </button>
-              <button type="button" class="chat-tool-btn" title="Device settings" aria-label="Device settings" onClick={openDeviceSettings}>
-                <TutorIcon name="fi fi-sr-settings"/>
-              </button>
-            </div>
+            <ClassroomChatTools onHistory={requestActivityHistory} onSettings={openDeviceSettings}/>
           </div>
-          {(isHistoryOpen() || isSettingsOpen()) && (<div class="classroom-chat-popover">
-              {isHistoryOpen() && (<TutorDialog label="Classroom history" className="classroom-modal classroom-history-modal" onClose={() => setIsHistoryOpen(false)}>
-                  <div class="classroom-modal-header">
-                    <div>
-                      <h2 id="classroom-history-title">History</h2>
-                      <div class="classroom-modal-meta">
-                        <span>SID: {currentSessionId()}</span>
-                        <span><TutorIcon name="fi fi-sr-calendar"/>{formatActivityDate(activityLogs()[0]?.createdAt)}</span>
-                      </div>
-                    </div>
-                    <button type="button" class="classroom-modal-close" aria-label="Close history" onClick={() => setIsHistoryOpen(false)}>
-                      <TutorIcon name="fi fi-sr-cross-small"/>
-                    </button>
-                  </div>
-
-                  <div class="classroom-history-list">
-                    {isHistoryLoading() ? (<div class="classroom-modal-empty">Loading history...</div>) : activityLogs().length === 0 ? (<div class="classroom-modal-empty">No classroom activity yet.</div>) : (activityLogs().map(log => (<div class={`classroom-history-item ${log.userType}`}>
-                          <span class="classroom-history-marker" aria-hidden="true"></span>
-                          <span class="classroom-history-time">{formatActivityTime(log.createdAt)}</span>
-                          <span class="classroom-history-message">{log.message}</span>
-                        </div>)))}
-                  </div>
-
-                  <div class="classroom-modal-footer">
-                    <button type="button" class="classroom-modal-primary" onClick={requestActivityHistory}>
-                      <TutorIcon name="fi fi-sr-refresh"/>
-                      Refresh
-                    </button>
-                  </div>
-                </TutorDialog>)}
-
-              {isSettingsOpen() && (<TutorDialog label="Classroom settings" className="classroom-modal classroom-settings-modal" onClose={() => setIsSettingsOpen(false)} busy={isApplyingDeviceSettings()}>
-                  <div class="classroom-modal-header">
-                    <div>
-                      <h2 id="classroom-settings-title">Settings</h2>
-                      <div class="classroom-modal-meta">
-                        <span>Classroom devices</span>
-                      </div>
-                    </div>
-                    <button type="button" class="classroom-modal-close" aria-label="Close settings" onClick={() => setIsSettingsOpen(false)}>
-                      <TutorIcon name="fi fi-sr-cross-small"/>
-                    </button>
-                  </div>
-
-                  {recordingAvailable() && <button type="button" class="classroom-recording-settings" onClick={() => setRecordingRevision(value => value + 1)}><TutorIcon name="fa-shield-alt"/>Recording permission</button>}
-                  <div class="classroom-device-fields">
-                    <label class="classroom-device-field">
-                      <span><TutorIcon name="fi fi-sr-microphone"/>Microphone</span>
-                      <select value={selectedAudioDeviceId()} onChange={(event) => setSelectedAudioDeviceId((event.currentTarget as HTMLSelectElement).value)}>
-                        <option value="">Default microphone</option>
-                        {audioInputDevices().map((device, index) => (<option value={device.deviceId}>
-                            {device.label || `Microphone ${index + 1}`}
-                          </option>))}
-                      </select>
-                    </label>
-
-                    <label class="classroom-device-field">
-                      <span><TutorIcon name="fi fi-sr-video-camera"/>Camera</span>
-                      <select value={selectedVideoDeviceId()} onChange={(event) => setSelectedVideoDeviceId((event.currentTarget as HTMLSelectElement).value)}>
-                        <option value="">Default camera</option>
-                        {videoInputDevices().map((device, index) => (<option value={device.deviceId}>
-                            {device.label || `Camera ${index + 1}`}
-                          </option>))}
-                      </select>
-                    </label>
-                  </div>
-
-                  <div class="classroom-modal-footer">
-                    <button type="button" class="classroom-modal-secondary" onClick={loadMediaDevices}>
-                      <TutorIcon name="fi fi-sr-refresh"/>
-                      Refresh
-                    </button>
-                    <button type="button" class="classroom-modal-primary" disabled={isApplyingDeviceSettings()} onClick={applyDeviceSettings}>
-                      <TutorIcon name="fi fi-sr-check"/>
-                      {isApplyingDeviceSettings() ? 'Applying...' : 'Apply'}
-                    </button>
-                  </div>
-                </TutorDialog>)}
-            </div>)}
+          <ClassroomChatPanels
+            historyOpen={isHistoryOpen()} settingsOpen={isSettingsOpen()} sessionId={currentSessionId()}
+            historyLoading={isHistoryLoading()} activities={activityLogs()} formatDate={formatActivityDate} formatTime={formatActivityTime}
+            audioDevices={audioInputDevices()} videoDevices={videoInputDevices()}
+            audioDeviceId={selectedAudioDeviceId()} videoDeviceId={selectedVideoDeviceId()}
+            onAudioDevice={setSelectedAudioDeviceId} onVideoDevice={setSelectedVideoDeviceId}
+            applying={isApplyingDeviceSettings()} recordingAvailable={recordingAvailable()}
+            onRecording={() => setRecordingRevision(value => value + 1)}
+            onRefreshHistory={() => {
+              setIsHistoryLoading(true);
+              socketInstance()?.emit('classroom:request-activity-history', { sessionId: currentSessionId() });
+            }}
+            onRefreshDevices={loadMediaDevices} onApply={applyDeviceSettings}
+            onClose={() => { setIsHistoryOpen(false); setIsSettingsOpen(false); }}/>
           <div class="chat-messages">
             {chatMessages().map((msg) => {
             // In tutor app: tutor messages are "self" (right), student messages are "other" (left)
@@ -3096,13 +3040,13 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
       <div class="classroom-right">
         <div class="material-topbar">
           <div class="material-header">
-            <TutorIcon name="fi fi-sr-book-open-reader"/>
+            <TutorArt name="training" size={30}/>
             <span>Learning Material</span>
           </div>
           <div class="material-tabs">
             <button type="button" class={`material-tab ${showLessonRequest() ? 'is-active' : ''}`} onClick={() => setShowLessonRequest(true)}>
               <span class="material-tab-icon" aria-hidden="true">
-                <TutorIcon name="fas fa-clipboard-list"/>
+                <TutorArt name="schedule" size={30}/>
               </span>
               <span class="material-tab-copy">
                 <span class="material-tab-label">Lesson Selection</span>
@@ -3111,7 +3055,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
             </button>
             {hasOpenMaterial() && (<button type="button" class={`material-tab ${!showLessonRequest() ? 'is-active' : ''}`} onClick={() => setShowLessonRequest(false)}>
                 <span class="material-tab-icon" aria-hidden="true">
-                  <TutorIcon name={materialTabIconClass()}/>
+                  <TutorArt name={viewingDispatchArticle() ? 'dispatch' : 'training'} size={30}/>
                 </span>
                 <span class="material-tab-copy">
                   <span class="material-tab-label">{materialTabTitle()}</span>
@@ -3170,7 +3114,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
                 <div class="lesson-request-header">
                   <div class="lesson-request-title-wrap">
                     <h2 class="lesson-request-title">
-                      <TutorArt name="training" size={32}/>
+                      <TutorArt name="schedule" size={30}/>
                       Lesson Request
                     </h2>
                     <p class="lesson-request-subtitle">

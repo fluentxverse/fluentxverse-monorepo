@@ -10,9 +10,14 @@ import { useAuthContext } from '../context/AuthContext';
 import { getExamStatus, getSpeakingExamStatus, type ExamStatus, type SpeakingExamStatus } from '../api/exam.api';
 import './HomePage.css';
 import TeachingDesk from '../Components/Dashboard/TeachingDesk';
+import FirstLessonGuide from '../Components/Dashboard/FirstLessonGuide';
 import StatusPanel from '../../../shared/ui/StatusPanel';
-import { proofApi } from '../api/proof.api';
+import { proofApi, type TutorCertificationProofResponse } from '../api/proof.api';
+import { interviewApi, type MyInterview } from '../api/interview.api';
 import { hasTeachingAccess } from '../utils/teachingAccess';
+import { client } from '../api/utils';
+import type { TutorIdentityRecord } from '../../../shared/tutorIdentity';
+import InterviewPreparation from '../Components/InterviewPreparation';
 const HomePage = () => {
     createEffect(on(() => [], () => {
         const _cleanup1 = untrack(() => {
@@ -35,17 +40,81 @@ const HomePage = () => {
     const [statusError, setStatusError] = createSignal(false);
     const [revision, setRevision] = createSignal(0);
     const [teachingApproved, setTeachingApproved] = createSignal(false);
+    const [approvalResolved, setApprovalResolved] = createSignal(false);
+    let approvalOwner: string | undefined;
+    const [interview, setInterview] = createSignal<MyInterview | null>(null);
+    const [approval, setApproval] = createSignal<TutorCertificationProofResponse | null>(null);
+    const [interviewError, setInterviewError] = createSignal(false);
+    const [identity, setIdentity] = createSignal<TutorIdentityRecord | null>(null);
+    const [identityError, setIdentityError] = createSignal(false);
+    const [identityLoaded, setIdentityLoaded] = createSignal(false);
+    const idAccepted = () => ['accepted', 'booked', 'verified'].includes(identity()?.status || '');
+    const identityLabel = () => ({ pending_review: 'ID review pending', accepted: 'ID accepted', booked: 'Present this same ID at your interview', verified: 'Identity verified', resubmit: 'Resubmission required', expired: 'Booking window expired', fraud: 'Account unavailable. Contact support.' })[identity()?.status || ''] || 'ID submission required';
+    const interviewPassed = () => interview()?.result ? interview().result === 'pass' : approval()?.snapshot.interviewPassed === true;
     createEffect(on(() => [_state0.user?.userId, revision()], () => {
         let current = true;
-        onCleanup(() => { current = false; });
-        setTeachingApproved(false);
+        let fetching = false;
+        if (approvalOwner !== _state0.user?.userId) {
+            approvalOwner = _state0.user?.userId;
+            setApprovalResolved(false);
+            setTeachingApproved(false);
+            setApproval(null);
+            setInterview(null);
+            setIdentity(null); setIdentityLoaded(false); setIdentityError(false);
+            setInterviewError(false);
+            setWrittenStatus(null);
+            setSpeakingStatus(null);
+            setLoadingStatus(true);
+            setStatusError(false);
+        }
         if (!_state0.user?.userId) return;
-        void proofApi.getTutorCertificationStatus().then(result => {
-            if (current) setTeachingApproved(hasTeachingAccess(result));
-        }).catch(() => { /* Keep teaching widgets locked when approval cannot be verified. */ });
+        const refresh = async () => {
+            if (fetching) return;
+            fetching = true;
+            try {
+                const [result, booking] = await Promise.all([proofApi.getTutorCertificationStatus(), interviewApi.getMyBooking()]);
+                if (!current) return;
+                const snapshot = result?.snapshot;
+                if (!snapshot || !Array.isArray(snapshot.missingRequirements) ||
+                    [snapshot.writtenPassed, snapshot.speakingPassed, snapshot.profileApproved, snapshot.interviewPassed].some(value => typeof value !== 'boolean')) {
+                    throw new Error('Application status unavailable');
+                }
+                setApproval(result);
+                setInterview(booking);
+                const approved = hasTeachingAccess(result) && booking?.result !== 'fail';
+                if (!approved && teachingApproved()) {
+                    setWrittenStatus(null);
+                    setSpeakingStatus(null);
+                    setLoadingStatus(true);
+                }
+                setTeachingApproved(approved);
+                setApprovalResolved(true);
+                setInterviewError(false);
+                try {
+                    const response = await client.get('/tutor-identity/status');
+                    if (!current) return;
+                    if (!response.data.success) throw Error('Identity status unavailable');
+                    setIdentity(response.data.data.record); setIdentityLoaded(true); setIdentityError(false);
+                } catch { if (current) setIdentityError(true); }
+            } catch {
+                if (current) setInterviewError(true);
+            } finally { fetching = false; }
+        };
+        void refresh();
+        const timer = window.setInterval(() => { if (!document.hidden) void refresh(); }, 15000);
+        const onWake = () => { if (!document.hidden) void refresh(); };
+        window.addEventListener('focus', onWake);
+        document.addEventListener('visibilitychange', onWake);
+        onCleanup(() => {
+            current = false; window.clearInterval(timer);
+            window.removeEventListener('focus', onWake);
+            document.removeEventListener('visibilitychange', onWake);
+        });
     }));
     // Calculate active step based on exam status
     const getActiveStep = () => {
+        if (teachingApproved()) return 4;
+        if (interviewPassed()) return 3;
         if (!writtenStatus() || !speakingStatus())
             return 1;
         const bothPassed = writtenStatus().passed === true && speakingStatus().passed === true;
@@ -55,10 +124,11 @@ const HomePage = () => {
     };
     const activeStep = createMemo(getActiveStep);
     // Fetch exam statuses on mount
-    createEffect(on(() => [_state0.user?.userId, revision()], () => {
+    createEffect(on(() => [_state0.user?.userId, revision(), approvalResolved(), teachingApproved()], () => {
         const _cleanup3 = untrack(() => {
             let active = true;
             let poll: ReturnType<typeof setTimeout> | undefined;
+            if (!approvalResolved() || teachingApproved()) return;
             const fetchExamStatus = async () => {
                 if (!_state0.user?.userId)
                     return;
@@ -70,7 +140,7 @@ const HomePage = () => {
                         getSpeakingExamStatus(_state0.user.userId),
                     ]);
                     if (!active) return;
-                    if (!writtenRes.success || !speakingRes.success) throw new Error('Assessment status unavailable');
+                    if (!writtenRes.success || !speakingRes.success || !writtenRes.status || !speakingRes.status) throw new Error('Assessment status unavailable');
                     if (writtenRes.success && writtenRes.status) {
                         setWrittenStatus(writtenRes.status);
                     }
@@ -98,12 +168,20 @@ const HomePage = () => {
     const handleTakeSpeakingTest = () => {
         location.route('/exam/speaking');
     };
+    const homeReady = createMemo(() => approvalResolved() && (teachingApproved() || !loadingStatus()));
     return (<>
       <SideBar />
       <div class="main-content">
         <DashboardHeader user={_state0.user || undefined}/>
         <main class="home-page-container">
           <div class="container">
+            {interviewError() && <StatusPanel kind="error" title="Could not refresh application status" message={approvalResolved() ? 'Your last confirmed home view is unchanged. Please try again.' : 'Please try again to load your application status.'} onRetry={() => setRevision(value => value + 1)}/>}
+            {!homeReady() && !interviewError() && <div class="home-status-placeholder" role="status" aria-label="Loading home" aria-busy="true">
+              <div class="home-status-placeholder-heading"/>
+              <div class="home-status-placeholder-shortcuts"><span/><span/><span/></div>
+              <div class="home-status-placeholder-body"/>
+            </div>}
+            {homeReady() && <>
             {/* Certification Required Alert */}
             {showCertificationAlert() && !teachingApproved() && (<div class="certification-alert" role="alert">
                 <div class="certification-alert-icon">
@@ -126,15 +204,15 @@ const HomePage = () => {
               <h2 class="page-title-gradient">{teachingApproved() ? `Welcome back, ${_state0.user?.firstName || "Tutor"}` : "Your teaching journey"}</h2>
             </div>
 
-            {teachingApproved() && <><nav class="tutor-home-shortcuts" aria-label="Teaching workspace">{([{ href: "/schedule", art: "schedule", title: "My schedule" }, { href: "/materials", art: "training", title: "Learning materials" }, { href: "/performance-metrics", art: "growth", title: "Performance metrics" }] as const).map(item => <a href={item.href}><TutorArt name={item.art} size={44}/><span>{item.title}</span><TutorIcon name="fa-arrow-right"/></a>)}</nav><TeachingDesk/></>}
-            {statusError() && <StatusPanel kind="error" title="Could not refresh assessment progress" onRetry={() => setRevision(value => value + 1)}/>}
+            {teachingApproved() && <><nav class="tutor-home-shortcuts" aria-label="Teaching workspace">{([{ href: "/schedule", art: "schedule", title: "My schedule" }, { href: "/materials", art: "training", title: "Learning materials" }, { href: "/performance-metrics", art: "growth", title: "Performance metrics" }] as const).map(item => <a href={item.href}><TutorArt name={item.art} size={44}/><span>{item.title}</span><TutorIcon name="fa-arrow-right"/></a>)}</nav><FirstLessonGuide/><TeachingDesk/></>}
+            {!teachingApproved() && statusError() && <StatusPanel kind="error" title="Could not refresh assessment progress" onRetry={() => setRevision(value => value + 1)}/>}
             {/* Main Status Card */}
-            <div class="main-status-card">
+            {!teachingApproved() && (!statusError() || (writtenStatus() && speakingStatus())) && <div class="main-status-card">
               {/* Progress Steps */}
               <div class="progress-steps">
                 {/* Progress Line - hidden on mobile via CSS */}
                 <div class="progress-line">
-                  <div class="progress-line-fill" style={cssStyle({ get width() { return activeStep() >= 2 ? '50%' : '0%'; } })}></div>
+                  <div class="progress-line-fill" style={cssStyle({ get width() { return `${(activeStep() - 1) / 3 * 100}%`; } })}></div>
                 </div>
 
                 {/* Step 1 */}
@@ -150,8 +228,7 @@ const HomePage = () => {
                 <div class="progress-step">
                   <div class={`progress-step-number ${activeStep() >= 2 ? 'is-active' : 'is-inactive'}`}>2</div>
                   <div class={`progress-step-copy ${activeStep() >= 2 ? 'is-active' : 'is-inactive'}`}>
-                    <div class="progress-step-label">ONBOARDING &</div>
-                    <div class="progress-step-label">PROFILE</div>
+                    <div class="progress-step-label">ID &amp; INTERVIEW</div>
                   </div>
                 </div>
 
@@ -159,6 +236,13 @@ const HomePage = () => {
                 <div class="progress-step">
                   <div class={`progress-step-number ${activeStep() >= 3 ? 'is-active' : 'is-inactive'}`}>3</div>
                   <div class={`progress-step-copy ${activeStep() >= 3 ? 'is-active' : 'is-inactive'}`}>
+                    <div class="progress-step-label">PROFILE</div>
+                    <div class="progress-step-label">COMPLETION</div>
+                  </div>
+                </div>
+                <div class="progress-step">
+                  <div class={`progress-step-number ${activeStep() >= 4 ? 'is-active' : 'is-inactive'}`}>4</div>
+                  <div class={`progress-step-copy ${activeStep() >= 4 ? 'is-active' : 'is-inactive'}`}>
                     <div class="progress-step-label">SCHEDULE SETUP</div>
                   </div>
                 </div>
@@ -176,16 +260,8 @@ const HomePage = () => {
 
                 {/* Written Test */}
                 <div class={`test-card ${writtenStatus()?.passed === true ? 'passed' : writtenStatus()?.passed === false ? 'failed' : ''}`}>
-                  <div class="test-icon" style={cssStyle({
-            get background() {
-                return writtenStatus()?.passed === true
-                    ? 'linear-gradient(135deg, #10b981 0%, #34d399 100%)'
-                    : writtenStatus()?.passed === false
-                        ? 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)'
-                        : 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)';
-            }
-        })}>
-                    <TutorIcon name={`fas ${writtenStatus()?.passed === true ? 'fa-check' : writtenStatus()?.passed === false ? 'fa-times' : 'fa-pen'}`}/>
+                  <div class="test-icon test-icon--artwork">
+                    <TutorArt name="writtenTest" size={44}/>
                   </div>
                   <div class="test-content">
                     <div class="test-header">
@@ -213,14 +289,8 @@ const HomePage = () => {
 
                 {/* Speaking Test */}
                 <div class={`test-card ${typeof speakingStatus()?.passed === 'boolean' || speakingStatus()?.isProcessing ? 'processing' : ''}`}>
-                  <div class="test-icon" style={cssStyle({
-            get background() {
-                return speakingStatus()?.isProcessing
-                            ? 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)'
-                            : 'linear-gradient(135deg, #4a9eff 0%, #0245ae 100%)';
-            }
-        })}>
-                    <TutorIcon name={`fas ${speakingStatus()?.isProcessing ? 'fa-spinner fa-spin' : 'fa-microphone'}`}/>
+                  <div class="test-icon test-icon--artwork">
+                    <TutorArt name="speakingTest" size={44}/>
                   </div>
                   <div class="test-content">
                     <div class="test-header">
@@ -257,13 +327,41 @@ const HomePage = () => {
               {/* Interview Section */}
               <div class="assessment-section" style={cssStyle({ marginTop: '28px' })}>
                 <h3 class="section-title">
-                  INTERVIEW
+                  IDENTITY &amp; INTERVIEW
                 </h3>
+
+                <div class="test-card home-identity-step">
+                  <div class="test-icon test-icon--artwork"><TutorArt name="privacy" size={48}/></div>
+                  <div class="test-content"><div class="test-header"><h4>ID SUBMISSION</h4></div>
+                    <span class="identity-home-status" role="status">{identityError() ? 'Identity status could not be refreshed.' : !identityLoaded() ? 'Checking identity status...' : identityLabel()}</span>
+                    <p>{!speakingStatus()?.passed ? 'Complete both assessments, then submit one accepted ID for staff review.' : idAccepted() ? 'Keep the same submitted document ready to present during your video interview.' : identity()?.status === 'pending_review' ? 'Your ID is with the recruitment team. Interview booking opens after staff accepts it.' : 'Your assessments are complete. Next, upload a readable ID for staff review before booking your interview.'}</p>
+                    {identity()?.status === 'accepted' && <p>Book within 84 hours of ID acceptance. Deadline: {new Date(identity()!.bookingDeadline!).toLocaleString('en-PH', { timeZone: 'Asia/Manila' })} (Manila).</p>}
+                    <a class="action-btn blue" href="/interview">{identity()?.status === 'pending_review' ? 'VIEW ID SUBMISSION' : idAccepted() ? 'ID & INTERVIEW DETAILS' : 'SUBMIT YOUR ID'}</a>
+                  </div>
+                </div>
+
+                <div class={`test-card ${interviewPassed() ? 'passed' : interview()?.result === 'fail' ? 'failed' : ''}`} role="status" aria-label="Interview result">
+                  <div class="test-icon test-icon--artwork"><TutorArt name="schedule" size={44}/></div>
+                  <div class="test-content">
+                    <div class="test-header">
+                      <h4>INTERVIEW RESULT</h4>
+                      <span class={`test-status-badge ${interviewPassed() ? 'passed' : interview()?.result === 'fail' ? 'failed' : 'pending'}`}>
+                        {interviewPassed() ? 'PASSED' : interview()?.result === 'fail' ? 'NOT PASSED' : interview()?.status === 'completed' || interview()?.mediaClosed ? 'PENDING REVIEW' : interview() ? 'SCHEDULED' : 'NOT SCHEDULED'}
+                      </span>
+                    </div>
+                    <p>{interviewPassed()
+                      ? approval()?.snapshot.profileApproved ? 'Your interview and profile are approved.' : approval()?.snapshot.profileStatus === 'pending_review' ? 'You passed your interview. Your profile is awaiting review.' : 'You passed your interview. Next: complete your profile for review.'
+                      : interview()?.result === 'fail' ? 'Your interview was not passed. Contact support for feedback and next steps.'
+                      : interview()?.status === 'completed' || interview()?.mediaClosed ? 'Your interview has ended. The recruitment team has not saved a decision yet.'
+                      : interview() ? `Your interview is scheduled for ${interview().date} at ${interview().time} (Manila time).` : 'After both assessments, submit your ID for acceptance before booking an interview.'}</p>
+                    {interviewPassed() && !approval()?.snapshot.profileApproved && <a class="action-btn blue" href="/application/profile">{approval()?.snapshot.profileStatus === 'pending_review' ? 'VIEW APPLICATION PROFILE' : 'COMPLETE YOUR PROFILE'}</a>}
+                  </div>
+                </div>
 
                 {/* Contact Verification */}
                 <div class="test-card">
-                  <div class="test-icon" style={cssStyle({ background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)' })}>
-                    <TutorIcon name="fas fa-check-circle"/>
+                  <div class="test-icon test-icon--artwork">
+                    <TutorArt name="contactCheck" size={44}/>
                   </div>
                   <div class="test-content">
                     <p>
@@ -275,37 +373,25 @@ const HomePage = () => {
                   </div>
                 </div>
 
-                {/* Interview Guide */}
-                <div class="test-card">
-                  <div class="test-icon" style={cssStyle({ background: 'linear-gradient(135deg, #4a9eff 0%, #0245ae 100%)' })}>
-                    <TutorIcon name="fas fa-book-open"/>
-                  </div>
-                  <div class="test-content">
-                    <p>
-                      Review our interview guide to learn what to expect and how to showcase your teaching skills.
-                    </p>
-                    <button class="action-btn blue" onClick={() => location.route('/become-tutor')}>
-                      INTERVIEW GUIDE
-                    </button>
-                  </div>
-                </div>
+                {approval() !== null && !interviewPassed() && <InterviewPreparation compact/>}
 
                 {/* Book Schedule */}
-                <div class="test-card">
-                  <div class="test-icon" style={cssStyle({ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' })}>
-                    <TutorIcon name="fas fa-calendar-check"/>
+                {!interviewPassed() && <div class="test-card">
+                  <div class="test-icon test-icon--artwork">
+                    <TutorArt name="schedule" size={44}/>
                   </div>
                   <div class="test-content">
                     <p>
-                      Choose a convenient time for your interview with our recruitment team.
+                      {idAccepted() ? 'Your ID is accepted. Choose an available interview within your booking window. Times are shown in Manila time.' : 'Interview booking becomes available after staff accepts your ID. You can prepare with the guide above while you wait.'}
                     </p>
-                    <button class="action-btn green" disabled={!writtenStatus()?.passed || !speakingStatus()?.passed} onClick={() => location.route('/interview')}>
+                    <button class="action-btn green" disabled={!writtenStatus()?.passed || !speakingStatus()?.passed || !idAccepted() || identityError()} onClick={() => location.route('/interview')}>
                       BOOK A SCHEDULE
                     </button>
                   </div>
-                </div>
+                </div>}
               </div>
-            </div>
+            </div>}
+            </>}
           </div>
         </main>
       </div>

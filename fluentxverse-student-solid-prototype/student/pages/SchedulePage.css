@@ -1,3 +1,8 @@
+html:has(.schedule-page) { scrollbar-gutter:stable; }
+@supports not (scrollbar-gutter:stable) {
+  html:has(.schedule-page) { overflow-y:scroll; }
+}
+
 .student-schedule-shell { margin-left: 116px; min-height: 100vh; }
 .schedule-page {
   --sc-bg: #f5f7fa; --sc-surface: #fff; --sc-text: #202636; --sc-muted: #647184;
@@ -46,9 +51,6 @@
 .lesson-detail.countdown { color: #128565; }
 [data-theme='dark'] .lesson-detail.countdown { color: #65d9ba; }
 .schedule-card-actions { display: flex; gap: 8px; flex-wrap: wrap; max-width: 360px; }
-.lesson-proof-pending,.lesson-proof-error { font-size: 12px; overflow-wrap: anywhere; }
-.lesson-proof-pending { color: var(--sc-muted); }
-.lesson-proof-error { color: #c13942; }
 .schedule-empty,.schedule-error { padding: 48px 24px; border: 1px solid var(--sc-border); border-radius: 8px; background: var(--sc-surface); text-align: center; }
 .empty-icon { margin-bottom: 20px; }
 .empty-icon .schedule-art { width: 88px; height: 88px; }

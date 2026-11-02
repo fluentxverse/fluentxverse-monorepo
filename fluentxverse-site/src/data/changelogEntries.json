@@ -2,9 +2,509 @@
   "schemaVersion": 1,
   "entries": [
     {
+      "id": "FXV-20261102-007",
+      "date": "2026-11-02",
+      "apps": ["tutor", "backend"],
+      "type": "improved",
+      "title": "Immediate replacement of rejected or expired ID submissions",
+      "summary": "Tutor applicants can submit a replacement ID immediately when resubmission is requested or a submission expires, without waiting until midnight.",
+      "details": [
+        "A replacement is saved before the previous submission is retired. Cleanup failures are retried without discarding the new pending submission.",
+        "The upload form and review emails explain the updated rule. Lifecycle checks covered replacement before midnight, pending status, and removal of the rejected image.",
+        "This updates the closed-test identity-review workflow; it does not issue a blockchain identity credential."
+      ]
+    },
+    {
+      "id": "FXV-20261102-006",
+      "date": "2026-11-02",
+      "apps": ["tutor", "backend"],
+      "type": "improved",
+      "title": "Clearer ID-review status and outcome emails",
+      "summary": "Applicants see confirmation that their ID was received, can refresh their review status, and receive queued emails when staff record a review outcome.",
+      "details": [
+        "The pending screen includes interview-preparation guidance and a suggested 24-48-hour review window. This is guidance, not a guaranteed response deadline.",
+        "Review emails cover acceptance, resubmission, interview matching, and other recorded outcomes. Acceptance includes the interview-booking deadline.",
+        "Failed sends are retried. Lifecycle and desktop/mobile checks used synthetic data and mocked mail delivery; inbox delivery is not guaranteed."
+      ]
+    },
+    {
+      "id": "FXV-20261102-005",
+      "date": "2026-11-02",
+      "apps": ["tutor", "backend"],
+      "type": "improved",
+      "title": "Interview preparation and clearer application review",
+      "summary": "Tutor applicants have a dedicated interview-preparation guide, while staff can distinguish profile approval, ID review, and interview readiness in the application workspace.",
+      "details": [
+        "Application review places ID status before interview scheduling, keeping document review separate from teaching approval.",
+        "The interview guide and administrator application layouts passed desktop and mobile browser checks with synthetic API responses."
+      ]
+    },
+    {
+      "id": "FXV-20261102-004",
+      "date": "2026-11-02",
+      "apps": ["tutor", "backend"],
+      "type": "improved",
+      "title": "Persistent private storage for identity documents",
+      "summary": "Encrypted ID submissions now persist across normal API restarts when their private storage and keys remain intact, replacing the temporary memory-only testing setup.",
+      "details": [
+        "Document viewing remains restricted to authorized staff. Existing deletion deadlines and retry handling remain in place.",
+        "Live checks used synthetic uploads to verify private access, fresh-process readback, and deletion. Test files and applicant records were removed afterward.",
+        "Live deletion does not guarantee erasure from historical backups or snapshots. Identity documents are not published onchain or sent to an AI provider by this workflow."
+      ]
+    },
+    {
+      "id": "FXV-20261102-003",
+      "date": "2026-11-02",
+      "apps": ["tutor", "backend"],
+      "type": "added",
+      "title": "Private tutor identity review for closed testing",
+      "summary": "The tutor application workflow now supports private ID submission, staff review, and a live identity comparison during the interview in a closed-test rollout.",
+      "details": [
+        "The workflow separates document acceptance, interview booking, live matching, and teaching approval, with defined expiry and resubmission states.",
+        "Authorized staff can review submitted images through private application endpoints. Verification used synthetic applicants rather than real identity documents.",
+        "Identity approval is not a wallet credential. Identity-specific zero-knowledge proofs, receipt-bound issuance, revocation, and wallet recovery remain separate work."
+      ]
+    },
+    {
+      "id": "FXV-20261102-002",
+      "date": "2026-11-02",
+      "apps": ["engine"],
+      "type": "added",
+      "title": "Transfer controls for new Engine ERC-1155 editions",
+      "summary": "Engine's ERC-1155 template now supports owner-controlled transfer restrictions and an irreversible transfer lock for newly deployed editions.",
+      "details": [
+        "Disabled transfers apply to single and batch operations, including approved operators. A permanent lock cannot be undone through ownership changes.",
+        "Existing non-upgradeable contracts are unchanged. Creating an edition does not automatically lock transfers, verify an identity, or implement credential recovery and revocation.",
+        "Contract and API tests passed. This template deployment did not create a new onchain collection, mint credentials, or submit a proof."
+      ]
+    },
+    {
+      "id": "FXV-20261102-001",
+      "date": "2026-11-02",
+      "apps": ["engine"],
+      "type": "added",
+      "title": "Lesson-dispute contract template in Engine",
+      "summary": "Engine now offers a Lesson disputes contract template with configurable administrator and operator roles, including a shared-wallet option.",
+      "details": [
+        "New instances start paused, with automatic non-response actions disabled. Local contract deployment and published dashboard checks passed; browser deployment actions used fixtures.",
+        "A subsequent integration observes isolated staging events and supports a synthetic testnet pilot. Mainnet application writes remain disabled, and the new dispute workflow has not been promoted to the public apps.",
+        "The integration records application-attested events; it does not independently arbitrate lessons or transfer refunds."
+      ]
+    },
+    {
+      "id": "FXV-20261101-001",
+      "date": "2026-11-01",
+      "apps": ["student", "tutor"],
+      "type": "fixed",
+      "title": "Device cleanup after a classroom closes",
+      "summary": "Camera and microphone changes that finish after classroom closure now release their tracks instead of leaving a late device stream active.",
+      "details": [
+        "The follow-up covers both classroom roles and both supported media providers.",
+        "Live browser checks used controlled fixtures, including a device switch resolving after the room closed. This is not a substitute for a two-person lesson test across separate networks."
+      ]
+    },
+    {
+      "id": "FXV-20261031-006",
+      "date": "2026-10-31",
+      "apps": ["student", "tutor"],
+      "type": "improved",
+      "title": "Classroom preparation and an expanded first-lesson guide",
+      "summary": "Classrooms can prepare a private camera and microphone preview before the lesson starts, and the tutor Home guide now covers nine steps through lesson completion.",
+      "details": [
+        "Device preparation requires authorized room access. The preview does not publish media before the scheduled start, and permission failures offer a device retry.",
+        "The illustrated guide now includes material selection, saving feedback, and final submission, with screenshots in both themes. It still disappears after the first taught lesson.",
+        "Tutor interview Return Home now returns to the tutor app. Classroom device lifecycle, theme contrast, and responsive guidance passed browser checks with controlled fixtures."
+      ]
+    },
+    {
+      "id": "FXV-20261031-005",
+      "date": "2026-10-31",
+      "apps": ["tutor", "backend"],
+      "type": "fixed",
+      "title": "Completed and cancelled lesson reminders stop appearing as unread",
+      "summary": "Obsolete note reminders and cancelled-session reminders now move into read history instead of continuing to count as actionable unread notifications.",
+      "details": [
+        "Reconciliation runs before filtering, pagination, and unread counting. Notifications for missing lessons no longer offer unavailable action links.",
+        "Drafts and unsubmitted edits remain actionable. Regression checks covered retained history, counts, pagination, and separation between users."
+      ]
+    },
+    {
+      "id": "FXV-20261031-004",
+      "date": "2026-10-31",
+      "apps": ["tutor"],
+      "type": "improved",
+      "title": "Refreshed tutor knowledge-base guidance",
+      "summary": "The tutor knowledge base has refreshed guidance aligned with the current tutor workflow.",
+      "details": [
+        "The update was published as a scoped tutor-frontend release, with no backend changes.",
+        "Knowledge-base tests, responsive browser checks, and published-asset verification passed. The knowledge base remains available after the first-lesson Home guide disappears."
+      ]
+    },
+    {
+      "id": "FXV-20261031-003",
+      "date": "2026-10-31",
+      "apps": ["tutor"],
+      "type": "improved",
+      "title": "Clearer email-confirmation arrival guidance",
+      "summary": "The tutor confirmation screen now explains that the email may take one to two minutes to arrive.",
+      "details": [
+        "This is a copy clarification, not a measured delivery-time improvement or an inbox-arrival guarantee. The backend was unchanged."
+      ]
+    },
+    {
+      "id": "FXV-20261031-002",
+      "date": "2026-10-31",
+      "apps": ["student", "tutor", "backend"],
+      "type": "improved",
+      "title": "Lesson dispute workflow verified in private staging",
+      "summary": "The revised student, tutor, and staff dispute workflow has been deployed to an isolated test environment. It is not yet available in production.",
+      "details": [
+        "The staged workflow includes attendance reporting after two minutes, after-lesson tutor explanation requests, 24-hour deadlines, staff review, and separate refund decisions.",
+        "Students and tutors do not exchange case messages. Tutor explanations and image evidence remain private to staff; students can follow up privately on a staff decision.",
+        "VPS checks passed for browser-origin enforcement, deadline processing, decision permissions, encrypted image upload and authorized download. Review also corrected origin checks and application-wide error responses.",
+        "Testing used synthetic cases and controlled credits with live transfers disabled. Production rollout remains gated on confirmed email delivery and a real-account classroom pilot."
+      ]
+    },
+    {
+      "id": "FXV-20261031-001",
+      "date": "2026-10-31",
+      "apps": ["backend"],
+      "type": "fixed",
+      "title": "Backend typechecking passes without error exceptions",
+      "summary": "All 40 previously recorded TypeScript diagnostics have been resolved in the development source. These changes have not yet been deployed to production.",
+      "details": [
+        "Email composition now narrows parsed image and document values explicitly, and external alert and proof-pilot JSON responses are validated before use.",
+        "Test fixtures now match Bun's fetch API and handle potentially missing array entries. The temporary known-error allowlist has been removed from the release check.",
+        "Full backend typechecking reports zero errors. Student and tutor typechecks and 50 focused regression tests passed. Paid proof submissions were not rerun as part of this work."
+      ]
+    },
+    {
+      "id": "FXV-20261030-006",
+      "date": "2026-10-30",
+      "apps": [
+        "tutor"
+      ],
+      "type": "added",
+      "title": "A six-step guide to your first lesson",
+      "summary": "New tutors can follow an illustrated guide from opening schedule slots through entering the classroom.",
+      "details": [
+        "Home now includes annotated screenshots for choosing times, opening slots, confirming Present, opening a booked lesson, and entering the classroom.",
+        "Classroom-entry guidance explains the five-minute entry window and camera, microphone, and pop-up permissions.",
+        "The guide automatically disappears after the first taught lesson and supports desktop, tablet, and mobile layouts."
+      ]
+    },
+    {
+      "id": "FXV-20261030-005",
+      "date": "2026-10-30",
+      "apps": [
+        "tutor"
+      ],
+      "type": "improved",
+      "title": "A more compact notification inbox",
+      "summary": "Tutor notifications now use a narrower layout, shorter rows, and colors aligned with the tutor workspace.",
+      "details": [
+        "All and Unread filters, date grouping, and visible read and delete actions make updates easier to review.",
+        "Pagination stops when there are no more results. Failed loads and updates show errors with appropriate retry options.",
+        "Dark-mode backgrounds were corrected, including the date headings and read notification rows."
+      ]
+    },
+    {
+      "id": "FXV-20261030-004",
+      "date": "2026-10-30",
+      "apps": [
+        "tutor"
+      ],
+      "type": "added",
+      "title": "Text chat in speaking interviews",
+      "summary": "Candidates and interviewers can exchange plain-text messages during the video interview.",
+      "details": [
+        "Multiline messages preserve line breaks. Enter creates a new line and the Send button sends the message; file attachments are not supported.",
+        "Chat uses the interview connection, retains unsent text during reconnection, and disables sending after the interview ends."
+      ]
+    },
+    {
+      "id": "FXV-20261030-003",
+      "date": "2026-10-30",
+      "apps": [
+        "tutor"
+      ],
+      "type": "improved",
+      "title": "Clearer navigation after an interview",
+      "summary": "Interview rooms now have a prominent Return Home button and clearer ended-call states.",
+      "details": [
+        "Leaving an active interview requires confirmation and releases the camera and microphone.",
+        "The candidate return action currently opens the student Home page. Reloading a completed interview no longer reopens camera access."
+      ]
+    },
+    {
+      "id": "FXV-20261030-002",
+      "date": "2026-10-30",
+      "apps": [
+        "student",
+        "tutor"
+      ],
+      "type": "fixed",
+      "title": "More consistent dark-mode surfaces",
+      "summary": "Notification text and tutor lesson panels received targeted contrast and background fixes.",
+      "details": [
+        "Student notification titles, messages, and timestamps remain readable after a notification is marked as read.",
+        "Tutor lesson-note editor attendance and assessment sections now match the modal background.",
+        "The first-lesson guide now matches the Home page background while retaining distinct controls and screenshot framing."
+      ]
+    },
+    {
+      "id": "FXV-20261030-001",
+      "date": "2026-10-30",
+      "apps": [
+        "tutor"
+      ],
+      "type": "improved",
+      "title": "Collapsed photo guidelines in Account settings",
+      "summary": "Profile photo guidelines now start minimized whenever Account settings opens.",
+      "details": [
+        "Tutors can expand the guidelines when needed. Photo-upload and profile-editing guidance remains available in the editing flow."
+      ]
+    },
+    {
+      "id": "FXV-20261029-004",
+      "date": "2026-10-29",
+      "apps": [
+        "student"
+      ],
+      "type": "fixed",
+      "title": "Stable schedule tab switching",
+      "summary": "Switching between Upcoming and Past Lessons no longer shifts the centered schedule layout.",
+      "details": [
+        "Scrollbar space is reserved consistently for short empty states and longer lesson lists."
+      ]
+    },
+    {
+      "id": "FXV-20261029-003",
+      "date": "2026-10-29",
+      "apps": [
+        "backend"
+      ],
+      "type": "improved",
+      "title": "A clearer Lesson Operations workspace",
+      "summary": "Administrator lesson operations now have more organized views, filters, tables, and report actions.",
+      "details": [
+        "Issue-report rows were made more compact, with expandable details and evidence. Existing review permissions and refund safeguards remain in place."
+      ]
+    },
+    {
+      "id": "FXV-20261029-002",
+      "date": "2026-10-29",
+      "apps": [
+        "backend"
+      ],
+      "type": "fixed",
+      "title": "Restored analytics visibility",
+      "summary": "The administrator analytics page no longer gets covered by an incorrectly positioned chart fill.",
+      "details": [
+        "Chart styles were scoped to prevent conflicts with other dashboard components."
+      ]
+    },
+    {
+      "id": "FXV-20261029-001",
+      "date": "2026-10-29",
+      "apps": [
+        "backend"
+      ],
+      "type": "added",
+      "title": "Pagination for administrator sessions",
+      "summary": "Administrators can browse session records in manageable pages.",
+      "details": [
+        "Page controls and page-size options support desktop and mobile. Search and date-filter changes reset the current page."
+      ]
+    },
+    {
+      "id": "FXV-20261028-006",
+      "date": "2026-10-28",
+      "apps": [
+        "student",
+        "tutor"
+      ],
+      "type": "improved",
+      "title": "Consistent classrooms and clearer lesson panels",
+      "summary": "Student and tutor classrooms now share a more consistent layout, with updated chat panels, lesson notes, and recording notices.",
+      "details": [
+        "Shared classroom styling keeps the two sides of a lesson visually aligned across desktop and mobile.",
+        "Lesson panels and recording notices received layout and readability improvements."
+      ]
+    },
+    {
+      "id": "FXV-20261028-005",
+      "date": "2026-10-28",
+      "apps": [
+        "student",
+        "backend"
+      ],
+      "type": "improved",
+      "title": "Smoother booking setup and administrator controls",
+      "summary": "Booking initialization and profile booking controls were improved, with booking settings now available to administrators.",
+      "details": [
+        "The student booking flow received initialization fixes and a clearer booking action on tutor profiles.",
+        "Administrator booking settings are persisted by the backend and applied to the booking policy."
+      ]
+    },
+    {
+      "id": "FXV-20261028-004",
+      "date": "2026-10-28",
+      "apps": [
+        "student",
+        "tutor",
+        "backend"
+      ],
+      "type": "improved",
+      "title": "Clearer tutor profiles, qualifications, and display names",
+      "summary": "Tutor profiles now have improved education and qualification editing, profile guidance, and consistent public display names across discovery and administration.",
+      "details": [
+        "Applicants can review profile requirements while editing their biography, photo, and qualifications.",
+        "Student-facing tutor profiles received clearer tabs, icons, and booking controls. Profile photos retain their full framing.",
+        "Public tutor nicknames are handled consistently across tutor cards, profiles, and administrator review."
+      ]
+    },
+    {
+      "id": "FXV-20261028-003",
+      "date": "2026-10-28",
+      "apps": [
+        "student",
+        "tutor",
+        "backend"
+      ],
+      "type": "fixed",
+      "title": "More reliable introduction video uploads and playback",
+      "summary": "Tutor introduction videos now have clearer upload feedback and more reliable playback in student profiles and administrator review.",
+      "details": [
+        "The server measures uploaded video duration and enforces the 30-second limit, including rejection of corrupt media.",
+        "Video streaming responses were corrected to support seeking and partial-content playback.",
+        "Upload guidance, pending-video states, and profile review controls were improved."
+      ]
+    },
+    {
+      "id": "FXV-20261028-002",
+      "date": "2026-10-28",
+      "apps": [
+        "tutor",
+        "backend"
+      ],
+      "type": "fixed",
+      "title": "Clearer application progress and interview scheduling",
+      "summary": "Tutor application review and interview booking now have clearer progress states, more compact lists, and improved calendar handling.",
+      "details": [
+        "Interview time periods and booking dates received timezone checks, with responsive calendar and appointment-state coverage.",
+        "Administrator application and interview views now make applicant progress and review actions easier to scan.",
+        "Interview waiting, feedback, and result displays received layout improvements."
+      ]
+    },
+    {
+      "id": "FXV-20261028-001",
+      "date": "2026-10-28",
+      "apps": [
+        "student"
+      ],
+      "type": "fixed",
+      "title": "Restored social sign-in from guest booking",
+      "summary": "Guest booking now opens the configured student social sign-in flow, with corrected public build settings and booking initialization.",
+      "details": [
+        "The deployed student build includes the public authentication configuration required by the sign-in dialog.",
+        "Guest booking and booking initialization passed browser checks."
+      ]
+    },
+    {
+      "id": "FXV-20261027-005",
+      "date": "2026-10-27",
+      "apps": [
+        "student",
+        "tutor"
+      ],
+      "type": "fixed",
+      "title": "Readable Business English material footers",
+      "summary": "The Business English course label and copyright text now use a brighter color against the dark material footer.",
+      "details": [
+        "The same contrast improvement was deployed to student, tutor, and administrator material views.",
+        "Desktop and mobile previews were checked after deployment."
+      ]
+    },
+    {
+      "id": "FXV-20261027-004",
+      "date": "2026-10-27",
+      "apps": [
+        "backend"
+      ],
+      "type": "fixed",
+      "title": "Authentication required across dashboard previews",
+      "summary": "All dashboard routes, including standalone material previews, now require an administrator session.",
+      "details": [
+        "Published lesson-detail and lesson-list APIs also require a valid administrator, tutor, or student session and use private, non-cacheable responses.",
+        "Live checks covered blocked anonymous access and continued material access for authenticated users."
+      ]
+    },
+    {
+      "id": "FXV-20261027-003",
+      "date": "2026-10-27",
+      "apps": [
+        "backend"
+      ],
+      "type": "added",
+      "title": "Workplace Communication curriculum workspace",
+      "summary": "Administrators can create and edit Workplace Communication materials in a dedicated curriculum workspace.",
+      "details": [
+        "Prepare and Perform material templates have their own persisted document structure.",
+        "Workplace Communication is maintained separately from the existing Business English curriculum."
+      ]
+    },
+    {
+      "id": "FXV-20261027-002",
+      "date": "2026-10-27",
+      "apps": [
+        "tutor"
+      ],
+      "type": "fixed",
+      "title": "Certification checks across tutor workspace tabs",
+      "summary": "Profile, Performance Metrics, and Knowledge Base now require application approval, alongside scheduling, classrooms, and teaching materials.",
+      "details": [
+        "Restricted navigation and direct links return applicants to their teaching journey with a Certification Required warning.",
+        "Applicants can still complete Application Profile from the teaching journey, without access to performance statistics."
+      ]
+    },
+    {
+      "id": "FXV-20261027-001",
+      "date": "2026-10-27",
+      "apps": [
+        "backend"
+      ],
+      "type": "fixed",
+      "title": "Daily Dispatch article generation restored",
+      "summary": "The cloud article generator is running again, scheduled for 3:00 AM Philippine time each day.",
+      "details": [
+        "The worker retries failures and catches up the most recent due day after a restart.",
+        "Daily article identifiers prevent restart retries from replacing or duplicating an already generated article. The first restored publication was verified in the classroom library."
+      ]
+    },
+    {
+      "id": "FXV-20261026-004",
+      "date": "2026-10-26",
+      "apps": [
+        "tutor",
+        "backend"
+      ],
+      "type": "changed",
+      "title": "Simpler read-aloud speaking assessment",
+      "summary": "New speaking assessments contain ten read-aloud sentences, replacing the previous mix of speaking tasks.",
+      "details": [
+        "AI evaluation compares the submitted transcript with the assigned sentence. Pronunciation and acoustic delivery still require human review.",
+        "AI scores are provisional and do not by themselves determine the final tutor application decision.",
+        "Written exam options are shuffled before an attempt is saved, and reading-question review now checks for more plausible distractors."
+      ]
+    },
+    {
       "id": "FXV-20261026-003",
       "date": "2026-10-26",
-      "apps": ["tutor", "backend"],
+      "apps": [
+        "tutor",
+        "backend"
+      ],
       "type": "improved",
       "title": "Branded tutor confirmation emails",
       "summary": "Tutor application emails now include the FluentXVerse logo, a clear confirmation button, and a clickable backup link in a mobile-friendly layout.",
@@ -16,7 +516,10 @@
     {
       "id": "FXV-20261026-002",
       "date": "2026-10-26",
-      "apps": ["tutor", "backend"],
+      "apps": [
+        "tutor",
+        "backend"
+      ],
       "type": "improved",
       "title": "Clearer written exams and stronger question checks",
       "summary": "The written exam has an updated responsive design and additional AI review before newly generated questions are published.",
@@ -29,7 +532,10 @@
     {
       "id": "FXV-20261026-001",
       "date": "2026-10-26",
-      "apps": ["tutor", "backend"],
+      "apps": [
+        "tutor",
+        "backend"
+      ],
       "type": "added",
       "title": "Email confirmation before tutor assessments",
       "summary": "Tutor applicants must confirm their email address before accessing the written assessment.",
@@ -42,7 +548,9 @@
     {
       "id": "FXV-20261025-003",
       "date": "2026-10-25",
-      "apps": ["engine"],
+      "apps": [
+        "engine"
+      ],
       "type": "improved",
       "title": "More recognizable Engine controls and browser tabs",
       "summary": "Engine now has a dedicated blue terminal favicon and a compact save control beside the proof-destination selector.",
@@ -54,7 +562,9 @@
     {
       "id": "FXV-20261025-002",
       "date": "2026-10-25",
-      "apps": ["engine"],
+      "apps": [
+        "engine"
+      ],
       "type": "fixed",
       "title": "Restored zkVerify mainnet account lookups",
       "summary": "Fixed the Engine verification-account error by correcting production module imports and aligning the native RPC settings with zkVerify mainnet.",
@@ -66,7 +576,9 @@
     {
       "id": "FXV-20261025-001",
       "date": "2026-10-25",
-      "apps": ["engine"],
+      "apps": [
+        "engine"
+      ],
       "type": "added",
       "title": "Project-wide proof-receipt destination selection",
       "summary": "Each Engine project can select Base, ApeChain, Arbitrum One, OP Mainnet, or Robinhood Chain as its mainnet proof-receipt destination. Verification remains on zkVerify.",
@@ -79,7 +591,9 @@
     {
       "id": "FXV-20261024-003",
       "date": "2026-10-24",
-      "apps": ["backend"],
+      "apps": [
+        "backend"
+      ],
       "type": "improved",
       "title": "Safer handling for uploads and intensive requests",
       "summary": "The backend now checks access earlier and applies bounded request sizes and capacity limits to uploads and proof-related requests.",
@@ -91,7 +605,11 @@
     {
       "id": "FXV-20261024-002",
       "date": "2026-10-24",
-      "apps": ["student", "tutor", "backend"],
+      "apps": [
+        "student",
+        "tutor",
+        "backend"
+      ],
       "type": "fixed",
       "title": "Session handling across student and tutor apps",
       "summary": "Improved authentication handling when multiple FluentXVerse apps are open in the same browser.",
@@ -103,7 +621,9 @@
     {
       "id": "FXV-20261024-001",
       "date": "2026-10-24",
-      "apps": ["backend"],
+      "apps": [
+        "backend"
+      ],
       "type": "changed",
       "title": "Base becomes the active proof-receipt destination",
       "summary": "FluentXVerse's five Engine projects now use Base mainnet. Proof verification remains on zkVerify mainnet, with official bridge receipts checked on Base.",

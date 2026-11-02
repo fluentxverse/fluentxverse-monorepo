@@ -86,3 +86,6 @@
 }
 .lne-continuation { padding:12px 0; border-bottom:1px solid var(--border-color,#dce4ef); }
 .lne-continuation p { margin:6px 0; }
+.lesson-notes-editor.tutor-dialog :is(.lesson-student-attendance, .dispatch-notes-section, .dispatch-notes-label, .lesson-assessment-options) {
+  background: transparent !important;
+}

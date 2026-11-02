@@ -17,6 +17,7 @@ type Props = {
     socket?: Socket | null;
     initiator?: boolean;
     enabled: boolean;
+    prepare?: boolean;
 };
 function streamFromParticipant(participant: {
     audioEnabled: boolean;
@@ -251,16 +252,35 @@ export function useClassroomMedia(props: Props) {
     const legacy = useWebRTC(mergeProps(() => props, { get enabled() {
             return props.provider === 'webrtc' && props.enabled;
         } }));
+    let preparedSession: string | undefined;
+    // Device access is private: the legacy transport is still disabled until lesson start.
+    createEffect(on(() => [props.prepare, props.sessionId, props.provider, props.enabled], () => {
+        if (preparedSession !== props.sessionId) {
+            legacy.cleanup();
+            preparedSession = props.sessionId;
+        }
+        if (!props.prepare || (props.provider === 'realtimekit' && props.enabled)) {
+            legacy.cleanup();
+            return;
+        }
+    }));
+    onCleanup(() => legacy.cleanup());
     const realtimekit = useRealtimeKit(props);
-    const startLocalStream = createMemo(on(() => [props.provider, legacy.startLocalStream, realtimekit.startLocalStream], () => async (audio = true, video = true, devices: Devices = {}) => {
-        if (props.provider === 'webrtc')
+    const startLocalStream = createMemo(on(() => [props.provider, props.prepare, props.enabled, legacy.startLocalStream, realtimekit.startLocalStream], () => async (audio = true, video = true, devices: Devices = {}) => {
+        if (!props.prepare) return;
+        if (!props.enabled || props.provider === 'webrtc')
             return legacy.startLocalStream(audio, video, devices);
         if (props.provider === 'realtimekit')
             return realtimekit.startLocalStream(audio, video, devices);
     }));
     const cleanup = createMemo(on(() => [legacy.cleanup, realtimekit.cleanup], () => () => { legacy.cleanup(); realtimekit.cleanup(); }));
-    const media = createMemo(() => props.provider === 'realtimekit' ? realtimekit : legacy);
-    return mergeProps(() => media(), { get startLocalStream() {
+    const media = createMemo(() => props.provider === 'realtimekit' && props.enabled ? realtimekit : legacy);
+    const retryDevices = async () => {
+        if (!props.prepare || props.enabled) return;
+        legacy.cleanup();
+        return legacy.startLocalStream(true, true);
+    };
+    return mergeProps(() => media(), { retryDevices, get startLocalStream() {
             return startLocalStream();
         } }, { get cleanup() {
             return cleanup();

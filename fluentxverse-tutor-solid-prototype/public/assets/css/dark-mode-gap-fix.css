@@ -1,24 +1,24 @@
 /* Dark mode main content background fix */
-.dark-mode main {
+.dark-mode .App.tutor-public main {
   background-color: #121212;
 }
 
 /* Ensure banner connects seamlessly with narrative section */
-.banner-bg {
+.App.tutor-public .banner-bg {
   margin-bottom: 0 !important;
 }
 
 /* Add a bit more padding to the banner to compensate for removed margin */
-.banner-area {
+.App.tutor-public .banner-area {
   padding-bottom: 165px !important;
 }
 
 /* Adjust the narrative section padding in dark mode for a better connection */
-.dark-mode .narrative-section {
+.dark-mode .App.tutor-public .narrative-section {
   padding-top: 100px;
 }
 
-/* Ensure no white gaps on any sections */
-.dark-mode section {
+/* Legacy landing-page surfaces must not recolor workspace sections. */
+.dark-mode .App.tutor-public section {
   background-color: #1a1a1a;
 }

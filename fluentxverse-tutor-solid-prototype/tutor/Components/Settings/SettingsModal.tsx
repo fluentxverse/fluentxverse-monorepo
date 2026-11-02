@@ -12,6 +12,11 @@ import { listRegions, type PSGCRegion, type PSGCProvince, type PSGCCity } from '
 import { updatePersonalInfo, updateEmail, updatePassword, getPersonalInfo } from '../../api/auth.api';
 import { tutorApi } from '../../api/tutor.api';
 import ProfileAvatar from '../Common/ProfileAvatar';
+import ProfileGuidelines from '../Common/ProfileGuidelines';
+import ProfileMediaUploadDialog from '../Common/ProfileMediaUploadDialog';
+import { validateProfilePhoto } from '../../utils/profilePhoto';
+import QualificationsFields from '../Common/QualificationsFields';
+import { client } from '../../api/utils';
 import { mediaUrl } from '../../utils/mediaUrl';
 // Helper type alias for municipalities (same as PSGCCity)
 interface SettingsModalProps {
@@ -65,34 +70,20 @@ const SettingsModal = (_props0: SettingsModalProps): JSX.Element | null => {
     const [sameAsPermanent, setSameAsPermanent] = createSignal(false);
     // Qualifications
     const [schoolAttended, setSchoolAttended] = createSignal('');
-    const [schoolSearchQuery, setSchoolSearchQuery] = createSignal('');
-    const [showSchoolDropdown, setShowSchoolDropdown] = createSignal(false);
     const [educationalAttainment, setEducationalAttainment] = createSignal('');
     const [major, setMajor] = createSignal('');
     const [teachingExperience, setTeachingExperience] = createSignal('');
     const [teachingQualifications, setTeachingQualifications] = createSignal<string[]>([]);
-    // Universities list (lazy-loaded)
-    const [universities, setUniversities] = createSignal<{
-        text: string;
-        value: string;
-    }[]>([]);
     // Lazy-load PSGC regions and university data when modal opens
     createEffect(on(() => [_props0["isOpen"]], () => {
         const _cleanup2 = untrack(() => {
             if (!_props0["isOpen"])
                 return;
             listRegions().then(setRegionsData);
-            import('../../data/univ.json').then(m => setUniversities(m.default.universitiesAndColleges));
         });
         if (typeof _cleanup2 === "function")
             onCleanup(_cleanup2);
     }));
-    const filteredUniversities = createMemo(() => {
-        if (!schoolSearchQuery().trim())
-            return universities().slice(0, 50); // Show first 50 by default
-        const query = schoolSearchQuery().toLowerCase();
-        return universities().filter(u => u.text.toLowerCase().includes(query)).slice(0, 50);
-    });
     // Form state
     const [infoError, setInfoError] = createSignal('');
     const [infoSuccess, setInfoSuccess] = createSignal('');
@@ -290,35 +281,6 @@ const SettingsModal = (_props0: SettingsModalProps): JSX.Element | null => {
         'Region 13 - Caraga',
         'BARMM - Bangsamoro'
     ];
-    const educationalAttainments = [
-        'High school or equivalent',
-        'Some college',
-        'Associate degree',
-        "Bachelor's degree",
-        "Master's degree",
-        'Doctoral degree'
-    ];
-    const teachingExperienceOptions = [
-        'No experience',
-        'Less than 1 year',
-        '1 to 3 years',
-        '3 to 5 years',
-        '5 to 10 years',
-        'More than 10 years'
-    ];
-    const qualificationOptions = [
-        'COTE Certified',
-        'FLT Certified',
-        'RSA-CELTA Certified',
-        'TEFL/TESL Certified',
-        'Education major',
-        'Professionally trained'
-    ];
-    const toggleQualification = (qual: string) => {
-        setTeachingQualifications(prev => prev.includes(qual)
-            ? prev.filter(q => q !== qual)
-            : [...prev, qual]);
-    };
     const handleUpdateInfo = async (e: Event) => {
         e.preventDefault();
         setInfoError('');
@@ -364,23 +326,13 @@ const SettingsModal = (_props0: SettingsModalProps): JSX.Element | null => {
                 get sameAsPermanent() {
                     return sameAsPermanent();
                 },
-                get schoolAttended() {
-                    return schoolAttended();
-                },
-                get educationalAttainment() {
-                    return educationalAttainment();
-                },
-                get major() {
-                    return major();
-                },
-                get teachingExperience() {
-                    return teachingExperience();
-                },
-                get teachingQualifications() {
-                    return teachingQualifications();
-                }
             });
-            setInfoSuccess('Personal information updated successfully!');
+            const result = await client.patch('/tutor/profile', {
+                ...(schoolAttended() ? { schoolAttended: schoolAttended() } : {}), educationalAttainment: educationalAttainment(), ...(major().trim() ? { major: major() } : {}),
+                teachingExperience: teachingExperience(), teachingQualifications: teachingQualifications()
+            });
+            if (!result.data.success) throw new Error(result.data.error || 'Could not save qualifications');
+            setInfoSuccess(result.data.hasPendingChanges ? 'Personal information saved. Qualification changes submitted for review.' : 'Personal information updated successfully!');
             // Return to main view after success
             setTimeout(() => {
                 setCurrentView('main');
@@ -388,7 +340,7 @@ const SettingsModal = (_props0: SettingsModalProps): JSX.Element | null => {
             }, 2000);
         }
         catch (err: any) {
-            setInfoError(err?.message || 'Failed to update personal information');
+            setInfoError(err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Failed to update personal information');
         }
         finally {
             setInfoLoading(false);
@@ -429,6 +381,8 @@ const SettingsModal = (_props0: SettingsModalProps): JSX.Element | null => {
     const [avatarPreview, setAvatarPreview] = createSignal<string | null>(_state1.user?.profilePicture || null);
     const [uploading, setUploading] = createSignal(false);
     const [uploadError, setUploadError] = createSignal<string | null>(null);
+    const [photoGuidelinesOpen, setPhotoGuidelinesOpen] = createSignal(false);
+    let avatarInput: HTMLInputElement | undefined;
     // Update avatar preview when user profile picture changes
     createEffect(on(() => [_state1.user?.profilePicture], () => {
         const _cleanup4 = untrack(() => {
@@ -445,19 +399,11 @@ const SettingsModal = (_props0: SettingsModalProps): JSX.Element | null => {
         if (!file)
             return;
         setUploadError(null);
-        if (!file.type.startsWith('image/')) {
-            setUploadError('Please select an image file');
-            return;
-        }
-        const MAX_BYTES = 5 * 1024 * 1024; // 5MB
-        if (file.size > MAX_BYTES) {
-            setUploadError(`File too large. Max ${(MAX_BYTES / (1024 * 1024)).toFixed(1)}MB`);
-            target.value = '';
-            return;
-        }
         try {
             setUploading(true);
+            await validateProfilePhoto(file);
             const url = await tutorApi.uploadProfilePicture(file);
+            setPhotoGuidelinesOpen(false);
             setAvatarPreview(url);
             // Optimistically update user.profilePicture
             if (_state1.user) {
@@ -489,6 +435,7 @@ const SettingsModal = (_props0: SettingsModalProps): JSX.Element | null => {
     };
     return (<Show when={_props0.isOpen}><TutorDialog label="Account settings" className="tutor-settings-dialog" onClose={handleClose} busy={emailLoading() || passwordLoading() || infoLoading() || uploading() || _state1.logoutLoading}>
       <div class="settings-modal" onClick={(e) => e.stopPropagation()}>
+        <header class="settings-dialog-header">
         {/* Back button for sub-views */}
         {currentView() !== 'main' && (<button class="settings-modal-back" disabled={emailLoading() || passwordLoading() || infoLoading()} onClick={handleBack} aria-label="Go back">
             <TutorIcon name="fa-arrow-left" size={20}/>
@@ -497,6 +444,9 @@ const SettingsModal = (_props0: SettingsModalProps): JSX.Element | null => {
         <button class="settings-modal-close" disabled={emailLoading() || passwordLoading() || infoLoading() || uploading() || _state1.logoutLoading} onClick={handleClose} aria-label="Close settings">
           ×
         </button>
+        <h2>{currentView() === 'main' ? 'Account settings' : currentView() === 'update-info' ? 'Personal information' : currentView() === 'update-email' ? 'Update email' : 'Update password'}</h2>
+        </header>
+        <div class="settings-dialog-content">
 
         {/* Main Settings View */}
         {currentView() === 'main' && (<>
@@ -505,10 +455,10 @@ const SettingsModal = (_props0: SettingsModalProps): JSX.Element | null => {
               <div class="settings-avatar">
                 <ProfileAvatar src={avatarPreview()} alt="User Avatar" fallback={displayName().charAt(0).toUpperCase()} style={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', objectFit: 'cover', fontSize: '36px', fontWeight: 700, color: '#fff' }}/>
                 <div class="avatar-overlay">
-                  <label class="avatar-btn" title="Upload new avatar">
-                    <input type="file" accept="image/*" onChange={onSelectAvatar} style={cssStyle({ display: 'none' })}/>
+                  <input ref={element => avatarInput = element} type="file" accept="image/jpeg,.jpg,.jpeg" onChange={onSelectAvatar} style={cssStyle({ display: 'none' })}/>
+                  <button type="button" class="avatar-btn" title="Upload new avatar" onClick={() => { setUploadError(null); setPhotoGuidelinesOpen(true); }} disabled={uploading()}>
                     {uploading() ? 'Uploading...' : 'Upload'}
-                  </label>
+                  </button>
                   <button type="button" class="avatar-btn secondary" disabled={!avatarPreview()} onClick={viewAvatar}>
                     View
                   </button>
@@ -536,6 +486,7 @@ const SettingsModal = (_props0: SettingsModalProps): JSX.Element | null => {
             </div>
 
             {/* Action Buttons */}
+            <ProfileGuidelines kind="photo" expanded={false}/>
             <div class="settings-actions">
               <button class="settings-action-btn" onClick={() => setCurrentView('update-email')}>
                 <div class="settings-action-icon update-email">
@@ -778,73 +729,12 @@ const SettingsModal = (_props0: SettingsModalProps): JSX.Element | null => {
               <div class="settings-form-section">
                 <h3 class="settings-form-section-title">Qualifications</h3>
                 
-                <div class="settings-form-group">
-                  <label class="settings-form-label">School Attended</label>
-                  <div class="school-dropdown-container">
-                    <div class="school-dropdown-trigger" onClick={() => setShowSchoolDropdown(!showSchoolDropdown())}>
-                      <span class={schoolAttended() ? '' : 'placeholder'}>
-                        {schoolAttended() || 'Select your school'}
-                      </span>
-                      <TutorIcon name={`fas fa-chevron-down dropdown-arrow ${showSchoolDropdown() ? 'open' : ''}`}/>
-                    </div>
-                    {showSchoolDropdown() && (<>
-                        <div class="school-dropdown-backdrop" onClick={() => {
-                    setShowSchoolDropdown(false);
-                    setSchoolSearchQuery('');
+                <QualificationsFields id="settings-qualifications" value={{ schoolAttended: schoolAttended(), educationalAttainment: educationalAttainment(), major: major(), teachingExperience: teachingExperience(), teachingQualifications: teachingQualifications() }} onChange={value => {
+                  setSchoolAttended(value.schoolAttended); setEducationalAttainment(value.educationalAttainment); setMajor(value.major); setTeachingExperience(value.teachingExperience); setTeachingQualifications(value.teachingQualifications);
                 }}/>
-                        <div class="school-dropdown-panel">
-                          <div class="school-dropdown-search">
-                            <TutorIcon name="fas fa-search"/>
-                            <input type="text" value={schoolSearchQuery()} onInput={(e) => setSchoolSearchQuery((e.target as HTMLInputElement).value)} placeholder="Search schools..." autofocus/>
-                          </div>
-                          <div class="school-dropdown-list">
-                            {filteredUniversities().length > 0 ? (filteredUniversities().map(uni => (<div class={`school-dropdown-item ${schoolAttended() === uni.text ? 'selected' : ''}`} onClick={() => {
-                        setSchoolAttended(uni.text);
-                        setSchoolSearchQuery('');
-                        setShowSchoolDropdown(false);
-                    }}>
-                                  {uni.text}
-                                </div>))) : (<div class="school-dropdown-empty">No schools found</div>)}
-                          </div>
-                        </div>
-                      </>)}
-                  </div>
-                </div>
-
-                <div class="settings-form-group">
-                  <label class="settings-form-label">Educational Attainment</label>
-                  <select value={educationalAttainment()} onChange={(e) => setEducationalAttainment((e.target as HTMLSelectElement).value)} class="settings-form-select">
-                    <option value="">Select attainment</option>
-                    {educationalAttainments.map(ea => (<option value={ea}>{ea}</option>))}
-                  </select>
-                </div>
-
-                <div class="settings-form-row">
-                  <div class="settings-form-group settings-form-group-half">
-                    <label class="settings-form-label">Major</label>
-                    <input type="text" value={major()} onInput={(e) => setMajor((e.target as HTMLInputElement).value)} class="settings-form-input settings-form-input-no-toggle" placeholder="Enter major"/>
-                  </div>
-                  <div class="settings-form-group settings-form-group-half">
-                    <label class="settings-form-label">Teaching Experience</label>
-                    <select value={teachingExperience()} onChange={(e) => setTeachingExperience((e.target as HTMLSelectElement).value)} class="settings-form-select">
-                      <option value="">Select experience</option>
-                      {teachingExperienceOptions.map(te => (<option value={te}>{te}</option>))}
-                    </select>
-                  </div>
-                </div>
-
-                <div class="settings-form-group">
-                  <label class="settings-form-label">Teaching Qualifications</label>
-                  <div class="settings-checkbox-group">
-                    {qualificationOptions.map(qual => (<label class="settings-checkbox-item">
-                        <input type="checkbox" checked={teachingQualifications().includes(qual)} onChange={() => toggleQualification(qual)}/>
-                        <span>{qual}</span>
-                      </label>))}
-                  </div>
-                </div>
               </div>
 
-              {infoError() && (<div class="settings-form-error">
+              {infoError() && (<div class="settings-form-error" role="alert">
                   <TutorIcon name="fa-info-circle" size={20}/>
                   {infoError()}
                 </div>)}
@@ -862,7 +752,9 @@ const SettingsModal = (_props0: SettingsModalProps): JSX.Element | null => {
               </button>
             </form>
           </div>)}
+        </div>
       </div>
+      {photoGuidelinesOpen() && <ProfileMediaUploadDialog kind="photo" busy={uploading()} error={uploadError() || undefined} onClose={() => setPhotoGuidelinesOpen(false)} onChoose={() => avatarInput?.click()}/>}
     </TutorDialog></Show>);
 };
 export default SettingsModal;

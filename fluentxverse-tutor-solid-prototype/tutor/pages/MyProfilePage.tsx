@@ -1,4 +1,4 @@
-import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, Suspense, type Accessor, type Component, type JSX } from "solid-js";
+import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
 import TutorDialog from "../Components/Common/TutorDialog";
@@ -15,14 +15,31 @@ import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SettingsModal from '../Components/Settings/SettingsModal';
 import ImageCropper from '../Components/Common/ImageCropper';
 import VideoPlayer from '../Components/Common/VideoPlayer';
+import QualificationsFields, { emptyQualifications, type Qualifications } from '../Components/Common/QualificationsFields';
 import ProfileAvatar from '../Components/Common/ProfileAvatar';
 import { mediaUrl } from '../utils/mediaUrl';
+import { checkIntroVideo } from '../utils/introVideo';
+import { validateProfilePhoto } from '../utils/profilePhoto';
+import ProfileGuidelines from '../Components/Common/ProfileGuidelines';
+import ProfileMediaUploadDialog from '../Components/Common/ProfileMediaUploadDialog';
+import { tutorPublicName, validateTutorNickname } from '../../../shared/tutorPublicName';
+import { Pencil } from 'lucide-solid';
+import { isAxiosError } from 'axios';
+import { getErrorMessage } from '../utils/errorUtils';
+import { validateProfileInterests } from '../../../shared/profileGuidelines';
 import { toast, toastConfirm } from '../Components/Common/Toast';
 import './MyProfilePage.css';
-import ScreeningCredential from '../Components/Common/ScreeningCredential';
 import { proofApi } from '../api/proof.api';
 import { hasTeachingAccess } from '../utils/teachingAccess';
 import { useLocation } from '../routing';
+const profileErrorMessage = (error: unknown): string => {
+    if (isAxiosError(error)) {
+        const message = error.response?.data?.error || error.response?.data?.message;
+        if (error.response && error.response.status < 500 && typeof message === 'string') return message;
+        return getErrorMessage(error);
+    }
+    return error instanceof Error ? error.message : 'Could not save changes. Please try again.';
+};
 export const MyProfilePage = () => {
     const _state0 = useAuthContext();
     const location = useLocation();
@@ -70,15 +87,26 @@ export const MyProfilePage = () => {
     const [uploading, setUploading] = createSignal(false);
     const [editingField, setEditingField] = createSignal<string | null>(null);
     const [editValue, setEditValue] = createSignal<string>('');
+    const [editError, setEditError] = createSignal('');
+    const [photoError, setPhotoError] = createSignal('');
+    const [videoError, setVideoError] = createSignal('');
+    const [educationValues, setEducationValues] = createSignal<Qualifications>(emptyQualifications());
+    const profileApproved = () => profileData()?.profileStatus === 'approved';
     const [interestChips, setInterestChips] = createSignal<string[]>([]);
     const [newInterest, setNewInterest] = createSignal<string>('');
     const [settingsOpen, setSettingsOpen] = createSignal(false);
+    createEffect(() => {
+        if (!profileApproved()) {
+            if (activeTab() === 'settings') setActiveTab('about');
+            setSettingsOpen(false);
+        }
+    });
     const [saving, setSaving] = createSignal(false);
     const [cropperImage, setCropperImage] = createSignal<string | null>(null);
     const [selectedFile, setSelectedFile] = createSignal<File | null>(null);
     const [avatarUrl, setAvatarUrl] = createSignal<string | null>(null);
     const [videoUploading, setVideoUploading] = createSignal(false);
-    const [showVideoModal, setShowVideoModal] = createSignal(false);
+    const [mediaUpload, setMediaUpload] = createSignal<'photo' | 'video' | null>(null);
     const [submittingProfile, setSubmittingProfile] = createSignal(false);
     const [toastMessage, setToastMessage] = createSignal<{
         text: string;
@@ -145,21 +173,17 @@ export const MyProfilePage = () => {
         loadProfile();
     };
     const handleAvatarClick = () => {
-        fileInputRef.current?.click();
+        setPhotoError('');
+        setMediaUpload('photo');
     };
-    const handleFileChange = (e: Event) => {
+    const handleFileChange = async (e: Event) => {
         const target = e.target as HTMLInputElement;
         const file = target.files?.[0];
         if (!file)
             return;
-        if (!file.type.startsWith('image/')) {
-            toast.error('Please select an image file');
-            return;
-        }
-        if (file.size > 10 * 1024 * 1024) {
-            toast.error('Image must be less than 10MB');
-            return;
-        }
+        setPhotoError('');
+        try { await validateProfilePhoto(file); } catch (error) { setPhotoError(profileErrorMessage(error)); target.value = ''; return; }
+        setMediaUpload(null);
         // Store the file and open cropper
         setSelectedFile(file);
         const reader = new FileReader();
@@ -175,6 +199,7 @@ export const MyProfilePage = () => {
         setSelectedFile(null);
         setUploading(true);
         try {
+            await validateProfilePhoto(croppedBlob);
             const formData = new FormData();
             formData.append('file', croppedBlob, 'profile.jpg');
             // Use the server endpoint which handles both upload and saving
@@ -209,7 +234,7 @@ export const MyProfilePage = () => {
         }
         catch (error) {
             console.error('Upload error:', error);
-            setToastMessage({ text: 'Failed to upload image', type: 'error' });
+            setPhotoError(profileErrorMessage(error));
         }
         finally {
             setUploading(false);
@@ -224,16 +249,20 @@ export const MyProfilePage = () => {
         const file = target.files?.[0];
         if (!file)
             return;
+        setVideoError('');
         if (!file.type.startsWith('video/')) {
-            setToastMessage({ text: 'Please select a video file', type: 'error' });
+            setVideoError('Please select a video file.');
+            target.value = '';
             return;
         }
         if (file.size > 100 * 1024 * 1024) {
-            setToastMessage({ text: 'Video must be less than 100MB', type: 'error' });
+            setVideoError('Video must be less than 100MB.');
+            target.value = '';
             return;
         }
         setVideoUploading(true);
         try {
+            await checkIntroVideo(file);
             const formData = new FormData();
             formData.append('file', file);
             const response = await client.post('/tutor/intro-video', formData, {
@@ -242,6 +271,7 @@ export const MyProfilePage = () => {
                 }
             });
             if (response.data.success) {
+                setMediaUpload(null);
                 // Check if changes are pending review (for approved profiles)
                 if (response.data.hasPendingChanges) {
                     setToastMessage({
@@ -262,7 +292,7 @@ export const MyProfilePage = () => {
         }
         catch (error) {
             console.error('Video upload error:', error);
-            setToastMessage({ text: 'Failed to upload video', type: 'error' });
+            setVideoError(profileErrorMessage(error));
         }
         finally {
             setVideoUploading(false);
@@ -287,8 +317,13 @@ export const MyProfilePage = () => {
         }
     };
     const startEditing = (field: string, currentValue: string) => {
+        setEditError('');
         setEditingField(field);
         setEditValue(currentValue || '');
+        if (field === 'education') {
+            const profile = profileData();
+            setEducationValues({ schoolAttended: profile?.schoolAttended || '', major: profile?.major || '', educationalAttainment: profile?.educationalAttainment || '', teachingExperience: profile?.teachingExperience || '', teachingQualifications: profile?.teachingQualifications || [] });
+        }
         // Initialize interest chips when editing interests
         if (field === 'interests') {
             const existingInterests = profileData()?.interests || [];
@@ -304,7 +339,9 @@ export const MyProfilePage = () => {
     };
     const addInterest = () => {
         const trimmed = newInterest().trim();
-        if (trimmed && interestChips().length < 5 && !interestChips().includes(trimmed)) {
+        try { validateProfileInterests([...interestChips(), trimmed]); } catch (error) { setEditError(profileErrorMessage(error)); return; }
+        setEditError('');
+        if (trimmed && interestChips().length < 5 && !interestChips().some(interest => interest.toLocaleLowerCase() === trimmed.toLocaleLowerCase())) {
             setInterestChips([...interestChips(), trimmed]);
             setNewInterest('');
         }
@@ -333,18 +370,24 @@ export const MyProfilePage = () => {
         }
     };
     const saveField = async () => {
-        if (!editingField())
+        if (!editingField() || saving())
             return;
         setSaving(true);
+        setEditError('');
         try {
             // Handle interests field - use interestChips array
             let valueToSend: string | string[] = editValue();
-            let valueToStore: string | string[] = editValue();
             if (editingField() === 'interests') {
-                valueToSend = interestChips();
-                valueToStore = interestChips();
+                valueToSend = validateProfileInterests(newInterest().trim() ? [...interestChips(), newInterest().trim()] : interestChips());
             }
-            const response = await client.patch('/tutor/profile', { [editingField()]: valueToSend });
+            if (editingField() === 'nickname') valueToSend = validateTutorNickname(editValue());
+            const updates = editingField() === 'education'
+                ? { ...educationValues(), schoolAttended: educationValues().schoolAttended.trim(), major: educationValues().major.trim() }
+                : { [editingField()]: valueToSend };
+            if (editingField() === 'education' && (!educationValues().schoolAttended.trim() || !educationValues().major.trim())) {
+                throw new Error('Enter your school and degree or field of study.');
+            }
+            const response = await client.patch('/tutor/profile', updates);
             if (response.data.success) {
                 // Check if changes are pending review (for approved profiles)
                 if (response.data.hasPendingChanges) {
@@ -358,14 +401,14 @@ export const MyProfilePage = () => {
                     // Update local state immediately
                     setProfileData(prev => {
                         if (prev) {
-                            return { ...prev, [editingField()]: valueToStore };
+                            return { ...prev, ...updates };
                         }
                         // Create a minimal profile data object if none exists
                         return {
                             firstName: _state0.user?.firstName || '',
                             lastName: _state0.user?.lastName || '',
                             email: _state0.user?.email || '',
-                            [editingField()]: valueToStore
+                            ...updates
                         } as TutorProfileData;
                     });
                     setToastMessage({ text: 'Profile updated successfully!', type: 'success' });
@@ -378,7 +421,7 @@ export const MyProfilePage = () => {
         }
         catch (error) {
             console.error('Save error:', error);
-            setToastMessage({ text: 'Failed to save changes', type: 'error' });
+            setEditError(profileErrorMessage(error));
         }
         finally {
             setSaving(false);
@@ -427,17 +470,13 @@ export const MyProfilePage = () => {
       </>);
         }
         if (!profileData() && loadError()) return <><SideBar/><div class="main-content"><DashboardHeader/><div class="my-profile-loading"><StatusPanel kind="error" title={loadError()} onRetry={() => void loadProfile(true)}/></div></div></>;
-        const displayName = createMemo(() => _state0.user?.firstName && _state0.user?.lastName
-            ? `${_state0.user.firstName} ${_state0.user.lastName}`.trim()
-            : profileData()?.displayName
-                || `${profileData()?.firstName || ''} ${profileData()?.lastName || ''}`.trim()
-                || _state0.user?.email?.split('@')[0]
-                || 'Tutor');
-        const initials = createMemo(() => `${_state0.user?.firstName?.[0] || profileData()?.firstName?.[0] || ''}${_state0.user?.lastName?.[0] || profileData()?.lastName?.[0] || ''}`.toUpperCase() || 'T');
+        const displayName = createMemo(() => tutorPublicName(profileData() || _state0.user || {}));
+        const initials = createMemo(() => displayName().split(' ').map(part => part[0]).slice(0, 2).join('').toUpperCase());
         // Use avatarUrl state first, then fallback to profileData or user
         const currentAvatar = createMemo(() => avatarUrl() || profileData()?.profilePicture || _state0.user?.profilePicture);
         // Calculate profile completeness
         const profileFields = createMemo(() => [
+            { name: 'Preferred nickname', complete: !!profileData()?.nickname },
             { name: 'Bio', complete: !!(profileData()?.bio && profileData().bio.length > 10) },
             { name: 'Profile Picture', complete: !!currentAvatar() },
             { name: 'Introduction Video', complete: !!profileData()?.videoIntroUrl },
@@ -464,6 +503,13 @@ export const MyProfilePage = () => {
         <div class="my-profile-page">
           <div class="profile-container">
             {loadError() && <StatusPanel compact kind="error" title={loadError()} onRetry={() => void loadProfile(true)}/>}
+            {applicationProfile() && !profileApproved() && <aside class="profile-guidelines-reminder" aria-label="Profile guidelines reminder">
+              <TutorArt name="interviewGuide" size={36}/>
+              <div>
+                <h2>Before you submit your profile</h2>
+                <p>Review the guidelines for your nickname, bio, profile photo, introduction video, and interests. Make sure each section meets the requirements before submitting your profile for review.</p>
+              </div>
+            </aside>}
             {/* Hero Section */}
             <div class="profile-hero">
               <div class="profile-hero-content">
@@ -474,20 +520,26 @@ export const MyProfilePage = () => {
                         <div class="upload-spinner"></div>
                       </div>) : (<ProfileAvatar src={currentAvatar()} alt={displayName()} className="profile-avatar-large" fallbackClassName="profile-avatar-placeholder" fallback={initials()}/>)}
                     <div class="avatar-overlay">
-                      <label class="avatar-btn" title="Upload new avatar">
-                        <input type="file" accept="image/*" onChange={handleFileChange} style={cssStyle({ display: 'none' })}/>
+                      <input ref={element => fileInputRef.current = element} type="file" accept="image/jpeg,.jpg,.jpeg" onChange={handleFileChange} style={cssStyle({ display: 'none' })}/>
+                      <button type="button" class="avatar-btn" title="Upload new avatar" onClick={handleAvatarClick} disabled={uploading()}>
                         {uploading() ? 'Uploading...' : 'Upload'}
-                      </label>
+                      </button>
                       <button type="button" class="avatar-btn secondary" disabled={!currentAvatar()} onClick={viewAvatar}>
                         View
                       </button>
                     </div>
                   </div>
+                  {photoError() && <p role="alert" class="profile-field-error">{photoError()}</p>}
                 </div>
 
                 {/* Right: Details */}
                 <div class="profile-header-right">
-                  <h1 class="profile-name">{displayName()}</h1>
+                  <div class="profile-nickname-heading">
+                    <h1 class="profile-name">{displayName()}</h1>
+                    <button type="button" class="btn-edit-name" aria-label="Edit preferred nickname" title="Edit preferred nickname" onClick={() => startEditing('nickname', profileData()?.nickname || '')}><Pencil size={17}/></button>
+                  </div>
+                  <div class="profile-nickname-note">{profileData()?.nickname ? 'Public nickname' : 'Preferred nickname required'}</div>
+                  {profileData()?.profileItemStatuses?.nickname?.status === 'rejected' && <p role="status" class="profile-nickname-feedback">Nickname needs revision: {profileData()?.profileItemStatuses?.nickname?.rejectionReason || 'Choose a clear, professional nickname.'}</p>}
 
                   {/* Star Rating */}
                   <div class="profile-rating-row">
@@ -536,31 +588,33 @@ export const MyProfilePage = () => {
                   <TutorArt name="video" size={28}/>
                   Introduction Video
                 </h3>
+                {videoError() && <p role="alert" class="profile-field-error">{videoError()}</p>}
                 {profileData()?.videoIntroUrl ? (<div class="hero-video-container">
                     <VideoPlayer src={mediaUrl(profileData().videoIntroUrl)!} hideBigPlayButton={true}/>
-                    <label class="video-replace-overlay">
+                    <div class="video-replace-overlay">
                       <input type="file" accept="video/*" onChange={handleVideoUpload} style={cssStyle({ display: 'none' })} ref={_element => videoInputRef.current = _element}/>
-                      <div class="video-replace-btn">
+                      <button type="button" class="video-replace-btn" onClick={() => { setVideoError(''); setMediaUpload('video'); }} disabled={videoUploading()}>
                         <TutorIcon name="fi-sr-refresh"/>
                         <span>{videoUploading() ? 'Uploading...' : 'Replace Video'}</span>
-                      </div>
-                    </label>
+                      </button>
+                    </div>
                   </div>) : (<div class="hero-video-placeholder">
                     <div class="video-placeholder-content">
                       <TutorIcon name="fi-sr-video-plus"/>
                       <span>Add intro video</span>
                     </div>
-                    <label class="btn-video-action">
+                    <div>
                       <input type="file" accept="video/*" onChange={handleVideoUpload} style={cssStyle({ display: 'none' })} ref={_element => videoInputRef.current = _element}/>
+                    <button type="button" class="btn-video-action" onClick={() => { setVideoError(''); setMediaUpload('video'); }} disabled={videoUploading()}>
                       <TutorIcon name="fi-sr-plus"/>
                       {videoUploading() ? 'Uploading...' : 'Upload Video'}
-                    </label>
+                    </button>
+                    </div>
                   </div>)}
               </div>
             </div>
 
             {/* Profile Completeness Indicator */}
-            <Suspense><ScreeningCredential /></Suspense>
             {completionPercent() < 100 && (<div class="profile-completeness-card">
                 <div class="completeness-header">
                   <div class="completeness-title">
@@ -577,17 +631,18 @@ export const MyProfilePage = () => {
                 {incompleteFields().length > 0 && (<div class="completeness-missing">
                     <span class="missing-label">Complete your profile:</span>
                     <div class="missing-items">
-                      {incompleteFields().slice(0, 3).map((field, idx) => (<span class="missing-item">
+                      {incompleteFields().map((field, idx) => (field.name === 'Education' || field.name === 'Preferred nickname' ? <button type="button" class="missing-item" onClick={() => startEditing(field.name === 'Education' ? 'education' : 'nickname', '')}>
+                          <TutorIcon name="fi-sr-plus-small"/> {field.name}
+                        </button> : <span class="missing-item">
                           <TutorIcon name="fi-sr-plus-small"/>
                           {field.name}
                         </span>))}
-                      {incompleteFields().length > 3 && (<span class="missing-item more">+{incompleteFields().length - 3} more</span>)}
                     </div>
                   </div>)}
               </div>)}
 
             {/* Profile Status Card - Show when profile is 100% complete or has a status */}
-            {(completionPercent() === 100 || profileData()?.profileStatus) && (<div class={`profile-status-card status-${profileData()?.profileStatus || 'ready'}`}>
+            {(profileData()?.profileStatus === 'pending_review' || profileData()?.profileStatus === 'rejected' || (profileApproved() ? profileData()?.hasPendingChanges : completionPercent() === 100)) && (<div class={`profile-status-card status-${profileData()?.profileStatus || 'ready'}`}>
                 {profileData()?.profileStatus === 'pending_review' && (<>
                     <div class="status-icon pending">
                       <TutorIcon name="fi-sr-time-half-past"/>
@@ -611,12 +666,7 @@ export const MyProfilePage = () => {
                     </div>
                   </>)}
                 {profileData()?.profileStatus === 'approved' && (<>
-                    <div class="status-icon approved">
-                      <TutorIcon name="fi-sr-check"/>
-                    </div>
                     <div class="status-content">
-                      <h3>Profile Approved</h3>
-                      <p>Your profile has been reviewed and approved! Students can now find and book sessions with you.</p>
                       
                       {/* Show pending changes if any */}
                       {profileData().hasPendingChanges && profileData().pendingProfileChanges && profileData().pendingProfileChanges.length > 0 && (<div class="pending-changes-notice">
@@ -630,6 +680,7 @@ export const MyProfilePage = () => {
                           <div class="pending-changes-list">
                             {profileData().pendingProfileChanges.map((change, idx) => {
                             const itemLabels: Record<string, string> = {
+                                'nickname': 'Preferred nickname',
                                 'bio': 'Bio',
                                 'profilePicture': 'Profile Photo',
                                 'videoIntro': 'Introduction Video',
@@ -726,10 +777,10 @@ export const MyProfilePage = () => {
                 <TutorIcon name="fi-sr-chart-histogram"/>
                 Stats
               </button>}
-              <button class={`tab-btn ${activeTab() === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+              {profileApproved() && <button class={`tab-btn ${activeTab() === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
                 <TutorIcon name="fi-sr-settings"/>
                 Settings
-              </button>
+              </button>}
             </div>
 
             {/* Tab Content */}
@@ -747,14 +798,19 @@ export const MyProfilePage = () => {
                   </section>
 
                   {/* Education */}
-                  {(profileData()?.schoolAttended || (profileData()?.education && profileData().education.length > 0)) && (<section class="profile-tab-section">
+                  <section class="profile-tab-section profile-education-section">
+                    <div class="profile-tab-title-row">
                       <h2 class="profile-tab-title">
                         <TutorArt name="training" size={32}/>
                         Education
                       </h2>
+                      <button type="button" class="btn-edit-inline" aria-label="Edit education" title="Edit education" onClick={() => startEditing('education', '')}>
+                        <TutorIcon name="fas fa-pencil-alt"/>
+                      </button>
+                    </div>
                       <div class="profile-tab-body">
                         <div class="education-info">
-                          {profileData()?.schoolAttended ? (<>
+                          {profileData()?.schoolAttended || profileData()?.major ? (<>
                               <div class="education-row">
                                 <TutorIcon name="fi-sr-school"/>
                                 <span class="education-label">University:</span>
@@ -765,21 +821,24 @@ export const MyProfilePage = () => {
                                   <span class="education-label">Degree:</span>
                                   <strong>{profileData().major}</strong>
                                 </div>)}
-                            </>) : (profileData()?.education?.map((edu, idx) => (<div class="education-row">
+                            </>) : profileData()?.education?.length ? (profileData()?.education?.map((edu, idx) => (<div class="education-row">
                                 <div class="education-details">
                                   <TutorIcon name="fi-sr-school"/>
                                   <strong>{edu}</strong>
                                 </div>
-                              </div>)))}
+                              </div>))) : <p class="education-empty">Add your school and degree or field of study.</p>}
+                          {profileData()?.educationalAttainment && <div class="education-row"><span class="education-label">Educational attainment:</span><strong>{profileData().educationalAttainment}</strong></div>}
+                          <div class="education-row"><span class="education-label">Teaching experience:</span><strong>{profileData()?.teachingExperience || 'Not added yet'}</strong></div>
+                          {!!profileData()?.teachingQualifications?.length && <div class="education-row"><span class="education-label">Teaching qualifications:</span><strong>{profileData().teachingQualifications.join(', ')}</strong></div>}
                         </div>
                       </div>
-                    </section>)}
+                    </section>
 
                   {/* Interests */}
                   <section class="profile-tab-section">
                     <div class="profile-tab-title-row">
                       <h2 class="profile-tab-title">
-                        <TutorIcon name="fi-sr-heart"/>
+                        <TutorArt name="interests" size={32}/>
                         Interests
                       </h2>
                       <button class="btn-edit-inline" onClick={() => startEditing('interests', profileData()?.interests?.join(', ') || '')}>
@@ -853,7 +912,7 @@ export const MyProfilePage = () => {
                   </section>
                 </div>)}
 
-              {activeTab() === 'settings' && (<div class="tab-content">
+              {profileApproved() && activeTab() === 'settings' && (<div class="tab-content">
                   <section class="profile-tab-section">
                     <h2 class="profile-tab-title">
                       <TutorIcon name="fi-sr-settings"/>
@@ -896,12 +955,15 @@ export const MyProfilePage = () => {
       {editingField() && (<TutorDialog label="Edit profile" className="tutor-profile-edit-dialog" onClose={cancelEditing} busy={saving()}>
           <div class="edit-modal" onClick={(e) => e.stopPropagation()}>
             <div class="edit-modal-header">
-              <h3>Edit {editingField().replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</h3>
+              <h3>{editingField() === 'nickname' ? 'Edit preferred nickname' : `Edit ${editingField().replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}`}</h3>
               <button class="edit-modal-close" aria-label="Close profile editor" disabled={saving()} onClick={cancelEditing}>
                 <TutorIcon name="fas fa-times"/>
               </button>
             </div>
-            <div class="edit-modal-body">
+            <div class="edit-modal-body" hidden={editingField() === 'education'}>
+              {editingField() === 'nickname' && <>
+                <label for="preferred-nickname">Preferred nickname</label>
+              </>}
               {editingField() === 'bio' || editingField() === 'introduction' || editingField() === 'teachingStyle' ? (<textarea value={editValue()} onInput={(e) => setEditValue((e.target as HTMLTextAreaElement).value)} placeholder={`Enter your ${editingField().replace(/([A-Z])/g, ' $1').toLowerCase()}...`} rows={5}/>) : editingField() === 'interests' ? (<div class="interests-editor">
                   <div class="interests-chips">
                     {interestChips().map((interest, idx) => (<div class="interest-chip">
@@ -921,9 +983,16 @@ export const MyProfilePage = () => {
                   <p class="input-hint">
                     {interestChips().length}/5 interests added. {interestChips().length < 5 ? 'Press Enter or click Add to add more.' : 'Maximum reached.'}
                   </p>
-                </div>) : (<input type="text" value={editValue()} onInput={(e) => setEditValue((e.target as HTMLInputElement).value)} placeholder={`Enter ${editingField().replace(/([A-Z])/g, ' $1').toLowerCase()}...`}/>)}
+                </div>) : (<input id={editingField() === 'nickname' ? 'preferred-nickname' : undefined} type="text" maxLength={editingField() === 'nickname' ? 24 : undefined} autocomplete={editingField() === 'nickname' ? 'nickname' : 'off'} value={editValue()} onInput={(e) => setEditValue((e.target as HTMLInputElement).value)} placeholder={editingField() === 'nickname' ? 'e.g. Alex or Mary Ann' : `Enter ${editingField().replace(/([A-Z])/g, ' $1').toLowerCase()}...`}/>)}
+              {editingField() === 'nickname' && <ProfileGuidelines kind="nickname"/>}
+              {editingField() === 'bio' && <ProfileGuidelines kind="bio" expanded/>}
+              {editingField() === 'interests' && <ProfileGuidelines kind="interests"/>}
             </div>
+            {editingField() === 'education' && <div class="edit-modal-body education-editor">
+              <QualificationsFields id="profile-qualifications" value={educationValues()} onChange={setEducationValues}/>
+            </div>}
             <div class="edit-modal-footer">
+              {editError() && <p id="profile-edit-error" role="alert" class="profile-field-error">{editError()}</p>}
               <button class="btn-cancel" disabled={saving()} onClick={cancelEditing}>Cancel</button>
               <button class="btn-save" onClick={saveField} disabled={saving()}>
                 {saving() ? 'Saving...' : 'Save Changes'}
@@ -933,6 +1002,7 @@ export const MyProfilePage = () => {
         </TutorDialog>)}
 
       {/* Image Cropper Modal */}
+      {mediaUpload() && <ProfileMediaUploadDialog kind={mediaUpload()!} busy={mediaUpload() === 'video' ? videoUploading() : uploading()} error={mediaUpload() === 'photo' ? photoError() : videoError()} onClose={() => setMediaUpload(null)} onChoose={() => (mediaUpload() === 'photo' ? fileInputRef.current : videoInputRef.current)?.click()}/>}
       {cropperImage() && (<ImageCropper imageSrc={cropperImage()} onCropComplete={handleCropComplete} onCancel={handleCropCancel}/>)}
 
       {/* Settings Modal for editing personal info */}

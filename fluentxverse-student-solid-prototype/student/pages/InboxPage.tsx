@@ -7,6 +7,8 @@ import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 import { inboxApi, type SystemMessage } from '../api/inbox.api';
 import './InboxPage.css';
+import DisputeInbox from '../../../shared/ui/DisputeInbox';
+import { client } from '../api/utils';
 const categories = { announcement: 'Announcement', update: 'Update', alert: 'Alert', news: 'News', promotion: 'Promotion' };
 export default function InboxPage() {
     const _state0 = useAuthContext();
@@ -99,6 +101,7 @@ export default function InboxPage() {
             setMessages(prev => prev.map(message => ({ ...message, isRead: true })));
         })}><CheckCheck size={18}/>Mark all as read</button>
       </header>
+      <DisputeInbox client={client} role="student"/>
       {error() && <div class="inbox-error" role="alert"><CircleAlert size={18}/><span>{error()}</span><button class="inbox-command" disabled={busy()} onClick={load}><RotateCw size={16}/>Reload</button></div>}
       <nav class="inbox-filters" aria-label="Message filters">{(['all', 'unread', 'pinned'] as const).map(value => <button aria-pressed={filter() === value} onClick={() => { setFilter(value); setSelectedId(null); }}><span>{value === 'all' ? 'All messages' : value === 'unread' ? 'Unread' : 'Pinned'}</span></button>)}</nav>
       <div class={`inbox-content ${selected() ? 'inbox-reading' : ''}`}>

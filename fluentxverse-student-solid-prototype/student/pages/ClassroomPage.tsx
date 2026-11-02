@@ -1,3 +1,4 @@
+import ClassroomChatPanels, { ClassroomChatTools } from '../../../shared/ui/ClassroomChatPanels';
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
@@ -23,7 +24,9 @@ import { dispatchPostDate, type DispatchArticle } from '../utils/dispatchLibrary
 import { useThemeStore } from '../context/ThemeContext';
 import { materialFrameUrl } from '../utils/materialFrameUrl';
 import { ArrowLeft, CalendarDays, Check, ChevronDown, ChevronUp, FileText, History, Info, Mic, MicOff, MoreHorizontal, Paperclip, Pencil, PhoneOff, Plus, RefreshCw, Send, Settings, ShieldCheck, Trash2, Video, VideoOff, X } from "lucide-solid";
-import './ClassroomPage.css';
+import '../../../shared/ui/classroom-student-base.css';
+import '../../../shared/ui/classroom-layout.css';
+import ClassroomRecordingFlag from '../../../shared/ui/ClassroomRecordingFlag';
 const classroomArt = (name: string, className = '') => <img class={'classroom-art ' + className} src={'/assets/img/home-icons/' + name + (name === 'dispatch' ? '-v1.png' : '-v1.webp')} alt=""/>;
 // Conversational Skills lesson interface for viewing
 interface ConversationalLesson {
@@ -268,6 +271,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
                 message: string;
             }) => {
                 setSignalingError(data.message);
+                setClassroomJoined(false);
                 toast.error(data.message);
             };
             // Handle chat history
@@ -461,6 +465,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
     const [activityLogs, setActivityLogs] = createSignal<ClassroomActivityLogData[]>([]);
     const [isSettingsOpen, setIsSettingsOpen] = createSignal(false);
     const [recordingAvailable, setRecordingAvailable] = createSignal(false);
+    const [recordingStatus, setRecordingStatus] = createSignal('');
     const [recordingRevision, setRecordingRevision] = createSignal(0);
     const [audioInputDevices, setAudioInputDevices] = createSignal<MediaDeviceInfo[]>([]);
     const [videoInputDevices, setVideoInputDevices] = createSignal<MediaDeviceInfo[]>([]);
@@ -884,7 +889,9 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
         }, get socket() {
             return socketInstance();
         }, get enabled() {
-            return lessonStart.live;
+            return classroomJoined() && lessonStart.live;
+        }, get prepare() {
+            return classroomJoined() && !lessonStart.closed;
         } });
     createEffect(on(() => [lessonStart.closed, _state3.cleanup], () => {
         const _cleanup12 = untrack(() => { if (lessonStart.closed)
@@ -1449,7 +1456,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
             _state2.route('/schedule');
         }
     };
-    return (<div class="classroom-container">
+    return (<div class="classroom-container classroom-standardized classroom-role-student">
       {/* Left Panel - Video & Chat */}
       <div class="classroom-left">
         {/* Header Bar */}
@@ -1469,10 +1476,15 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
         {currentSessionId() && <StudentLessonIssueReport bookingId={currentSessionId()} compact presenceRevision={activityLogs().at(-1)?.id}/>}
         {currentSessionId() && <ClassroomLessonSurvey bookingId={currentSessionId()} socket={socketInstance()}/>}
         {!lessonStart.live && <div class="classroom-start-wait" role={signalingError() ? 'alert' : 'status'}>{lessonStart.closed ? lessonStart.message : signalingError() || lessonStart.message}</div>}
+        {classroomJoined() && !lessonStart.live && !lessonStart.closed && <div class="classroom-device-preview" role="status">
+            <span>{_state3.error || (_state3.localStream ? 'Device preview is private. Audio and video are shared only when the lesson starts.' : 'Preparing your camera and microphone...')}</span>
+            {_state3.error && <button type="button" onClick={() => void _state3.retryDevices().catch(() => {})}>Retry devices</button>}
+        </div>}
         {lessonStart.wrapUp && <div class="classroom-start-wait" role="status">{lessonStart.wrapUpMessage}</div>}
 
         {/* Video Area */}
-        <ClassroomRecordingNotice socket={socketInstance()} provider={mediaProvider()} openRevision={recordingRevision()} onAvailabilityChange={setRecordingAvailable}/>
+        <ClassroomRecordingNotice socket={socketInstance()} provider={mediaProvider()} openRevision={recordingRevision()} onAvailabilityChange={setRecordingAvailable} autoPrompt={false} onStatusChange={setRecordingStatus}/>
+        <ClassroomRecordingFlag available={recordingAvailable()} status={recordingStatus()} onPreferences={() => setRecordingRevision(value => value + 1)}/>
         <div class="video-section" tabIndex={0} aria-label="Lesson video and call controls">
           {/* Main Video */}
           <div class="video-main">
@@ -1568,95 +1580,22 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
           <div class="chat-header">
             {classroomArt('community')}
             <span>Chat</span>
-            <div class="chat-header-actions" aria-label="Chat tools">
-              <button type="button" class="chat-tool-btn" title="Classroom history" aria-label="Classroom history" onClick={requestActivityHistory}>
-                <History size={18}/>
-              </button>
-              <button type="button" class="chat-tool-btn" title="Device settings" aria-label="Device settings" onClick={openDeviceSettings}>
-                <Settings size={18}/>
-              </button>
-            </div>
+            <ClassroomChatTools onHistory={requestActivityHistory} onSettings={openDeviceSettings}/>
           </div>
-          {(isHistoryOpen() || isSettingsOpen()) && (<div class="classroom-chat-popover">
-              {isHistoryOpen() && (<div class="classroom-modal classroom-history-modal" role="dialog" aria-modal="false" aria-labelledby="classroom-history-title">
-                  <div class="classroom-modal-header">
-                    <div>
-                      <h2 id="classroom-history-title">History</h2>
-                      <div class="classroom-modal-meta">
-                        <span>SID: {currentSessionId()}</span>
-                        <span><CalendarDays size={15}/>{formatActivityDate(activityLogs()[0]?.createdAt)}</span>
-                      </div>
-                    </div>
-                    <button type="button" class="classroom-modal-close" aria-label="Close history" onClick={() => setIsHistoryOpen(false)}>
-                      <X size={18}/>
-                    </button>
-                  </div>
-
-                  <div class="classroom-history-list">
-                    {isHistoryLoading() ? (<div class="classroom-modal-empty">Loading history...</div>) : activityLogs().length === 0 ? (<div class="classroom-modal-empty">No classroom activity yet.</div>) : (activityLogs().map(log => (<div class={`classroom-history-item ${log.userType}`}>
-                          <span class="classroom-history-marker" aria-hidden="true"></span>
-                          <span class="classroom-history-time">{formatActivityTime(log.createdAt)}</span>
-                          <span class="classroom-history-message">{log.message}</span>
-                        </div>)))}
-                  </div>
-
-                  <div class="classroom-modal-footer">
-                    <button type="button" class="classroom-modal-primary" onClick={requestActivityHistory}>
-                      <RefreshCw size={16}/>
-                      Refresh
-                    </button>
-                  </div>
-                </div>)}
-
-              {isSettingsOpen() && (<div class="classroom-modal classroom-settings-modal" role="dialog" aria-modal="false" aria-labelledby="classroom-settings-title">
-                  <div class="classroom-modal-header">
-                    <div>
-                      <h2 id="classroom-settings-title">Settings</h2>
-                      <div class="classroom-modal-meta">
-                        <span>Classroom devices</span>
-                      </div>
-                    </div>
-                    <button type="button" class="classroom-modal-close" aria-label="Close settings" onClick={() => setIsSettingsOpen(false)}>
-                      <X size={18}/>
-                    </button>
-                  </div>
-
-                  <div class="classroom-device-fields">
-                    <label class="classroom-device-field">
-                      <span><Mic size={16}/>Microphone</span>
-                      <select value={selectedAudioDeviceId()} onChange={(event) => setSelectedAudioDeviceId((event.currentTarget as HTMLSelectElement).value)}>
-                        <option value="">Default microphone</option>
-                        {audioInputDevices().map((device, index) => (<option value={device.deviceId}>
-                            {device.label || `Microphone ${index + 1}`}
-                          </option>))}
-                      </select>
-                    </label>
-
-                    <label class="classroom-device-field">
-                      <span><Video size={16}/>Camera</span>
-                      <select value={selectedVideoDeviceId()} onChange={(event) => setSelectedVideoDeviceId((event.currentTarget as HTMLSelectElement).value)}>
-                        <option value="">Default camera</option>
-                        {videoInputDevices().map((device, index) => (<option value={device.deviceId}>
-                            {device.label || `Camera ${index + 1}`}
-                          </option>))}
-                      </select>
-                    </label>
-                  </div>
-
-                  {recordingAvailable() && <button type="button" class="classroom-recording-settings" onClick={() => setRecordingRevision(value => value + 1)}><ShieldCheck size={17}/>Recording permission</button>}
-
-                  <div class="classroom-modal-footer">
-                    <button type="button" class="classroom-modal-secondary" onClick={loadMediaDevices}>
-                      <RefreshCw size={16}/>
-                      Refresh
-                    </button>
-                    <button type="button" class="classroom-modal-primary" disabled={isApplyingDeviceSettings()} onClick={applyDeviceSettings}>
-                      <Check size={16}/>
-                      {isApplyingDeviceSettings() ? 'Applying...' : 'Apply'}
-                    </button>
-                  </div>
-                </div>)}
-            </div>)}
+          <ClassroomChatPanels
+            historyOpen={isHistoryOpen()} settingsOpen={isSettingsOpen()} sessionId={currentSessionId()}
+            historyLoading={isHistoryLoading()} activities={activityLogs()} formatDate={formatActivityDate} formatTime={formatActivityTime}
+            audioDevices={audioInputDevices()} videoDevices={videoInputDevices()}
+            audioDeviceId={selectedAudioDeviceId()} videoDeviceId={selectedVideoDeviceId()}
+            onAudioDevice={setSelectedAudioDeviceId} onVideoDevice={setSelectedVideoDeviceId}
+            applying={isApplyingDeviceSettings()} recordingAvailable={recordingAvailable()}
+            onRecording={() => setRecordingRevision(value => value + 1)}
+            onRefreshHistory={() => {
+              setIsHistoryLoading(true);
+              socketInstance()?.emit('classroom:request-activity-history', { sessionId: currentSessionId() });
+            }}
+            onRefreshDevices={loadMediaDevices} onApply={applyDeviceSettings}
+            onClose={() => { setIsHistoryOpen(false); setIsSettingsOpen(false); }}/>
           <div class="chat-messages">
             {chatMessages().map((msg) => {
             // In student app: student messages are "self" (right), tutor messages are "other" (left)

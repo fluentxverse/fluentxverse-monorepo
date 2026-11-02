@@ -56,7 +56,7 @@ export default function ConfirmEmailPage() {
     <Show when={verified()} fallback={<>
       <p>Confirm your email address before starting the written exam.</p>
       <Show when={status()?.email}><p class="tutor-confirm-address">{status()!.email}</p></Show>
-      <p class="tutor-confirm-sender">Your confirmation email comes from <strong>tutor@fluentxverse.com</strong>. Check your spam folder if it has not arrived.</p>
+      <p class="tutor-confirm-sender">Your confirmation email comes from <strong>tutor@fluentxverse.com</strong> and may take 1-2 minutes to arrive. Check your spam folder if it has not arrived.</p>
     </>}><p>Your email address is confirmed. You can continue your tutor application.</p></Show>
     <Show when={error()}><p class="tutor-confirm-error" role="alert">{error()}</p></Show>
     <Show when={notice()}><p class="tutor-confirm-notice" role="status">{notice()}</p></Show>

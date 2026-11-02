@@ -2,14 +2,15 @@ import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useCont
 import { Portal } from "solid-js/web";
 import { TICKETING_VISIBLE } from '../config/launch';
 import { cssStyle, Fragment } from "../utils/cssStyle";
-import { CircleAlert, CalendarDays, Check, Globe, Play, User, Star, GraduationCap, School, Award, Heart, Lightbulb, MessagesSquare, CircleCheck, Info, Ticket, ShieldCheck, ArrowLeft } from "lucide-solid";
+import { CircleAlert, CalendarDays, Check, Globe, Play, User, Star, GraduationCap, School, Award, Heart, Lightbulb, CircleCheck, Info, Ticket, ShieldCheck, ArrowLeft } from "lucide-solid";
 import { useRoute } from "../routing";
 import { tutorApi } from '../api/tutor.api';
 import { favoritesApi } from '../api/favorites.api';
 import { scheduleApi, type AvailableSlot } from '../api/schedule.api';
 import type { TutorProfile } from '../types/tutor.types';
+import { tutorPublicName } from '../../../shared/tutorPublicName';
 import ProfileAvatar from '../Components/Common/ProfileAvatar';
-import { mediaUrl } from '../utils/mediaUrl';
+import { mediaUrl, videoMediaUrl } from '../utils/mediaUrl';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { BookingModal } from '../Components/Booking/BookingModal';
@@ -20,7 +21,6 @@ import { getTicketBalance } from '../services/ticket.service';
 import { API_BASE_URL } from '../config/api';
 import './TutorProfilePage.css';
 import ScreeningCertification from '../Components/Common/ScreeningCertification';
-import AnonymousTutorRatings from '../Components/AnonymousTutorRatings';
 const getZkProfileBadge = (tutor: TutorProfile) => {
     if (!tutor.zkCertificationStatus)
         return null;
@@ -60,7 +60,16 @@ export const TutorProfilePage = () => {
     const [tutor, setTutor] = createSignal<TutorProfile | null>(null);
     const [loading, setLoading] = createSignal(true);
     const [error, setError] = createSignal<string | null>(null);
-    const [activeTab, setActiveTab] = createSignal<'about' | 'schedule' | 'reviews'>('about');
+    const [activeTab, setActiveTab] = createSignal<'about' | 'schedule'>('about');
+    const handleProfileTabKeyDown = (event: KeyboardEvent) => {
+        const tabs = ['about', 'schedule'] as const;
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const index = tabs.indexOf(activeTab());
+        const next = event.key === 'Home' ? tabs[0] : event.key === 'End' ? tabs[tabs.length - 1] : tabs[(index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+        setActiveTab(next);
+        document.getElementById(`tutor-profile-tab-${next}`)?.focus();
+    };
     const [showVideoModal, setShowVideoModal] = createSignal(false);
     const [bookingModalOpen, setBookingModalOpen] = createSignal(false);
     const [isFavorite, setIsFavorite] = createSignal(false);
@@ -369,8 +378,8 @@ export const TutorProfilePage = () => {
         </div>
       </>);
         }
-        const displayName = createMemo(() => tutor().displayName || `${tutor().firstName} ${tutor().lastName}`);
-        const initials = createMemo(() => `${tutor().firstName?.[0] || ''}${tutor().lastName?.[0] || ''}`.toUpperCase());
+        const displayName = createMemo(() => tutorPublicName(tutor()));
+        const initials = createMemo(() => displayName().split(' ').map(part => part[0]).slice(0, 2).join('').toUpperCase());
         const hourlyRate = createMemo(() => tutor().hourlyRate ? `₱${tutor().hourlyRate}` : 'Free');
         return (<>
       <SideBar />
@@ -378,10 +387,7 @@ export const TutorProfilePage = () => {
         <Header />
         <div class="tutor-profile-page">
           <div class="profile-heading"><img src="/assets/img/home-icons/profile-v1.webp" alt="" width="48" height="48"/><a href="/browse-tutors"><ArrowLeft size={16}/>Browse tutors</a></div><div class="profile-layout">
-            {/* Main Content Column */}
-            <div class="profile-main-column">
-              {/* Hero Section */}
-              <div class="profile-hero">
+              <header class="profile-hero">
                 <div class="profile-hero-content">
                   {/* Left: Avatar & Basic Info */}
                   <div class="profile-header-left">
@@ -393,18 +399,13 @@ export const TutorProfilePage = () => {
                       </div>)}
                   </div>
 
-                  {/* Mobile Book Button */}
-                  <button onClick={handleBookTrial} class="btn-book-mobile">
-                    <CalendarDays size={18} aria-hidden="true"/>
-                    Book Trial Lesson
-                  </button>
                 </div>
 
                 {/* Right: Details */}
                 <div class="profile-header-right">
                   <div class="profile-name-row">
                     <h1 class="profile-name">{displayName()}</h1>
-                    {_state0.user && (<button onClick={handleToggleFavorite} class={`btn-favorite-star ${isFavorite() ? 'favorited' : ''}`} title={isFavorite() ? 'Remove from Favorites' : 'Add to Favorites'}>
+                    {_state0.user && (<button onClick={handleToggleFavorite} class={`btn-favorite-star ${isFavorite() ? 'favorited' : ''}`} aria-label={isFavorite() ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={isFavorite()} title={isFavorite() ? 'Remove from Favorites' : 'Add to Favorites'}>
                         <Star size={20} fill={isFavorite() ? "currentColor" : "none"}/>
                       </button>)}
                   </div>
@@ -445,49 +446,42 @@ export const TutorProfilePage = () => {
                 </div>
               </div>
 
-              {/* Video Introduction - Inside Hero Card but outside hero-content for full width */}
-              {tutor().videoIntroUrl && (<div class="hero-video-section">
-                  <h3 class="video-section-title">
-                    <img src="/assets/img/home-icons/video-v1.webp" alt="" width="28" height="28"/>
-                    Introduction Video
-                  </h3>
-                  <VideoPlayer src={mediaUrl(tutor().videoIntroUrl)!}/>
-                </div>)}
-            </div>
-
               {/* Tabs Navigation */}
-              <div class="profile-tabs">
-                <button class={`tab-btn ${activeTab() === 'about' ? 'active' : ''}`} onClick={() => setActiveTab('about')}>
+              <div class="profile-tabs" role="tablist" aria-label="Tutor profile" onKeyDown={handleProfileTabKeyDown}>
+                <button id="tutor-profile-tab-about" role="tab" aria-selected={activeTab() === 'about'} aria-controls="tutor-profile-panel" tabIndex={activeTab() === 'about' ? 0 : -1} class={`tab-btn ${activeTab() === 'about' ? 'active' : ''}`} onClick={() => setActiveTab('about')}>
                   <User size={18} aria-hidden="true"/>
                   About
                 </button>
-                <button class={`tab-btn ${activeTab() === 'schedule' ? 'active' : ''}`} onClick={() => setActiveTab('schedule')}>
+                <button id="tutor-profile-tab-schedule" role="tab" aria-selected={activeTab() === 'schedule'} aria-controls="tutor-profile-panel" tabIndex={activeTab() === 'schedule' ? 0 : -1} class={`tab-btn ${activeTab() === 'schedule' ? 'active' : ''}`} onClick={() => setActiveTab('schedule')}>
                   <CalendarDays size={18} aria-hidden="true"/>
                   Schedule
                 </button>
-                <button class={`tab-btn ${activeTab() === 'reviews' ? 'active' : ''}`} onClick={() => setActiveTab('reviews')}>
-                  <Star size={18} aria-hidden="true"/>
-                  Reviews ({tutor().totalReviews || 0})
-                </button>
               </div>
+              </header>
+
+            <div class="profile-main-column">
+              {tutor().videoIntroUrl && activeTab() === 'about' && (<article class="hero-video-section profile-info-card" aria-labelledby="profile-video-title">
+                  <h2 id="profile-video-title" class="video-section-title"><img src="/assets/img/home-icons/video-v1.webp" alt="" width="28" height="28"/>Introduction Video</h2>
+                  <VideoPlayer src={videoMediaUrl(tutor().videoIntroUrl)!}/>
+                </article>)}
 
               {/* Tab Content */}
-              <div class="profile-content">
-            {activeTab() === 'about' && (<div class="tab-content">
+              <div class="profile-content" id="tutor-profile-panel" role="tabpanel" aria-labelledby={`tutor-profile-tab-${activeTab()}`} tabIndex={0}>
+            {activeTab() === 'about' && (<div class="tab-content profile-about-grid">
                 {/* About Me */}
-                <section class="content-section">
-                  <h2 class="section-title">
+                <article class="content-section profile-info-card profile-about-card" aria-labelledby="profile-about-title">
+                  <h2 id="profile-about-title" class="section-title">
                     <img src="/assets/img/home-icons/profile-v1.webp" alt="" width="32" height="32"/>
                     About Me
                   </h2>
                   <div class="section-content">
                     <p>{tutor().introduction || tutor().bio || 'This tutor has not provided an introduction yet.'}</p>
                   </div>
-                </section>
+                </article>
 
                 {/* Education */}
-                {(tutor().schoolAttended || (tutor().education && tutor().education.length > 0)) && (<section class="content-section">
-                    <h2 class="section-title">
+                {(tutor().schoolAttended || (tutor().education && tutor().education.length > 0)) && (<article class="content-section profile-info-card profile-education-card" aria-labelledby="profile-education-title">
+                    <h2 id="profile-education-title" class="section-title">
                       <img src="/assets/img/home-icons/training-v1.webp" alt="" width="32" height="32"/>
                       Education
                     </h2>
@@ -512,12 +506,12 @@ export const TutorProfilePage = () => {
                             </div>)))}
                       </div>
                     </div>
-                  </section>)}
+                  </article>)}
 
                 {/* Interests */}
-                {tutor().interests && tutor().interests.length > 0 && (<section class="content-section">
-                    <h2 class="section-title">
-                      <Heart size={24} aria-hidden="true"/>
+                {tutor().interests && tutor().interests.length > 0 && (<article class="content-section profile-info-card" aria-labelledby="profile-interests-title">
+                    <h2 id="profile-interests-title" class="section-title">
+                      <img src="/assets/img/home-icons/interests-v1.webp" alt="" width="32" height="32"/>
                       Interests
                     </h2>
                     <div class="section-content">
@@ -528,11 +522,11 @@ export const TutorProfilePage = () => {
                           </div>))}
                       </div>
                     </div>
-                  </section>)}
+                  </article>)}
 
                 {/* Specializations */}
-                {tutor().specializations && tutor().specializations.length > 0 && (<section class="content-section">
-                    <h2 class="section-title">
+                {tutor().specializations && tutor().specializations.length > 0 && (<article class="content-section profile-info-card" aria-labelledby="profile-expertise-title">
+                    <h2 id="profile-expertise-title" class="section-title">
                       <img src="/assets/img/home-icons/certificate-v1.webp" alt="" width="32" height="32"/>
                       Areas of Expertise
                     </h2>
@@ -544,12 +538,12 @@ export const TutorProfilePage = () => {
                           </div>))}
                       </div>
                     </div>
-                  </section>)}
+                  </article>)}
               </div>)}
 
             {activeTab() === 'schedule' && (<div class="tab-content">
-                <section class="content-section">
-                  <h2 class="section-title">
+                <section class="content-section profile-info-card" aria-labelledby="profile-schedule-title">
+                  <h2 id="profile-schedule-title" class="section-title">
                     <img src="/assets/img/home-icons/schedule-v1.webp" alt="" width="32" height="32"/>
                     Available Time Slots
                   </h2>
@@ -599,33 +593,6 @@ export const TutorProfilePage = () => {
                 </section>
               </div>)}
 
-            {activeTab() === 'reviews' && (<div class="tab-content">
-                <section class="content-section">
-                  <h2 class="section-title">
-                    <img src="/assets/img/home-icons/reviews-v1.webp" alt="" width="32" height="32"/>
-                    Student Reviews
-                  </h2>
-                  {tutor().totalReviews && tutor().totalReviews > 0 ? (<div class="reviews-summary">
-                      <div class="reviews-overview">
-                        <div class="overall-rating">
-                          <span class="rating-big">{tutor().rating?.toFixed(1)}</span>
-                          <div class="rating-stars">
-                            {[1, 2, 3, 4, 5].map(star => (<Star size={16} fill={star <= (tutor().rating || 0) ? "currentColor" : "none"}/>))}
-                          </div>
-                          <span class="rating-count">{tutor().totalReviews} reviews</span>
-                        </div>
-                      </div>
-                      <div class="reviews-list-placeholder">
-                        <p>Review details coming soon!</p>
-                      </div>
-                    </div>) : (<div class="no-reviews">
-                      <MessagesSquare size={18} aria-hidden="true"/>
-                      <p>This tutor doesn't have any reviews yet.</p>
-                      <p class="no-reviews-hint">Be the first to book a lesson and leave a review!</p>
-                    </div>)}
-                  <AnonymousTutorRatings tutorId={tutorId()} />
-                </section>
-              </div>)}
               </div>
             </div>
 

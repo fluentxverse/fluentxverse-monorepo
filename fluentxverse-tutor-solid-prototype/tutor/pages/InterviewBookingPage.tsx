@@ -4,6 +4,7 @@ import { cssStyle, Fragment } from "../utils/cssStyle";
 import TutorDialog from "../Components/Common/TutorDialog";
 import TutorIcon from "../Components/Common/TutorIcon";
 import TutorArt from "../Components/Common/TutorArt";
+import IdentitySubmission from '../Components/IdentitySubmission';
 import DashboardHeader from '@/Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
@@ -20,10 +21,34 @@ const InterviewBookingPage = () => {
     }));
     const _state0 = useAuthContext();
     const [currentWeekOffset, setCurrentWeekOffset] = createSignal(0);
-    const [selectedPeriod, setSelectedPeriod] = createSignal<'morning' | 'afternoon' | 'evening'>('afternoon');
+    const [refreshVersion, setRefreshVersion] = createSignal(0);
     const [availableSlots, setAvailableSlots] = createSignal<Map<string, InterviewSlot>>(new Map());
     const [myBooking, setMyBooking] = createSignal<MyInterview | null>(null);
+    const bookingSummary = createMemo(() => {
+        const booking = myBooking();
+        if (booking?.result === 'pass') return { title: 'Interview passed', status: 'Passed', tone: 'passed', icon: 'fas fa-check-circle', description: 'Next, complete your tutor profile and submit it for review.' };
+        if (booking?.result === 'fail') return { title: 'Interview not passed', status: 'Not passed', tone: 'failed', icon: 'fas fa-times-circle', description: 'Contact support for feedback and the next steps in your application.' };
+        if (booking?.status === 'completed' || booking?.mediaClosed) return { title: 'Interview completed', status: 'Pending review', tone: 'pending', icon: 'fas fa-clock', description: 'Your interview is finished. Your recruitment team will share the decision here.' };
+        return { title: 'Your interview is booked', status: 'Scheduled', tone: 'scheduled', icon: 'fas fa-calendar-check', description: 'Meet with the FluentXVerse recruitment team for your teaching interview.' };
+    });
+    createEffect(on(() => myBooking()?.id, id => {
+        if (!id) return;
+        let active = true, fetching = false;
+        const refresh = async () => {
+            if (fetching || document.hidden) return;
+            fetching = true;
+            try {
+                const booking = await interviewApi.getMyBooking();
+                if (active) setMyBooking(booking);
+            } catch { /* Preserve the existing booking if a background refresh fails. */ }
+            finally { fetching = false; }
+        };
+        const timer = window.setInterval(refresh, 15000);
+        window.addEventListener('focus', refresh);
+        onCleanup(() => { active = false; window.clearInterval(timer); window.removeEventListener('focus', refresh); });
+    }));
     const [loading, setLoading] = createSignal(true);
+    const [identityEligible, setIdentityEligible] = createSignal(false);
     const [error, setError] = createSignal<string | null>(null);
     const [showConfirmModal, setShowConfirmModal] = createSignal(false);
     const [selectedSlot, setSelectedSlot] = createSignal<InterviewSlot | null>(null);
@@ -57,6 +82,9 @@ const InterviewBookingPage = () => {
         const date = new Date(dateStr + 'T00:00:00');
         return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
     };
+    // Week dates represent calendar days, not instants to convert to UTC.
+    const calendarDateKey = (date: Date) =>
+        `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     // Generate time slots for different periods
     const generateTimeSlots = () => {
         const slots: string[] = [];
@@ -102,11 +130,20 @@ const InterviewBookingPage = () => {
             hour += 12;
         if (period === 'AM' && hour === 12)
             hour = 0;
-        const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        const dateString = calendarDateKey(date);
         return Date.parse(`${dateString}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00+08:00`) <= Date.now();
     };
     // Load data
-    createEffect(on(() => [currentWeekOffset()], () => {
+    const bookableSlots = createMemo(() => [...availableSlots().values()]
+      .filter(slot => !isPastSlot(new Date(slot.date + 'T00:00:00'), slot.time))
+      .sort((a, b) => {
+        const at = (s: InterviewSlot) => {
+          const [time, period] = s.time.split(' '), [h, m] = time.split(':').map(Number);
+          return Date.parse(`${s.date}T${String(h % 12 + (period === 'PM' ? 12 : 0)).padStart(2, '0')}:${String(m).padStart(2, '0')}:00+08:00`);
+        };
+        return at(a) - at(b);
+      }));
+    createEffect(on(() => [currentWeekOffset(), refreshVersion()], () => {
         const _cleanup2 = untrack(() => {
             const loadData = async () => {
                 setLoading(true);
@@ -145,6 +182,7 @@ const InterviewBookingPage = () => {
     }));
     // Handle slot click
     const handleSlotClick = (slot: InterviewSlot) => {
+        if (!identityEligible()) return;
         if (myBooking()) {
             // Already have a booking
             return;
@@ -242,37 +280,42 @@ const InterviewBookingPage = () => {
                 <div class="interview-header-icon">
                   <TutorArt name="schedule" size={32}/>
                 </div>
-                <h1>Book Your Interview</h1>
+                <h1>{identityEligible() || myBooking() ? 'Book Your Interview' : 'Interview application'}</h1>
               </div>
-              <div class="interview-header-actions">
-                <button class="btn-today" onClick={() => setCurrentWeekOffset(0)}>
-                  <TutorIcon name="fas fa-calendar-check"/> Today
-                </button>
-              </div>
+              <a class="booking-guide-link" href="/interview-guide">Interview guide <TutorIcon name="fas fa-arrow-right"/></a>
             </div>
 
             {/* Current Booking */}
-            {myBooking() && (<div class="current-booking-card">
-                <h2><TutorArt name="schedule" size={32}/> Your Scheduled Interview</h2>
-                <div class="booking-details">
-                  <div class="booking-detail">
-                    <TutorIcon name="fas fa-calendar-day"/>
-                    <span>{formatDateFull(myBooking().date)}</span>
+            {myBooking() && (<section class="current-booking-card interview-appointment" aria-labelledby="interview-appointment-title">
+                <div class="interview-appointment-header">
+                  <span class="interview-appointment-eyebrow">Your application interview</span>
+                  <span class={`interview-appointment-status ${bookingSummary().tone}`}><TutorIcon name={bookingSummary().icon}/>{bookingSummary().status}</span>
+                </div>
+                <div class="interview-appointment-body">
+                  <div class="interview-appointment-date" aria-hidden="true">
+                    <span>{new Date(myBooking().date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' })}</span>
+                    <strong>{Number(myBooking().date.slice(-2))}</strong>
                   </div>
-                  <div class="booking-detail">
-                    <TutorIcon name="fas fa-clock"/>
-                    <span>{myBooking().time}</span>
+                  <div class="interview-appointment-content">
+                    <h2 id="interview-appointment-title" class="interview-appointment-title">{bookingSummary().title}</h2>
+                    <p class="interview-appointment-full-date">{formatDateFull(myBooking().date)}</p>
+                    <p class="interview-appointment-description">{bookingSummary().description}</p>
+                    <dl class="interview-appointment-meta">
+                      <div><dt><TutorIcon name="fas fa-clock"/> Time</dt><dd>{myBooking().time}<span>Manila (UTC+08:00)</span></dd></div>
+                      <div><dt><TutorIcon name="fas fa-video"/> Location</dt><dd>Online video call<span>FluentXVerse interview room</span></dd></div>
+                    </dl>
                   </div>
                 </div>
-                <div class="booking-actions">
-                  <button class="btn-join-interview" onClick={() => window.location.href = `/interview/room/${myBooking().id}`}>
-                    <TutorIcon name="fas fa-video"/> Join Interview
-                  </button>
-                  <button class="btn-cancel" onClick={() => setShowCancelConfirmModal(true)}>
-                    <TutorIcon name="fas fa-times"/> Cancel Interview
-                  </button>
+                <div class="interview-appointment-actions">
+                  {myBooking().status === 'booked' && !myBooking().mediaClosed && <button class="interview-appointment-action primary" onClick={() => window.location.href = `/interview/room/${myBooking().id}`}>
+                    <TutorIcon name="fas fa-video"/> Join interview
+                  </button>}
+                  <a class={`interview-appointment-action ${myBooking().status === 'booked' && !myBooking().mediaClosed ? 'secondary' : 'primary'}`} href={myBooking().result === 'pass' ? '/application/profile' : '/home'}>{myBooking().result === 'pass' ? 'Complete your profile' : 'Application progress'}<TutorIcon name="fas fa-arrow-right"/></a>
+                  {myBooking().status === 'booked' && !myBooking().mediaClosed && !myBooking().result && <button class="interview-appointment-action cancel" onClick={() => setShowCancelConfirmModal(true)}>
+                    <TutorIcon name="fas fa-times"/> Cancel interview
+                  </button>}
                 </div>
-              </div>)}
+              </section>)}
 
             {/* Cancel Confirmation Modal */}
             {showCancelConfirmModal() && (<TutorDialog label="Cancel interview" className="tutor-interview-dialog" onClose={() => setShowCancelConfirmModal(false)} busy={cancelInProgress()}>
@@ -306,25 +349,18 @@ const InterviewBookingPage = () => {
                 {toastMessage().text}
               </div>)}
 
-            {/* Info Card */}
-            {!myBooking() && (<div class="info-card">
-                <div class="info-card-icon">
-                  <TutorIcon name="fas fa-info-circle"/>
-                </div>
-                <p>
-                  Select an available interview slot below. You can only have one scheduled interview at a time.
-                  The interview will be conducted by a FluentXVerse administrator to verify your teaching capabilities.
-                </p>
-              </div>)}
-
-            {/* Schedule Card */}
-            <div class="schedule-card">
-              <p class="interview-timezone">Interview times: Asia/Manila (UTC+08:00)</p>
+            <IdentitySubmission onEligibility={setIdentityEligible}/>
+            {(identityEligible() || myBooking()) && <>
+            {!myBooking() && <div class="booking-workspace">
+            <section class="booking-availability" aria-label="Interview availability">
+              <div class="booking-section-heading"><div><h2>Choose your interview time</h2>
+              <p class="interview-timezone">Manila time · UTC+08:00</p></div>
+              <button class="booking-refresh" title="Refresh availability" aria-label="Refresh availability" disabled={loading()} onClick={() => setRefreshVersion(v => v + 1)}><TutorIcon name="fas fa-sync-alt"/></button></div>
               <div class="interview-calendar-toolbar">
               {/* Calendar Navigation */}
               <div class="calendar-nav">
                 <div class="week-navigation">
-                  <button class="nav-btn" aria-label="Previous week" title="Previous week" onClick={() => setCurrentWeekOffset(prev => prev - 1)}>
+                  <button class="nav-btn" disabled={currentWeekOffset() <= 0} aria-label="Previous week" title="Previous week" onClick={() => setCurrentWeekOffset(prev => Math.max(0, prev - 1))}>
                     <TutorIcon name="fas fa-chevron-left"/>
                   </button>
                   <span class="week-range" aria-live="polite">
@@ -335,22 +371,7 @@ const InterviewBookingPage = () => {
                   </button>
                 </div>
               </div>
-
-              {/* Period Tabs */}
-              <div class="period-tabs" role="group" aria-label="Time of day">
-                <button aria-pressed={selectedPeriod() === 'morning'} class={`period-tab ${selectedPeriod() === 'morning' ? 'active' : ''}`} onClick={() => setSelectedPeriod('morning')}>
-                  <TutorIcon name="fas fa-sun"/>
-                  Morning
-                </button>
-                <button aria-pressed={selectedPeriod() === 'afternoon'} class={`period-tab ${selectedPeriod() === 'afternoon' ? 'active' : ''}`} onClick={() => setSelectedPeriod('afternoon')}>
-                  <TutorIcon name="fas fa-cloud-sun"/>
-                  Afternoon
-                </button>
-                <button aria-pressed={selectedPeriod() === 'evening'} class={`period-tab ${selectedPeriod() === 'evening' ? 'active' : ''}`} onClick={() => setSelectedPeriod('evening')}>
-                  <TutorIcon name="fas fa-moon"/>
-                  Evening
-                </button>
-              </div>
+              <button class="booking-week-reset" onClick={() => setCurrentWeekOffset(0)}>This week</button>
               </div>
 
               {/* Calendar Grid */}
@@ -360,48 +381,27 @@ const InterviewBookingPage = () => {
                 </div>) : error() ? (<div class="error-container">
                   <TutorIcon name="fas fa-exclamation-triangle"/>
                   <p>{error()}</p>
-                  <button class="btn btn-primary" onClick={() => setCurrentWeekOffset(currentWeekOffset())}>
+                  <button class="btn btn-primary" onClick={() => setRefreshVersion(v => v + 1)}>
                     Retry
                   </button>
-                </div>) : (<div class="calendar-container" role="region" aria-label="Interview availability" tabIndex={0}>
-                  <div class="calendar-grid">
-                    {/* Header Row */}
-                    <div class="calendar-header">
-                      <div class="time-header"></div>
-                      {weekDates().map((date, idx) => (<div class={`day-header ${isToday(date) ? 'today' : ''}`}>
-                          <div class="day-name">{days[idx].substring(0, 3)}</div>
-                          <div class="day-date">{date.getDate()}</div>
-                        </div>))}
-                    </div>
-
-                    {/* Time Rows */}
-                    {timeSlots[selectedPeriod()].map(time => (<div class="time-row">
-                        <div class="time-label">{time}</div>
-                        {weekDates().map((date, dayIdx) => {
-                    const key = `${dayIdx}-${time}`;
-                    const slot = availableSlots().get(key);
-                    const isPast = isPastSlot(date, time);
-                    // Check if this slot is the user's booking
-                    const dateStr = date.toISOString().split('T')[0];
-                    const isMyBooking = myBooking() && myBooking().date === dateStr && myBooking().time === time;
-                    return (<div class={`slot-cell ${isPast ? 'past' : ''} ${isMyBooking ? 'booked' : ''} ${slot && !myBooking() ? 'available' : ''}`}>
-                              {isMyBooking ? (<div class="slot-badge booked">
-                                  <TutorIcon name="fas fa-check-circle"/> Your Booking
-                                </div>) : slot && !myBooking() && !isPast ? (<button type="button" class="slot-badge open" aria-label={`Book interview on ${formatDateFull(slot.date)} at ${slot.time}`} onClick={() => handleSlotClick(slot)}>
-                                  <TutorIcon name="fas fa-plus-circle"/> Available
-                                </button>) : null}
-                            </div>);
-                })}
-                      </div>))}
-                  </div>
-                </div>)}
-            </div>
-
-            {availableSlots().size === 0 && !loading() && !error() && (<div class="empty-state">
-                <TutorIcon name="fas fa-calendar-times"/>
-                <h3>No Available Slots</h3>
-                <p>There are no interview slots available for this week. Please check back later or try a different week.</p>
-              </div>)}
+                </div>) : bookableSlots().length === 0 ? (<div class="booking-empty" role="status">
+                  <TutorArt name="schedule" size={64}/><h3>No interview times available yet</h3>
+                  <p>Our team opens slots up to three days ahead. Check back soon for new times. Your ID booking deadline still applies.</p>
+                  <button class="interview-appointment-action secondary" onClick={() => setRefreshVersion(v => v + 1)}><TutorIcon name="fas fa-sync-alt"/> Check again</button>
+                </div>) : <div class="booking-date-list">{weekDates().map(date => {
+                  const slots = () => bookableSlots().filter(s => s.date === calendarDateKey(date));
+                  return <>{slots().length > 0 && <section class="booking-date-row"><div class="booking-date-label"><strong>{isToday(date) ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'long' })}</strong><span>{formatDate(date)}</span></div>
+                    <div class="booking-time-options">{slots().map(slot => <button class="booking-time" disabled={!identityEligible()} aria-label={`Book interview on ${formatDateFull(slot.date)} at ${slot.time}`} onClick={() => handleSlotClick(slot)}><TutorIcon name="fas fa-clock"/>{slot.time}</button>)}</div>
+                  </section>}</>;
+                })}</div>}
+            </section>
+            <aside class="booking-preparation"><TutorArt name="contactCheck" size={56}/><h2>Ready for your interview</h2>
+              <ul><li>Keep the same ID you submitted ready to show on camera.</li><li>Check your microphone, camera and internet connection.</li><li>Choose a quiet, well-lit place for your video call.</li></ul>
+              <p>You can hold one interview booking at a time. Cancelling or missing it requires a new ID submission.</p>
+              <a class="booking-guide-link" href="/interview-guide">Read the interview guide <TutorIcon name="fas fa-arrow-right"/></a>
+            </aside>
+            </div>}
+            </>}
           </div>
         </div>
       </div>

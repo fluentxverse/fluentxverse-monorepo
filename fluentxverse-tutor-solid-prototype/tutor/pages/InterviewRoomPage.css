@@ -1,4 +1,5 @@
 /* Interview Room Page Styles - Light Mode with Blue Theme */
+@import '../../../shared/ui/interview-chat.css';
 .interview-room {
   min-height: 100vh;
   background: #f8fafc;
@@ -556,4 +557,23 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+.interview-room .interview-call { height: 100dvh; }
+.interview-room .interview-candidate-body { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 12px; padding: 12px; flex: 1; min-height: 0; }
+.interview-room .interview-candidate-media { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.interview-room .interview-candidate-media .video-grid { margin: 0; min-height: 180px; padding: 16px; border-radius: 8px; }
+.interview-room .interview-candidate-media .video-container.remote { max-height: 100%; max-width: min(900px,100%); }
+.interview-room .interview-candidate-media .video-container.local { width: 140px; bottom: 12px; right: 12px; }
+.interview-room .interview-candidate-media .call-controls { padding: 12px; flex-shrink: 0; }
+.interview-room .interview-candidate-media .video-placeholder { color: #c3cfdf; }
+.interview-room .call-header { gap: 12px; flex-wrap: wrap; padding: 12px 16px; }
+@media (max-width: 900px) {
+  .interview-room .interview-call { height: auto; min-height: 100dvh; }
+  .interview-room .interview-candidate-body { grid-template-columns: minmax(0,1fr); }
+  .interview-room .interview-candidate-media .video-grid { min-height: 280px; }
+  .interview-room .interview-chat { height: 380px; }
+  .interview-room .call-header { flex-direction: row; }
+  .interview-room .call-title { font-size: 14px; }
+  .interview-room .call-info { gap: 8px; flex-wrap: wrap; }
 }

@@ -5,6 +5,7 @@ import { cssStyle, Fragment } from "../utils/cssStyle";
 import { Search, X, CalendarDays, SlidersHorizontal, ArrowRight, ArrowDown, RotateCcw, Star, ShieldCheck, MapPin, Languages, Video, Plus } from "lucide-solid";
 import { tutorApi } from '../api/tutor.api';
 import type { Tutor } from '../types/tutor.types';
+import { tutorPublicName } from '../../../shared/tutorPublicName';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { BookingModal } from '../Components/Booking/BookingModal';
@@ -18,9 +19,9 @@ function TutorCard(_props0: {
     tutor: Tutor;
     onBook: (tutor: Tutor) => void;
 }) {
-    const name = createMemo(() => _props0["tutor"].displayName || `${_props0["tutor"].firstName} ${_props0["tutor"].lastName}`);
+    const name = createMemo(() => tutorPublicName(_props0["tutor"]));
     const profileUrl = createMemo(() => `/tutor/${encodeURIComponent(_props0["tutor"].userId)}`);
-    const initials = createMemo(() => `${_props0["tutor"].firstName?.[0] || ''}${_props0["tutor"].lastName?.[0] || ''}`.toUpperCase());
+    const initials = createMemo(() => name().split(' ').map(part => part[0]).slice(0, 2).join('').toUpperCase());
     const proofLabels = { local_proof_generated: 'ZK Proof Ready', submitted: 'zkVerify Pending', verified: 'ZK Verified' };
     const proofLabel = createMemo(() => _props0["tutor"].zkCertificationStatus && proofLabels[_props0["tutor"].zkCertificationStatus as keyof typeof proofLabels]);
     return (<article class="browse-tutor-card">
@@ -281,7 +282,7 @@ export const BrowseTutorsPage = () => {
         <div class="browse-filter-dialog-footer"><button class="browse-reset" onClick={clearFilters}><RotateCcw size={14}/>Reset</button><button class="browse-button" onClick={() => setShowFilters(false)}>View Tutors <ArrowRight size={16}/></button></div>
       </dialog>}
     </div>
-    {selectedTutor() && <BookingModal isOpen onClose={() => setSelectedTutor(null)} tutorId={selectedTutor().userId} tutorName={selectedTutor().displayName || `${selectedTutor().firstName} ${selectedTutor().lastName}`} tutorAvatar={selectedTutor().profilePicture} hourlyRate={selectedTutor().hourlyRate} filterDate={selectedDate()}/>}
+    {selectedTutor() && <BookingModal isOpen onClose={() => setSelectedTutor(null)} tutorId={selectedTutor().userId} tutorName={tutorPublicName(selectedTutor())} tutorAvatar={selectedTutor().profilePicture} hourlyRate={selectedTutor().hourlyRate} filterDate={selectedDate()}/>}
   </>;
     }) as unknown as JSX.Element;
 };

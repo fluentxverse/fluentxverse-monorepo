@@ -36,6 +36,7 @@ const DashboardOverview = () => {
     const [speakingStatus, setSpeakingStatus] = createSignal<SpeakingExamStatus | null>(null);
     const [interview, setInterview] = createSignal<MyInterview | null>(null);
     const [proofStatus, setProofStatus] = createSignal<TutorCertificationProofResponse | null>(null);
+    const interviewPassed = () => interview()?.result ? interview().result === 'pass' : proofStatus()?.snapshot.interviewPassed === true;
     createEffect(on(() => [_state0.user?.userId], () => {
         const _cleanup1 = untrack(() => {
             let disposed = false;
@@ -59,7 +60,7 @@ const DashboardOverview = () => {
                     }
                     setInterview(interviewRes);
                     setProofStatus(proofRes);
-                    if (speakingRes.status?.isProcessing) poll = setTimeout(fetchData, 5000);
+                    poll = setTimeout(fetchData, speakingRes.status?.isProcessing ? 5000 : 15000);
                 }
                 catch (err) {
                     console.error('Failed to fetch dashboard data:', err);
@@ -81,7 +82,7 @@ const DashboardOverview = () => {
             progress += 33;
         if (speakingStatus()?.passed)
             progress += 33;
-        if (proofStatus()?.snapshot.interviewPassed || interview()?.result === 'pass')
+        if (interviewPassed())
             progress += 34;
         return progress;
     };
@@ -94,7 +95,7 @@ const DashboardOverview = () => {
         if (speakingStatus()?.isProcessing)
             return { text: 'Speaking Assessment Processing', color: '#3b82f6' };
         if (speakingStatus()?.passed && writtenStatus()?.passed)
-            return { text: interview()?.result === 'pass' || proofStatus()?.snapshot.interviewPassed ? 'Profile Review Pending' : 'Interview Pending', color: '#f59e0b' };
+            return { text: interviewPassed() ? 'Profile Review Pending' : interview()?.result === 'fail' ? 'Interview Not Passed' : 'Interview Pending', color: '#f59e0b' };
         if (writtenStatus()?.passed)
             return { text: 'Speaking Exam Pending', color: '#3b82f6' };
         return { text: 'In Progress', color: '#94a3b8' };
@@ -199,15 +200,15 @@ const DashboardOverview = () => {
 
           <div class="step-connector"></div>
 
-          <div class={`progress-step ${proofStatus()?.snapshot.interviewPassed || interview()?.result === 'pass' ? 'completed' : interview() ? 'scheduled' : ''}`}>
+          <div class={`progress-step ${interviewPassed() ? 'completed' : interview()?.result === 'fail' ? 'failed' : interview() ? 'scheduled' : ''}`}>
             <div class="step-icon">
-              {proofStatus()?.snapshot.interviewPassed || interview()?.result === 'pass' ? <TutorIcon name="fas fa-check"/> : <span>3</span>}
+              {interviewPassed() ? <TutorIcon name="fas fa-check"/> : <span>3</span>}
             </div>
             <div class="step-info">
               <span class="step-title">Interview</span>
               <span class="step-status">
-                {proofStatus()?.snapshot.interviewPassed || interview()?.result === 'pass' ? 'Passed' :
-                interview() ? `Scheduled: ${interview().date} ${interview().time}` : 'Not scheduled'}
+                {interviewPassed() ? 'Passed' : interview()?.result === 'fail' ? 'Not passed' :
+                interview()?.status === 'completed' || interview()?.mediaClosed ? 'Pending review' : interview() ? `Scheduled: ${interview().date} ${interview().time}` : 'Not scheduled'}
               </span>
             </div>
           </div>
@@ -274,13 +275,14 @@ const DashboardOverview = () => {
           <div class="stat-card-content">
             <h3>Interview</h3>
             <div class="stat-score">
-              {proofStatus()?.snapshot.interviewPassed || interview()?.result === 'pass' ? (<span class="score-badge passed">PASSED</span>) : interview() ? (<span class="score-badge scheduled">SCHEDULED</span>) : (<span class="score-badge pending">NOT SCHEDULED</span>)}
+              {interviewPassed() ? (<span class="score-badge passed">PASSED</span>) : interview()?.result === 'fail' ? (<span class="score-badge failed">NOT PASSED</span>) : interview()?.status === 'completed' || interview()?.mediaClosed ? (<span class="score-badge pending">PENDING REVIEW</span>) : interview() ? (<span class="score-badge scheduled">SCHEDULED</span>) : (<span class="score-badge pending">NOT SCHEDULED</span>)}
             </div>
             {interview() && interview().status !== 'completed' && (<div class="interview-datetime">
                 <TutorIcon name="fas fa-calendar"/>
                 {interview().date} at {interview().time}
               </div>)}
           </div>
+          {interviewPassed() && !proofStatus()?.snapshot.profileApproved && <a class="stat-action" href="/application/profile">Complete your profile</a>}
           {!interview() && writtenStatus()?.passed && speakingStatus()?.passed && (<button class="stat-action" onClick={() => location.route('/interview')}>
               Book Interview
               <TutorIcon name="fas fa-arrow-right"/>

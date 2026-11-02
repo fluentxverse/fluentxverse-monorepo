@@ -14,6 +14,7 @@ import { lessonPrivacyApi } from '../api/lessonPrivacy.api';
 import ProfileAvatar from '../Components/Common/ProfileAvatar';
 import StudentDialog from '../Components/Common/StudentDialog';
 import LessonJourney from '../Components/Booking/LessonJourney';
+import LessonRecordingNotice from '../../../shared/ui/LessonRecordingNotice';
 import { useCurrentTime } from '../hooks/useCurrentTime';
 import { canCancelLesson } from '../utils/lessonCancellation';
 import { canJoinClassroom } from '../utils/classroomWindow';
@@ -223,6 +224,7 @@ export const LessonPage = (_props0: {
                 </section>
               </div>
               <StudentLessonIssueReport bookingId={bookingId()!}/>
+              <LessonRecordingNotice/>
               <StudentLessonRecap bookingId={bookingId()!}/>
               <LessonEvidence bookingId={bookingId()!} role="student" api={lessonPrivacyApi}/>
             </>}

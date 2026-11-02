@@ -8,9 +8,8 @@ import { useLocation } from "../routing";
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import LessonNotesCard from '../Components/LessonNotesCard';
+import LessonRecordingNotice from '../../../shared/ui/LessonRecordingNotice';
 import LessonMaterialRequest from '../Components/LessonMaterialRequest';
-import LessonEvidence from '../../../shared/ui/LessonEvidence';
-import { lessonPrivacyApi } from '../api/lessonPrivacy.api';
 import { TutorLessonIssueReportDialog, type TroubleDuration, type TroubleReason, type TutorStudentIssue } from '../Components/TutorLessonIssueReportDialog';
 import { useAuthContext } from '../context/AuthContext';
 import { useNotificationStore } from '../context/NotificationContext';
@@ -626,6 +625,7 @@ const StudentProfilePage = (_props1: StudentProfilePageProps) => {
           <DashboardHeader user={_state2.user || undefined}/>
           <div class="student-profile-state error">
             <p>{error() || 'Student not found'}</p>
+            <a href="/schedule">Return to My schedule</a>
           </div>
         </div>
       </>);
@@ -819,10 +819,7 @@ const StudentProfilePage = (_props1: StudentProfilePageProps) => {
               </>)}
           </section>
 
-          {lessonData() && (<aside class="lesson-recording-notice" aria-label="Lesson recording notice">
-              <TutorIcon name="fi fi-sr-info" aria-hidden="true"/>
-              <p><strong>Recording notice:</strong> Lessons may be recorded to review teaching quality and maintain service standards. Recordings are handled confidentially and used only for quality assurance and compliance reviews.</p>
-            </aside>)}
+          {lessonData() && <LessonRecordingNotice/>}
 
           <section class="lesson-context" aria-labelledby="lesson-context-title">
             <div class="lesson-context-heading">
@@ -858,7 +855,6 @@ const StudentProfilePage = (_props1: StudentProfilePageProps) => {
           </section>
           {lessonData() && <LessonMaterialRequest studentId={studentData().id || lessonData().studentId} sessionId={lessonData().sessionId || bookingId()!}/>}
           {lessonData() && <LessonNotesCard sessionId={lessonData().sessionId || bookingId()!}/>}
-          {lessonData() && <LessonEvidence bookingId={bookingId()!} role="tutor" api={lessonPrivacyApi}/>}
         </div>
       </div>
 

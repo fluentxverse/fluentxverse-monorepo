@@ -40,7 +40,6 @@ const YoungLesson = page(() => import('./pages/YoungLearnersLessonPage'));
 const LessonView = page(() => import('./pages/LessonViewPage'));
 const Tickets = page(() => import('./pages/TicketsPage'));
 const Purchases = page(() => import('./pages/PurchaseHistoryPage'));
-const Reviews = page(() => import('./pages/AnonymousReviewsPage'));
 const Inbox = page(() => import('./pages/InboxPage'));
 const Register = page(() => import('./pages/RegisterPage'));
 const Contact = page(() => import('./pages/ContactPage'));
@@ -105,7 +104,6 @@ export default function App() {
     <Route path="/conversation-mat/:level/:chapter/:goalSlug" component={LessonView} />
     <Route path="/tickets" component={TICKETING_VISIBLE ? protect(Tickets) : () => <Navigate href="/browse-tutors" />} />
     <Route path="/purchase-history" component={TICKETING_VISIBLE ? protect(Purchases) : () => <Navigate href="/schedule" />} />
-    <Route path="/reviews" component={protect(Reviews)} />
     <Route path="/inbox" component={protect(Inbox)} />
     <Route path="/profile" component={protect(Profile)} />
     <Route path="/student/:studentId" component={protect(Profile)} />

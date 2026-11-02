@@ -1,0 +1,15 @@
+.profile-guidelines { border-top: 1px solid var(--td-border, #dbe3ee); border-bottom: 1px solid var(--td-border, #dbe3ee); margin: 16px 0; color: var(--td-text, #202636); min-width: 0; }
+.profile-guidelines summary { display: flex; align-items: center; gap: 8px; padding: 12px 0; font-size: 13px; font-weight: 600; color: var(--td-accent, #0245ae); cursor: pointer; list-style: none; }
+.profile-guidelines summary::after { content: '+'; margin-left: auto; font-size: 18px; }
+.profile-guidelines[open] summary::after { content: '-'; }
+.profile-guidelines summary svg { flex-shrink: 0; }
+.profile-guidelines summary:focus-visible { outline: 2px solid #3984f5; outline-offset: 2px; }
+.profile-guidelines-body { padding: 0 0 14px; font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
+.profile-guidelines-body p { margin: 0 0 12px; }
+.profile-guidelines-body :is(ul,ol) { padding-left: 20px; margin: 0 0 12px; }
+.profile-guidelines-body ul { list-style: disc; }
+.profile-guidelines-body ol { list-style: decimal; }
+.profile-guidelines-body li { margin: 6px 0; }
+.profile-guidelines-body p:last-child { margin-bottom: 0; }
+.profile-guidelines .guideline-review-note { color: var(--td-muted, #64748b); font-size: 12px; }
+.photo-background-swatch { display: inline-block; width: 14px; height: 14px; vertical-align: middle; background: #C8C8C8; border: 1px solid #929292; border-radius: 2px; }

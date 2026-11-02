@@ -19,3 +19,23 @@
 
 /* Ensure half groups expand full width when stacked */
 .settings-form-group-half { width: 100%; }
+
+dialog.tutor-settings-dialog { padding: 0; overflow: hidden; }
+dialog.tutor-dialog.tutor-settings-dialog > .settings-modal { display: flex !important; flex-direction: column; max-height: min(90dvh, 820px) !important; overflow: hidden; }
+.tutor-settings-dialog .settings-dialog-header { position: relative; flex: 0 0 64px; display: flex; align-items: center; justify-content: center; padding: 12px 60px; border-bottom: 1px solid var(--td-border, #dbe3ee); background: var(--td-surface, #fff); z-index: 2; }
+.tutor-settings-dialog .settings-dialog-header h2 { font-size: 15px; line-height: 1.4; margin: 0; text-align: center; color: var(--td-text, #202636); }
+.tutor-settings-dialog .settings-dialog-header :is(.settings-modal-back,.settings-modal-close) { top: 14px; }
+.tutor-settings-dialog .settings-dialog-header .settings-modal-back { left: 16px; }
+.tutor-settings-dialog .settings-dialog-header .settings-modal-close { right: 16px; }
+.tutor-settings-dialog .settings-dialog-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 20px 24px; scrollbar-gutter: stable; }
+.tutor-settings-dialog .settings-subview-scrollable { max-height: none; overflow: visible; padding: 0; }
+.tutor-settings-dialog .settings-subview { padding-top: 0; }
+.tutor-settings-dialog .settings-form-group { margin: 0 0 20px; padding: 0; }
+.tutor-settings-dialog .settings-form-label { display: block; margin: 0 0 8px; }
+.tutor-settings-dialog .settings-form-section { padding: 20px 0; }
+.tutor-settings-dialog .settings-form-section-title { margin: 0 0 20px; text-align: left; }
+.tutor-settings-dialog :is(.settings-form-input,.settings-form-select,.settings-form-textarea):focus { outline: 2px solid #3984f5; outline-offset: 2px; transform: none; }
+@media(max-width:600px) {
+  .tutor-settings-dialog .settings-dialog-content { padding: 16px; }
+  dialog.tutor-settings-dialog > .settings-modal { max-height: 90dvh !important; }
+}

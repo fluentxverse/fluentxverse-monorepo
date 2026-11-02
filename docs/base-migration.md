@@ -1,8 +1,10 @@
 # Base Migration
 
-FluentXVerse's active EVM destination is Base mainnet (`8453`). GMR Engine
-owns transaction routing and Vault-backed signing. zkVerify remains the native
-proof-verification network; its official receipt is checked on Base.
+This document records the earlier migration to Base mainnet (`8453`). On
+October 29, 2026, future proof receipts moved to Arbitrum One; see
+[Arbitrum Receipt Migration](arbitrum-migration.md) for the active configuration.
+Ticket assets and earlier proofs were not moved. GMR Engine continues to own
+transaction routing and Vault-backed signing.
 
 ## Destination Pins
 

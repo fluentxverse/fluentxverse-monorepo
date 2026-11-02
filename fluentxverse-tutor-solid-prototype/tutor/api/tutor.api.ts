@@ -3,6 +3,7 @@ import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
 import type { Tutor, TutorProfile, TutorSearchParams, TutorSearchResponse } from '../types/tutor.types';
 import { client as api } from './utils';
+import { validateProfilePhoto } from '../utils/profilePhoto';
 export interface ClassroomVocabularyNote {
     word: string;
     definitions: {
@@ -277,10 +278,7 @@ export const tutorApi = {
      * Upload tutor profile picture
      */
     uploadProfilePicture: async (file: File): Promise<string> => {
-        const MAX_BYTES = 5 * 1024 * 1024; // 5MB safeguard client-side
-        if (file.size > MAX_BYTES) {
-            throw new Error(`File too large. Max ${(MAX_BYTES / (1024 * 1024)).toFixed(1)}MB`);
-        }
+        await validateProfilePhoto(file);
         const form = new FormData();
         form.append('file', file);
         const response = await api.post<{

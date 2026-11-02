@@ -22,6 +22,11 @@
 /* The legacy section reset uses an important zero margin. */
 .student-profile-main .lesson-notes-card { margin-top: 16px !important; }
 
+/* Nested note sections share the card surface, including under legacy dark styles. */
+.App.tutor-workspace .lesson-notes-card :is(.lesson-student-attendance, .lesson-note-section, .lesson-note-section > h4) {
+  background: transparent !important;
+}
+
 .lesson-notes-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .lesson-notes-heading h2 { display: flex; align-items: center; gap: 10px; color: var(--notes-text); font-size: 16px; margin: 0; }
 .lesson-notes-refresh { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--notes-border); border-radius: 6px; background: var(--notes-header); color: var(--notes-muted); cursor: pointer; }

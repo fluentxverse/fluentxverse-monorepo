@@ -7,7 +7,7 @@ export type LessonIssueDuration = 'up_to_ten' | 'over_ten';
 export type LessonIssueReason = 'connection' | 'audio' | 'hardware' | 'emergency' | 'power' | 'tutor' | 'material' | 'other';
 export interface StudentLessonIssueReport {
     id: string;
-    duration: LessonIssueDuration;
+    duration?: LessonIssueDuration;
     reason: LessonIssueReason;
     details: string;
     tutorIssue?: StudentTutorIssue | null;
@@ -36,7 +36,7 @@ export const lessonIssueReportApi = {
             throw new Error(data.error || 'Could not check reporting availability');
         return data.data;
     },
-    async submit(bookingId: string, duration: LessonIssueDuration, reason: LessonIssueReason, details: string, tutorIssue?: StudentTutorIssue): Promise<StudentLessonIssueReport> {
+    async submit(bookingId: string, duration: LessonIssueDuration | undefined, reason: LessonIssueReason, details: string, tutorIssue?: StudentTutorIssue): Promise<StudentLessonIssueReport> {
         const { data } = await client.post(`/schedule/lesson/${encodeURIComponent(bookingId)}/issue-report`, { duration, reason, details, tutorIssue });
         if (!data.success)
             throw new Error(data.error || 'Could not submit issue report');

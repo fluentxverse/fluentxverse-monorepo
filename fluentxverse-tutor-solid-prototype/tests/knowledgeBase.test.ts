@@ -30,3 +30,15 @@ test('saved article parsing tolerates invalid storage and drops stale or duplica
   for (const raw of [null, 'invalid', '{}', 'null', '42']) expect(parseKnowledgeBookmarks(raw)).toEqual([]);
   expect(parseKnowledgeBookmarks('["join-your-classroom","join-your-classroom",null,"missing"]')).toEqual(['join-your-classroom']);
 });
+test('recent deployed workflows are documented and searchable', () => {
+  expect(searchKnowledge('first lesson guide').some(article => article.slug === 'your-first-lesson-guide')).toBe(true);
+  expect(searchKnowledge('line breaks').some(article => article.slug === 'speaking-interview-call-and-chat')).toBe(true);
+  const join = knowledgeArticles.find(article => article.slug === 'join-your-classroom')!;
+  expect(JSON.stringify(join)).toContain('Enter Classroom');
+  expect(JSON.stringify(join)).toContain('student ID');
+  const notes = knowledgeArticles.find(article => article.slug === 'write-and-submit-lesson-notes')!;
+  expect(JSON.stringify(notes)).toContain('Submit notes & confirm attendance');
+  expect(JSON.stringify(notes)).toContain('100 characters');
+  expect(searchKnowledge('nickname').some(article => article.slug === 'update-your-tutor-profile')).toBe(true);
+  expect(searchKnowledge('Mark all as read').some(article => article.slug === 'inbox-notifications-and-support')).toBe(true);
+});

@@ -2,6 +2,19 @@
 
 ## Status
 
+October 29, 2026: the ZK survey pilot has been removed from the application runtime.
+The server no longer mounts its API, and students use the regular per-lesson survey
+with the original 48-hour deadline and tutor rating updates. The old environment
+flag cannot redirect or block surveys. Historical proof data and shared proving
+artifacts are retained; other ZK features are unchanged. This rollback is local
+source work, not a deployment. The implementation details below are archived.
+
+October 29, 2026: new source enrollment is one review per eligible lesson, still
+batched by tutor/month. Historical monthly cohorts remain unchanged. See
+[the per-lesson implementation and limits](per-lesson-anonymous-reviews.md).
+This source change is not a deployment; the older policy description below is
+historical for pre-change cohorts.
+
 October 19, 2026: the application registry integration described below is archived.
 The active adapter accepts finalized receipts from the official Horizen bridge
 and enforces membership, nullifier uniqueness and acceptance in Memgraph. It does
