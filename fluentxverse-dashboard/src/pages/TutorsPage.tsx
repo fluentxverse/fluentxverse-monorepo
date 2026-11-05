@@ -394,7 +394,7 @@ const TutorsPage = ({ initialAccount, onAccountClose }: { initialAccount?: { id:
               <col key="languages" className="languages-column" />
               <col key="written" className="exam-column" />
               <col key="speaking" className="exam-column" />
-              <col key="status" className="status-column" />
+              <col key="status" className="tutor-status-column" />
               <col className="status-column" />
               <col className="status-column" />
               <col key="bookings" className="bookings-column" />

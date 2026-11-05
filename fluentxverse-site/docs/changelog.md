@@ -13,7 +13,7 @@ deployments; earlier history has not been reconstructed.
 2. Append an entry with the next unused `FXV-YYYYMMDD-NNN` ID for that release
    date. The sequence is global across apps, not restarted per app. Never
    recycle or renumber an ID. Its permalink is `/changelog#<ID>`.
-3. Set `apps` to one or more of `student`, `tutor`, `backend`, `engine`. A shared fix has
+3. Set `apps` to one or more of `student`, `tutor`, `dashboard`, `site`, `backend`, `engine`. A shared fix has
    one ID with multiple apps; do not duplicate it under different IDs.
 4. Use `added`, `improved`, `fixed`, `changed`, or `removed`, followed by a
    concise title, summary, and details. Use the deployment date, not the date

@@ -54,7 +54,17 @@ test('Engine has its own filter, searchable label and permanent released updates
   expect(entries.every(entry => entry.apps.includes('engine'))).toBe(true);
   expect(entries.some(entry => entry.type === 'added')).toBe(true);
   expect(filterChangelog(changelog, 'engine', 'fixed', 'mainnet account')).toHaveLength(1);
-  expect(filterChangelog(changelog, 'backend').some(entry => entry.apps.includes('engine'))).toBe(false);
+  expect(filterChangelog(changelog, 'backend').every(entry => entry.apps.includes('backend'))).toBe(true);
+  expect(filterChangelog(changelog, 'backend').some(entry => entry.id === 'FXV-20261025-001')).toBe(false);
   expect(filterChangelog(changelog, '', '', 'Engine').length).toBeGreaterThanOrEqual(entries.length);
   expect(changelog.filter(entry => entry.id.startsWith('FXV-20261024-'))).toHaveLength(3);
+});
+
+test('website and dashboard updates have distinct searchable filters', () => {
+  expect(appLabels.site).toBe('Website');
+  expect(appLabels.dashboard).toBe('Dashboard');
+  expect(filterChangelog(changelog, 'site', '', 'ecosystem').some(entry => entry.id === 'FXV-20261105-002')).toBe(true);
+  expect(filterChangelog(changelog, 'dashboard', '', 'monthly tutor reward').some(entry => entry.id === 'FXV-20261104-004')).toBe(true);
+  expect(filterChangelog(changelog, 'site').every(entry => entry.apps.includes('site'))).toBe(true);
+  expect(filterChangelog(changelog, 'dashboard').every(entry => entry.apps.includes('dashboard'))).toBe(true);
 });

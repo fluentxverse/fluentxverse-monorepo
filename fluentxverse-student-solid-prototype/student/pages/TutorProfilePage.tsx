@@ -483,7 +483,7 @@ export const TutorProfilePage = () => {
                 {(tutor().schoolAttended || (tutor().education && tutor().education.length > 0)) && (<article class="content-section profile-info-card profile-education-card" aria-labelledby="profile-education-title">
                     <h2 id="profile-education-title" class="section-title">
                       <img src="/assets/img/home-icons/training-v1.webp" alt="" width="32" height="32"/>
-                      Education
+                      Qualifications
                     </h2>
                     <div class="section-content">
                       <div class="education-info">

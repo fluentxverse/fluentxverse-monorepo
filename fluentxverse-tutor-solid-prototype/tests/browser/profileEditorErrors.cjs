@@ -37,7 +37,7 @@ const base = process.env.TUTOR_TEST_URL || 'http://127.0.0.1:5177';
   await visibleError('Please review the information you entered and try again.');
   await page.screenshot({path:`/tmp/fluentxverse-profile-errors/${width}-${theme}.png`});
   await dialog.getByRole('button',{name:'Cancel',exact:true}).click();
-  for(const heading of ['About Me','Education','Interests']) {
+  for(const heading of ['About Me','Qualifications','Interests']) {
    if(heading==='About Me')await page.locator('.profile-bio-row button').click();
    else await page.locator('.profile-tab-title-row').filter({has:page.getByRole('heading',{name:heading,exact:true})}).getByRole('button').click();
    await expect(dialog.getByRole('alert')).toHaveCount(0);
@@ -51,7 +51,7 @@ const base = process.env.TUTOR_TEST_URL || 'http://127.0.0.1:5177';
     await expect(dialog.getByRole('button',{name:'Save Changes',exact:true})).toBeInViewport();
     await page.screenshot({path:`/tmp/fluentxverse-profile-errors/bio-${width}-${theme}.png`});
    }
-   if(heading==='Education') {
+   if(heading==='Qualifications') {
     const before=writes;await save();await visibleError('Enter your school');assert.equal(writes,before);
    }else {
     if(heading==='Interests') {

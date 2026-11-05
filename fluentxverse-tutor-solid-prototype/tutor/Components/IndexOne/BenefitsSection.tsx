@@ -33,7 +33,7 @@ const BenefitsSection = () => {
         {
             illustration: 'growth',
             title: 'Career Growth',
-            description: 'Advance from tutor to senior tutor, mentor, or trainer. Build a real career in online ESL education.'
+            description: 'Advance from tutor to senior tutor, mentor, or trainer. Build a lasting career helping people learn English online.'
         }
     ] as const;
     return (<section class="benefits-section">

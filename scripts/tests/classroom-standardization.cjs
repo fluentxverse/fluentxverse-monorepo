@@ -8,11 +8,11 @@ const id='classroom-parity-fixture';
  fs.mkdirSync('/tmp/fluentxverse-classroom-parity',{recursive:true});
  try{for(const width of [1440,1024,390,320])for(const theme of ['light','dark']){
   const styles={};
-  for(const role of ['student','tutor']){
+  for(const role of process.env.CLASSROOM_TUTOR_ONLY ? ['tutor'] : process.env.CLASSROOM_STUDENT_ONLY ? ['student'] : ['student','tutor']){
    const base=bases[role],other=role==='tutor'?'student':'tutor';
    const context=await browser.newContext({viewport:{width,height:950},permissions:['camera','microphone'],reducedMotion:'reduce',colorScheme:theme});
    await context.addInitScript(theme=>localStorage.setItem('theme-storage',JSON.stringify({state:{themeMode:theme,isDarkMode:theme==='dark'},version:2})),theme);
-   let status='waiting',consent=null,consentWrites=[],socket,readCount=0,historyReads=0;
+   let status='waiting',consent=null,consentWrites=[],socket,readCount=0,historyReads=0,lessonStatus='confirmed';
    const startsAt=new Date(Date.now()-300000).toISOString(),endsAt=new Date(Date.now()+1200000).toISOString();
    const request={lessonId:'',courseId:'conversational-skills',title:'Everyday conversation',lessonNumber:1,goal:'Speak with confidence',studentPreferences:{cameraOn:true,proficiency:'Level 3',errorCorrection:'during_feedback',otherRequests:'Please speak clearly and allow extra thinking time. '.repeat(8)}};
    const user={userId:`${role}-parity`,id:`${role}-parity`,role,firstName:'Test',givenName:'Test',email:'test@example.invalid'};
@@ -28,7 +28,7 @@ const id='classroom-parity-fixture';
     if(path===`/schedule/lesson-recap/${id}`)json.data={startsAt,canRequestMaterial:false,materialRequest:null,materials:[],studentComment:'',englishLevelAssessment:null,previousLessonId:null,nextLessonId:null};
     if(path==='/notifications')json.data={notifications:[],unreadCount:0};
     if(path.startsWith('/tutor/classroom-lesson-notes/'))json.data={materials:[],studentComment:'',tutorMemo:'',englishLevelAssessment:null,updatedAt:null};
-    if(path===`/schedule/lesson/${id}`)json.data={bookingId:id,tutorId:'tutor-parity',tutorName:'Alex',startsAt,durationMinutes:25,status:'confirmed',bookedAt:startsAt};
+    if(path===`/schedule/lesson/${id}`)json.data={bookingId:id,tutorId:'tutor-parity',tutorName:'Alex',startsAt,durationMinutes:25,status:lessonStatus,bookedAt:startsAt};
     if(path===`/schedule/tutor-lesson/${id}`)json.data={bookingId:id,studentId:'student-parity',sessionId:id,slotDate:startsAt.slice(0,10),slotTime:'8:00 PM',status:'confirmed',durationMinutes:25};
     if(path==='/tutor/student/student-parity')json.data={id:'student-parity',givenName:'Test',familyName:'Student',hobbies:[],joinDate:'2026-01-01'};
     if(path.includes('/issue-report')||path.includes('/trouble-report'))json.data={eligible:false,reason:'not_ended',report:null,startsAt,endsAt,closesAt:endsAt,serverNow:new Date().toISOString()};
@@ -67,8 +67,8 @@ const id='classroom-parity-fixture';
    await expect.poll(()=>readCount).toBeGreaterThan(0);
    await expect(page.getByRole('dialog',{name:'Lesson recording',exact:true})).toHaveCount(0);
    assert.deepEqual(consentWrites,[],'A passive notice never silently grants recording permission');
-   await expect(root.getByRole('complementary',{name:'Lesson recording notice'})).toContainText('quality assurance');
-   await expect(root.getByRole('button',{name:'Recording preferences',exact:true})).toBeVisible();
+   await expect(root.getByRole('complementary',{name:'Lesson recording notice'})).toHaveCount(0);
+   await expect(root.getByRole('button',{name:'Recording preferences',exact:true})).toHaveCount(0);
    const requestSection=root.locator('.lesson-request-section');await expect(requestSection).toBeVisible();
    if(role==='tutor'){
     await expect(root.getByText('Teaching cues',{exact:true})).toBeVisible();
@@ -109,22 +109,34 @@ const id='classroom-parity-fixture';
    styles[role].settings=await settings.evaluate(el=>{const r=el.getBoundingClientRect(),s=getComputedStyle(el);return {width:Math.round(r.width),height:Math.round(r.height),bg:s.backgroundColor,color:s.color,padding:s.padding,radius:s.borderRadius};});
    assert.ok(await settings.evaluate(el=>Boolean(el.closest('.classroom-left'))&&el.scrollWidth<=el.clientWidth));
    await settings.getByRole('button',{name:'Close settings',exact:true}).click();await expect(settings).toHaveCount(0);
-   await root.getByRole('button',{name:'Recording preferences',exact:true}).click();
+   await root.getByRole('button',{name:'Device settings',exact:true}).click();
+   await root.getByRole('button',{name:'Recording permission',exact:true}).click();
    const dialog=page.getByRole('dialog',{name:'Lesson recording',exact:true});await expect(dialog).toBeVisible();
    await expect(dialog.getByRole('button',{name:'Agree',exact:true})).toBeDisabled();
    await dialog.getByRole('checkbox').check();await dialog.getByRole('button',{name:'Agree',exact:true}).click();
    await expect(dialog).toHaveCount(0);assert.equal(consentWrites.length,1);assert.equal(consentWrites[0].authority,true);
+   await settings.getByRole('button',{name:'Close settings',exact:true}).click();
    if(role==='tutor'){
     await root.getByTitle('Lesson notes',{exact:true}).click();await expect(root.locator('.dispatch-notes-widget')).toBeVisible();
     await root.locator('.dispatch-notes-close').click();
    }
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
    await page.goto(`${base}/lesson/${id}`,{waitUntil:'networkidle'});
+   if(role==='student'){
+    for(const state of ['confirmed','completed','cancelled']){
+     lessonStatus=state;
+     await page.reload({waitUntil:'networkidle'});
+     await expect(page.getByRole('heading',{name:'Alex',exact:true})).toBeVisible();
+     await expect(page.locator('.fxv-evidence')).toHaveCount(0);
+     await expect(page.getByRole('button',{name:'Create private snapshot',exact:true})).toHaveCount(0);
+    }
+    await page.screenshot({path:`/tmp/fluentxverse-classroom-parity/student-lesson-${width}-${theme}.png`,fullPage:true});
+   }
    await expect(page.getByRole('complementary',{name:'Lesson recording notice'})).toContainText('quality assurance').catch(async error=>{console.error(role,page.url(),await page.locator('body').innerText(),errors);throw error;});
    assert.deepEqual(errors,[]);await context.close();
   }
-  const differences=Object.keys(styles.student).filter(key=>JSON.stringify(styles.tutor[key])!==JSON.stringify(styles.student[key])).map(key=>({key,tutor:styles.tutor[key],student:styles.student[key]}));
+  const differences=process.env.CLASSROOM_TUTOR_ONLY || process.env.CLASSROOM_STUDENT_ONLY ? [] : Object.keys(styles.student).filter(key=>JSON.stringify(styles.tutor[key])!==JSON.stringify(styles.student[key])).map(key=>({key,tutor:styles.tutor[key],student:styles.student[key]}));
   assert.deepEqual(differences,[],`Shared classroom differences at ${width}px ${theme}: ${JSON.stringify(differences)}`);
-  console.log(`PASS ${width}px ${theme}: matching classroom shell, tutor-only cues/notes, no nested request scroll, QA notices and explicit recording permissions`);
+  console.log(`PASS ${width}px ${theme}: classroom banner absent, classroom controls and explicit recording permissions retained`);
  }}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1});

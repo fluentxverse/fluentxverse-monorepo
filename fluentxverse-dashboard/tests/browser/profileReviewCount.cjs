@@ -1,0 +1,20 @@
+const {chromium,expect}=require('@playwright/test');
+const base=process.env.IDENTITY_DASHBOARD_URL||'http://127.0.0.1:5304';
+(async()=>{const browser=await chromium.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox']});
+try{for(const width of [1440,390]){
+ const page=await browser.newPage({viewport:{width,height:1000}});
+ const statuses=Object.fromEntries(['nickname','profilePicture','videoIntro','bio','education','interests','legacy'].map(key=>[key,{status:'approved'}]));
+ await page.routeWebSocket('**/*',ws=>ws.close());
+ await page.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin===base)return route.continue();let json={success:true,data:[]};
+ if(u.pathname==='/admin/me')json.user={userId:'reviewer',username:'Reviewer',role:'superadmin'};
+ if(u.pathname==='/admin/pending-profiles')json.data=[{id:'fixture',name:'Test Tutor',email:'test@example.invalid',nickname:'Test Tutor',bio:'English tutor',profileStatus:'pending_review',profileItemStatuses:statuses}];
+ if(u.pathname==='/admin/applications')json.data={items:[],counts:{total:1,pendingProfile:1},total:0,page:1,pageCount:1,pageSize:10};
+ return route.fulfill({json});});
+ await page.goto(base+'/applications');await page.getByRole('button',{name:/Profile Reviews/}).click();
+ await page.getByRole('button',{name:'Review Test Tutor',exact:true}).click();
+ const dialog=page.getByRole('dialog',{name:'Review Profile',exact:true});
+ await expect(dialog.locator('.progress-text')).toContainText('6/6 approved');
+ await expect(dialog.getByRole('progressbar')).toHaveAttribute('aria-valuenow','6');
+ await expect(dialog.getByRole('progressbar')).toHaveAttribute('aria-valuemax','6');
+ console.log(`PASS ${width}: dashboard counts six required items and ignores legacy keys`);await page.close();
+}}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

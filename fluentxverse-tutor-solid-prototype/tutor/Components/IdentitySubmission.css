@@ -1,4 +1,15 @@
 .interview-booking-page .tutor-identity { border:0; margin:0; padding:0; color:var(--td-text); }
+.identity-credential-confirmation { max-width:680px; padding:4px 0 24px; }
+.tutor-identity .identity-credential-confirmation h3 { font-size:18px; margin:0 0 8px; color:var(--td-text); }
+.tutor-identity .identity-credential-confirmation p { margin:0 0 20px; color:var(--td-muted); }
+.identity-disclosure { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin:0 0 20px; padding:20px 0; border-block:1px solid var(--td-border); }
+.identity-disclosure dt { font-size:13px; font-weight:600; color:var(--td-text); margin-bottom:8px; }
+.identity-disclosure dd { margin:0; font-size:13px; line-height:1.7; color:var(--td-muted); }
+.tutor-identity .identity-credential-note { font-size:12px; line-height:1.7; }
+.identity-credential-check { display:flex; align-items:flex-start; gap:12px; font-size:13px; line-height:1.7; color:var(--td-text); cursor:pointer; margin:0 0 20px; }
+.identity-credential-check input { width:18px; height:18px; flex:0 0 18px; margin:2px 0 0; accent-color:#1254ba; }
+.tutor-identity .identity-credential-submit { min-height:44px; background:#1254ba; border-color:#1254ba; color:white; font-weight:600; }
+@media(max-width:600px) { .identity-disclosure { grid-template-columns:1fr; gap:18px; } .tutor-identity .identity-credential-submit { width:100%; } }
 .tutor-identity .identity-journey { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); padding:22px 0; margin:0 0 32px; list-style:none; border-bottom:1px solid var(--td-border); gap:20px; }
 .identity-journey li { display:flex; align-items:center; gap:12px; min-width:0; color:var(--td-muted); }
 .identity-journey li > span { display:grid; place-items:center; width:32px; height:32px; flex:0 0 32px; border:1px solid var(--td-border); border-radius:50%; font-size:13px; font-weight:600; }

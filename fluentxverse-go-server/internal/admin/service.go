@@ -557,9 +557,9 @@ func profileItemLabel(itemKey string) string {
 		"profilePicture": "Profile Photo",
 		"videoIntro":     "Introduction Video",
 		"videoIntroUrl":  "Introduction Video",
-		"education":      "Education",
-		"schoolAttended": "Education",
-		"major":          "Education",
+		"education":      "Qualifications",
+		"schoolAttended": "Qualifications",
+		"major":          "Qualifications",
 		"interests":      "Interests",
 	}
 	if label, ok := labels[itemKey]; ok {

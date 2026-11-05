@@ -49,6 +49,7 @@ const InboxPage = lazyRoute(() => import('./pages/InboxPage'));
 const KnowledgeBasePage = lazyRoute(() => import('./pages/KnowledgeBasePage'));
 const MyProfilePage = lazyRoute(() => import('./pages/MyProfilePage'));
 const PerformanceMetricsPage = lazyRoute(() => import('./pages/PerformanceMetricsPage'));
+const RewardsPage = lazyRoute(() => import('./pages/RewardsPage'));
 const YoungLearnersPage = lazyRoute(() => import('./pages/YoungLearnersPage'));
 const YoungLearnersLessonPage = lazyRoute(() => import('./pages/YoungLearnersLessonPage'));
 const RegisterPage = lazyRoute(() => import('./pages/RegisterPage'));
@@ -178,6 +179,7 @@ export function AppInner() {
 							<Route path="/profile" component={withCertified(MyProfilePage)}/>
                             <Route path="/application/profile" component={withProtected(MyProfilePage)}/>
 							<Route path="/performance-metrics" component={withCertified(PerformanceMetricsPage)}/>
+                            <Route path="/rewards" component={withProtected(RewardsPage)}/>
 
 							<Route path="/contact" component={ContactUsPage}/>
 							<Route path="/about" component={AboutUsPage}/>

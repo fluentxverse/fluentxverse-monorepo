@@ -5,7 +5,8 @@ import TutorIcon from "../Common/TutorIcon";
 import { A as Link } from "@solidjs/router";
 import { useAuthContext } from '../../context/AuthContext';
 import TutorDialog from "../Common/TutorDialog";
-import LoginModal from "../InnerPages/LoginModal";
+import { lazy, Suspense } from 'solid-js';
+const LoginModal = lazy(() => import('../InnerPages/LoginModal'));
 import ThemeSwitch from '../Common/ThemeSwitch';
 import "./Header.css";
 import BrandWordmark from '../../../../shared/ui/BrandWordmark';
@@ -190,7 +191,7 @@ const Header = (_props0: HeaderProps) => {
         </div>
       </div>
 
-      <LoginModal isOpen={showLoginModal()} onClose={closeLoginModal()}/>
+      {showLoginModal() && <Suspense><LoginModal isOpen={true} onClose={closeLoginModal()}/></Suspense>}
     </header>);
 };
 export default Header;

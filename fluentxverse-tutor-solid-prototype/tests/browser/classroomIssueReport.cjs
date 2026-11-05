@@ -6,7 +6,7 @@ const fs = require('node:fs/promises');
   const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', headless: true, args: ['--no-sandbox', '--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] });
   await fs.mkdir('../output/screenshots', { recursive: true });
   try {
-    for (const role of ['student', 'tutor']) for (const theme of ['light', 'dark']) for (const width of [1566, 375]) {
+    for (const role of process.env.TUTOR_ONLY ? ['tutor'] : ['student', 'tutor']) for (const theme of ['light', 'dark']) for (const width of [1566, 375, 320]) {
       const context = await browser.newContext({ viewport: { width, height: 900 }, permissions: ['camera', 'microphone'] });
       let report = null, eligible = false, submissions = 0, race = false;
       let departureDeadline = null, tutorReturned = false;
@@ -21,6 +21,8 @@ const fs = require('node:fs/promises');
         const user = { userId: `${role}-smoke`, email: 'paulanthonyarriola@gmail.com', role, givenName: 'Smoke', firstName: 'Smoke', tier: 1 };
         let json = { success: true, data: [], profile: {}, user };
         if (req.method() === 'OPTIONS') return route.fulfill({ status: 204 });
+        if (path === '/tutor/email-verification') json.data = { verified: true };
+        if (path === '/proof/tutor-certification/me') json.data = { snapshot: { writtenPassed: true, speakingPassed: true, profileApproved: true, interviewPassed: true, missingRequirements: [] } };
         if (path.endsWith('/socket-token')) json = { success: true, token: 'test-only-token' };
         if (path === '/schedule/week') json.data = { slots: [], weekStart: '2026-10-05', weekEnd: '2026-10-11' };
         if (path === '/notifications') json.data = { notifications: [], unreadCount: 0 };
@@ -62,7 +64,7 @@ const fs = require('node:fs/promises');
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(`${role === 'tutor' ? (process.env.TUTOR_TEST_URL || 'http://127.0.0.1:5177') : (process.env.STUDENT_TEST_URL || 'http://127.0.0.1:5176')}/classroom/classroom-report-smoke`, { waitUntil: 'domcontentloaded' });
       const button = page.getByRole('button', { name: 'Report issue', exact: true });
-      await button.waitFor();
+      await button.waitFor().catch(async error => { console.error({ url: page.url(), body: await page.locator('body').innerText(), errors }); throw error; });
       assert(await button.isDisabled(), 'Reporting is disabled outside eligibility');
       if (role === 'student') {
         const status = page.locator('.student-issue-report-control [role="status"]');
@@ -106,6 +108,17 @@ const fs = require('node:fs/promises');
       await page.screenshot({ path: `../output/screenshots/classroom-report-${role}-${theme}-${width}.png` });
       const selectIssue = async () => {
         await button.click();
+        if (role === 'tutor') {
+          const dialog = page.getByRole('dialog');
+          assert(await dialog.evaluate(el => {
+            const bounds = el.getBoundingClientRect();
+            return ['.trouble-report-header', '.trouble-report-content', '.trouble-report-actions'].every(selector => {
+              const node = el.querySelector(selector), s = getComputedStyle(node);
+              return parseFloat(s.paddingLeft) >= 16 && parseFloat(s.paddingRight) >= 16;
+            }) && bounds.width <= 562 && el.scrollWidth <= el.clientWidth;
+          }), 'Dialog needs consistent padding and bounded width');
+          await page.screenshot({ path: `../output/screenshots/report-duration-${theme}-${width}.png` });
+        }
         await page.getByRole('button', { name: '10 minutes or less', exact: true }).click();
         if (role === 'student') await page.getByRole('radio', { name: 'Audio or microphone problem', exact: true }).check();
         else await page.getByRole('button', { name: 'Audio or microphone problem', exact: true }).click();

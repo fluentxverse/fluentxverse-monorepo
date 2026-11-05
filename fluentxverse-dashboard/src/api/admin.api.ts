@@ -72,7 +72,8 @@ export interface PendingProfileReview {
 
 export interface RecentActivity {
   id: string;
-  type: 'tutor_registered' | 'exam_passed' | 'exam_failed' | 'student_joined' | 'booking' | 'profile_submitted' | 'profile_change_submitted' | 'minting_started' | 'minting_success' | 'minting_failed';
+  type: string;
+  href?: string;
   message: string;
   timestamp: string | null;
   userId?: string;

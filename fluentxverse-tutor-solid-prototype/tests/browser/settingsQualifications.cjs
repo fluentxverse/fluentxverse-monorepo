@@ -69,7 +69,7 @@ const base = process.env.TUTOR_TEST_URL || 'http://127.0.0.1:5177';
       await dialog.getByRole('button', { name: 'Close settings', exact: true }).click();
       await page.locator('.profile-tabs').getByRole('button', { name: 'About', exact: true }).click();
       await expect(page.locator('.profile-education-section')).toContainText('Applied Linguistics');
-      await page.getByRole('button', { name: 'Edit education', exact: true }).click();
+      await page.getByRole('button', { name: 'Edit qualifications', exact: true }).click();
       const editor = page.getByRole('dialog', { name: 'Edit profile', exact: true });
       await expect(editor.getByRole('combobox', { name: 'School attended', exact: true })).toContainText('Ateneo de Manila University');
       await expect(editor.getByLabel('Teaching experience', { exact: true })).toHaveValue('3 to 5 years');

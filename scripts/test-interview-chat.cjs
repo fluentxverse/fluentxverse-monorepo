@@ -10,6 +10,7 @@ const adminBase=process.env.INTERVIEW_DASHBOARD_URL||'http://127.0.0.1:5285';
  try{for(const width of [1440,390,320])for(const theme of ['light','dark']){
   const members=new Map(),errors=[],writes=[];
   let ended=false;
+  let denyAdminOnce=process.env.INTERVIEW_DENIAL_TEST==='true';
   const create=async(role,base)=>{
    const context=await browser.newContext({viewport:{width,height:950},permissions:['camera','microphone'],reducedMotion:'reduce'});
    await context.addInitScript(theme=>{
@@ -41,6 +42,7 @@ const adminBase=process.env.INTERVIEW_DASHBOARD_URL||'http://127.0.0.1:5285';
      if(!packet.startsWith('42'))return;
      const [event,data]=JSON.parse(packet.slice(2)),other=members.get(role==='admin'?'tutor':'admin');
      if(event==='interview:join'){
+      if(role==='admin'&&denyAdminOnce){denyAdminOnce=false;emit('interview:error',{message:'This interview opens at 11:15 PM Manila time, 15 minutes before the scheduled start. Please try again then.'});return;}
       members.set(role,{emit,ws});
       emit('interview:joined',{roomId:data.roomId,configuration:{iceServers:[]},peerPresent:Boolean(other),peerId:other?'peer-'+(role==='admin'?'tutor':'admin'):undefined});
       if(other)other.emit(role==='admin'?'interview:admin-joined':'interview:tutor-joined',{peerId:'peer-'+role});
@@ -59,6 +61,11 @@ const adminBase=process.env.INTERVIEW_DASHBOARD_URL||'http://127.0.0.1:5285';
    await join(tutor.page,tutorBase+'/interview/room/chat-fixture');
    await expect(tutor.page.getByRole('button',{name:'Send message',exact:true})).toBeDisabled();
    await join(admin.page,adminBase+'/interview-room/chat-fixture');
+   if(process.env.INTERVIEW_DENIAL_TEST==='true'){
+    await expect(admin.page.locator('.setup-error')).toContainText('opens at 11:15 PM');
+    await expect(admin.page.locator('.setup-error')).not.toContainText('Failed to join interview room');
+    await expect(admin.page.locator('.btn-join')).toBeEnabled();await admin.page.locator('.btn-join').click();
+   }
    await expect(admin.page.getByRole('heading',{name:'Philippine Passport',exact:true})).toBeVisible();
    await admin.page.getByRole('tab',{name:'Chat',exact:true}).click();
    for(const {page}of[tutor,admin])await expect(page.locator('.interview-chat header')).toContainText('Connected',{timeout:20000});

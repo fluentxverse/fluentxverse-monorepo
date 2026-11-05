@@ -97,6 +97,7 @@
   color: #64748b;
   margin: 0;
 }
+.setup-header .interview-entry-window { margin-top:12px; font-size:13px; line-height:1.6; }
 
 .setup-error {
   background: #fef2f2;

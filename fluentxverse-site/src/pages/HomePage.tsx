@@ -4,6 +4,7 @@ import { ArrowDown, ArrowRight, ArrowUpRight, Layers, MoveUpRight } from 'lucide
 import { Dynamic } from 'solid-js/web';
 import { projects } from '../data/site';
 import { ContactBand } from '../components/ContactBand';
+import { Web3Ecosystem } from '../components/Web3Ecosystem';
 
 export function HomePage() {
   return (
@@ -12,10 +13,10 @@ export function HomePage() {
         <img class="hero-photo" src="/assets/img/office.webp" srcset="/assets/img/office-small.webp 960w, /assets/img/office.webp 1920w" sizes="100vw" alt="A bright, open workspace filled with natural light" width="1920" height="1280" fetchpriority="high" />
         <div class="hero-photo-wash" />
         <div class="container hero-content">
-          <span class="eyebrow"><span class="small-line" /> AN ECOSYSTEM FOR ONCHAIN EDUCATION.</span>
+          <span class="eyebrow"><span class="small-line" /> AN ECOSYSTEM FOR ONCHAIN LEARNING.</span>
           <h1 id="home-title">Fluent<span class="brand-x">X</span>Verse<span class="brand-period">.</span></h1>
           <p class="hero-statement">Learning, backed by proof.</p>
-          <p class="hero-description">We build onchain education applications.<br class="desktop-break" /> FluentXVerse ESL is our first chapter, with more ways to learn ahead.</p>
+          <p class="hero-description">We build onchain learning applications.<br class="desktop-break" /> FluentXVerse ESL is our first chapter, with more ways to learn ahead.</p>
           <div class="hero-actions">
             <A class="button button-primary" href="/#ecosystem">Explore our ecosystem <ArrowDown size={18} /></A>
             <A class="text-link" href="/about">The story behind us <ArrowUpRight size={18} /></A>
@@ -27,15 +28,17 @@ export function HomePage() {
       <section class="intro-band">
         <div class="container intro-inner">
           <div class="intro-label"><Layers size={22} strokeWidth={1.5} /><span>ONCHAIN FOUNDATIONS.<br />REAL LEARNING.</span></div>
-          <p>Our focus is education: learning applications, onchain access, and verifiable credentials. One ecosystem, built to grow across subjects and skills.</p>
+          <p>We connect learning experiences, onchain access, and verifiable credentials. One ecosystem, built to grow across subjects and skills.</p>
           <A class="circle-link" href="/about" aria-label="Discover our purpose" title="Discover our purpose"><ArrowUpRight size={24} /></A>
         </div>
       </section>
 
+      <Web3Ecosystem />
+
       <section id="ecosystem" class="ecosystem-section section-space" aria-labelledby="ecosystem-title">
         <div class="container">
           <div class="section-heading">
-            <div><span class="eyebrow">OUR FIRST EDUCATION PLATFORM</span><h2 id="ecosystem-title">FluentXVerse ESL.<br /><span class="muted-heading">Two apps. One classroom.</span></h2></div>
+            <div><span class="eyebrow">OUR FIRST LEARNING PLATFORM</span><h2 id="ecosystem-title">FluentXVerse ESL.<br /><span class="muted-heading">Two apps. One classroom.</span></h2></div>
             <p>Online English learning with onchain foundations.<br />Dedicated apps for students and tutors.</p>
           </div>
           <div class="project-grid">
@@ -59,7 +62,7 @@ export function HomePage() {
           <div class="next-project">
             <span class="next-icon"><MoveUpRight size={26} strokeWidth={1.5} /></span>
             <div><span class="eyebrow">BEYOND LANGUAGE LEARNING</span><h3>More subjects. The same foundation.</h3></div>
-            <p>Our vision extends to new skills and learning formats,<br />with onchain education at the core.</p>
+            <p>Our vision extends to new skills and learning formats,<br />with onchain learning at the core.</p>
             <span class="future-label">MORE TO COME</span>
           </div>
         </div>
@@ -67,7 +70,7 @@ export function HomePage() {
 
       <section class="purpose-section section-space" aria-labelledby="purpose-title">
         <div class="container purpose-grid">
-          <div class="purpose-heading"><span class="eyebrow">WHY ONCHAIN EDUCATION</span><h2 id="purpose-title">Learning experiences.<br /><span class="muted-heading">Verifiable foundations.</span></h2><A class="text-link" href="/onchain-education">Read the case for onchain education <ArrowRight size={18} /></A></div>
+          <div class="purpose-heading"><span class="eyebrow">WHY ONCHAIN LEARNING</span><h2 id="purpose-title">Learning experiences.<br /><span class="muted-heading">Verifiable foundations.</span></h2><A class="text-link" href="/onchain-learning">Read the case for onchain learning <ArrowRight size={18} /></A></div>
           <div class="purpose-list">
             <article><span>01</span><div><h3>Onchain access to learning</h3><p>Our lesson-ticket design connects digital ownership with a practical use: booking an English lesson. Base Sepolia integration is in testing; contract deployment and ticket validation remain ahead.</p></div></article>
             <article><span>02</span><div><h3>Credentials that can be checked</h3><p>We're developing proof-based verification for tutor qualifications and lesson participation, with care for learners' and educators' personal information.</p></div></article>
@@ -79,8 +82,8 @@ export function HomePage() {
         <div class="container">
           <div class="section-heading"><div><span class="eyebrow">HOW WE BUILD</span><h2 id="home-tech-title">The technology behind the learning.</h2></div><A class="text-link" href="/technology">Explore our technology <ArrowRight size={18} /></A></div>
           <div class="research-links">
-            <A href="/technology/ai"><div><span class="eyebrow">AI / EDUCATION</span><h3>Better tools for human teaching.</h3><p>Language assistance, lesson drafts, and assessment support, with clear limits.</p></div><ArrowRight size={22} /></A>
-            <A href="/onchain-education"><div><span class="eyebrow">WEB3 / VERIFICATION</span><h3>Evidence that can be checked.</h3><p>Our case for shared verification, private proofs, and portable learning records.</p></div><ArrowRight size={22} /></A>
+            <A href="/technology/ai"><div><span class="eyebrow">AI / LEARNING</span><h3>Better tools for human teaching.</h3><p>Language assistance, lesson drafts, and assessment support, with clear limits.</p></div><ArrowRight size={22} /></A>
+            <A href="/onchain-learning"><div><span class="eyebrow">WEB3 / VERIFICATION</span><h3>Evidence that can be checked.</h3><p>Our case for shared verification, private proofs, and portable learning records.</p></div><ArrowRight size={22} /></A>
           </div>
         </div>
       </section>

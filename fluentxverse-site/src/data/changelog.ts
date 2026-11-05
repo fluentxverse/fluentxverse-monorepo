@@ -1,6 +1,6 @@
 import feed from './changelogEntries.json';
 
-export const appLabels = { student: 'Student app', tutor: 'Tutor app', backend: 'Backend', engine: 'Engine' } as const;
+export const appLabels = { student: 'Student app', tutor: 'Tutor app', dashboard: 'Dashboard', site: 'Website', backend: 'Backend', engine: 'Engine' } as const;
 export const changeLabels = { added: 'Added', improved: 'Improved', fixed: 'Fixed', changed: 'Changed', removed: 'Removed' } as const;
 export type ChangeApp = keyof typeof appLabels;
 export type ChangeType = keyof typeof changeLabels;

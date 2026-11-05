@@ -1,9 +1,11 @@
+import { learningCategoryLabel } from '../../../shared/learningTerminology';
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
 import { ArrowLeft, ArrowRight, ArrowUpRight, Search, X } from "lucide-solid";
 import { MaterialLibraryShell, LibraryState } from '../Components/Materials/MaterialLibrary';
 import { API_BASE_URL } from '../config/api';
+import { useLocation } from '../routing';
 interface DispatchArticle {
     id: string;
     title: string;
@@ -12,10 +14,12 @@ interface DispatchArticle {
     createdAt: string;
 }
 export default function DailyDispatchPage() {
+    const location = useLocation();
     const [articles, setArticles] = createSignal<DispatchArticle[]>([]);
     const [loading, setLoading] = createSignal(true);
     const [error, setError] = createSignal('');
     const [searchQuery, setSearchQuery] = createSignal('');
+    createEffect(on(() => location.url, url => setSearchQuery(new URL(url, window.location.href).searchParams.get('search') || '')));
     const [selectedCategory, setSelectedCategory] = createSignal('All');
     const [selectedRecency, setSelectedRecency] = createSignal('All');
     const [selectedSort, setSelectedSort] = createSignal('Newest');
@@ -49,13 +53,14 @@ export default function DailyDispatchPage() {
         try {
             setLoading(true);
             setError('');
-            const response = await fetch(`${API_BASE_URL}/dispatch`, {
+            const response = await fetch(`${API_BASE_URL}/dispatch/classroom-library`, {
                 credentials: 'include'
             });
             if (!response.ok)
                 throw new Error('Failed to load articles');
             const data = await response.json();
-            setArticles(data);
+            if (!data.success || !Array.isArray(data.articles)) throw new Error('Invalid article library');
+            setArticles(data.articles);
         }
         catch (err) {
             console.error('Failed to load articles:', err);
@@ -149,7 +154,7 @@ export default function DailyDispatchPage() {
         <input type="search" aria-label="Search articles" placeholder="Search articles" value={searchQuery()} onInput={event => setSearchQuery(event.currentTarget.value)}/>
         {searchQuery() && <button aria-label="Clear search" title="Clear search" onClick={() => setSearchQuery('')}><X size={16}/></button>}
       </div></label>
-      <label class="library-field">Category<select aria-label="Category" value={selectedCategory()} onChange={event => setSelectedCategory(event.currentTarget.value)}>{CATEGORIES.map(value => <option value={value}>{value}</option>)}</select></label>
+      <label class="library-field">Category<select aria-label="Category" value={selectedCategory()} onChange={event => setSelectedCategory(event.currentTarget.value)}>{CATEGORIES.map(value => <option value={value}>{learningCategoryLabel(value)}</option>)}</select></label>
       <label class="library-field">Recency<select aria-label="Recency" value={selectedRecency()} onChange={event => setSelectedRecency(event.currentTarget.value)}>{RECENCY_OPTIONS.map(value => <option value={value}>{value}</option>)}</select></label>
       <label class="library-field">Sort<select aria-label="Sort" value={selectedSort()} onChange={event => setSelectedSort(event.currentTarget.value)}>{SORT_OPTIONS.map(value => <option value={value}>{value}</option>)}</select></label>
       <div class="library-field library-date-field"><span>Date range</span><div class="library-dates">
@@ -163,7 +168,7 @@ export default function DailyDispatchPage() {
                 : <>
         <p class="library-result-count" aria-live="polite">{sortedArticles().length} {sortedArticles().length === 1 ? 'article' : 'articles'}</p>
         <div class="library-article-grid">{paginatedArticles().map(article => <a class="library-lesson" href={`/materials/daily-dispatch/${encodeURIComponent(article.id)}`} target="_blank" rel="noopener noreferrer" aria-label={`Read ${article.title}`}>
-          <div class="library-lesson-meta">{article.category} · {formatDate(article.createdAt)}</div>
+          <div class="library-lesson-meta">{learningCategoryLabel(article.category)} · {formatDate(article.createdAt)}</div>
           <h3>{article.title}</h3><p>{article.topic}</p>
           <div class="library-lesson-footer"><span>Read article</span><ArrowUpRight size={18}/></div>
         </a>)}</div>

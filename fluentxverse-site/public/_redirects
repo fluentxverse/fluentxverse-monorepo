@@ -1,1 +1,3 @@
 # SPA fallback is configured in wrangler.toml; do not rewrite asset requests.
+/onchain-education /onchain-learning 301
+/onchain-education/ /onchain-learning 301

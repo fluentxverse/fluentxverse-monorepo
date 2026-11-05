@@ -117,7 +117,6 @@ export default function AnonymousLessonReview(props: { enrollment: AnonymousRevi
           }
         })}><RefreshCw size={17}/></button>
         <input ref={input} type="file" accept="application/json,.json" hidden onChange={restore}/>
-        <a href="/reviews">My feedback</a>
       </div>
       <Show when={ack()} fallback={<Show when={group()?.state === 'open'} fallback={<p role="status" class="anonymous-review-status">
         {group()?.state === 'closed' ? 'Feedback window closed.' : group()?.state === 'insufficient_members' ? 'Not enough students enrolled for private feedback.'

@@ -1,3 +1,4 @@
+import { learningCategoryLabel } from '../../../shared/learningTerminology';
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
@@ -75,7 +76,7 @@ export default function DispatchMaterialPicker(_props0: {
     const days = createMemo(() => month() ? new Date(Date.UTC(Number(year() || '2000'), Number(month()), 0)).getUTCDate() : 31);
     const renderArticle = (article: DispatchArticle) => (<div class="dp-article">
       <time dateTime={dispatchPostDate(article)!}>{dateLabel.format(new Date(`${dispatchPostDate(article)}T00:00:00Z`))}</time>
-      <div class="dp-article-copy"><strong>{article.title}</strong><span class="dp-category">{article.category || 'General'}</span></div>
+      <div class="dp-article-copy"><strong>{article.title}</strong><span class="dp-category">{learningCategoryLabel(article.category || 'General')}</span></div>
       <button type="button" class="dp-open" onClick={() => _props0["onOpen"](article)} aria-label={`${_props0["actionLabel"] === undefined ? 'Open article' : _props0["actionLabel"]}: ${article.title}`}><BookOpen size={16}/><span>{_props0["actionLabel"] === undefined ? 'Open article' : _props0["actionLabel"]}</span></button>
     </div>);
     return createMemo(() => {
@@ -85,7 +86,7 @@ export default function DispatchMaterialPicker(_props0: {
             return <div class="dispatch-picker dp-state" role="alert"><span>Could not load Daily Dispatch articles.</span><button type="button" class="dp-retry" onClick={() => setRevision(value => value + 1)}>Try again</button></div>;
         return (<div class="dispatch-picker">
       <section class="dp-section" aria-labelledby="dp-latest-heading">
-        <header class="dp-heading"><h3 id="dp-latest-heading"><img src="/assets/img/home-icons/dispatch-v1.png" alt=""/>Latest article</h3><span>Today</span></header>
+        <header class="dp-heading"><h3 id="dp-latest-heading"><img src="/assets/img/home-icons/dispatch-v2.png" alt=""/>Latest article</h3><span>Today</span></header>
         {latest() ? renderArticle(latest()) : <p class="dp-empty">No article has been posted for today.</p>}
       </section>
       <section class="dp-section" aria-labelledby="dp-archive-heading">

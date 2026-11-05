@@ -118,6 +118,7 @@
   top: calc(100% + 8px);
   right: 0;
   width: 360px;
+  max-width: calc(100vw - 24px);
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
@@ -125,6 +126,10 @@
   overflow: hidden;
   animation: dropdownFade 0.2s ease;
 }
+.notification-open{display:inline-flex;align-items:center;gap:5px;font-size:12px;margin-top:6px;color:var(--primary-color,#2563eb);text-decoration:none}
+.notification-error{font-size:13px;color:var(--error-color,#b91c1c);padding:12px;margin:0}
+.notification-content{min-width:0;overflow-wrap:anywhere}
+.notification-footer{display:flex;align-items:center;justify-content:space-between;gap:12px}
 
 @keyframes dropdownFade {
   from {

@@ -64,3 +64,24 @@ Final contrast refinement: `output/release/identity-review-workspace-final-20261
 Dashboard version: `5abcc70f-19d4-4978-9288-635ba7da8ff6`. Scoped builds, responsive
 review/search/filter/confirmation checks and six two-peer interview regression scenarios
 passed. Full typecheck still has only the pre-existing AIContentGenerator Skill diagnostic.
+
+## Interview Entry Feedback
+
+The 2026-11-02 join failure was checked against the live booked slot: scheduled 11:30 PM
+Manila, entry opens 11:15 PM (the existing 15-minute rule). A live read-only authorization
+check at 11:06 PM returned that exact early-entry denial. No booking was changed.
+Previously the socket guard returned generic access denial and both clients replaced the
+rejected readiness error with Failed to join interview room, hiding the actual cause.
+
+The guard now distinguishes early/expired entry windows and closed bookings after checking
+staff permissions or tutor ownership. Unauthorized callers still receive generic denial.
+Both clients preserve the specific error; admin setup shows scheduled time and entry rule.
+No early-entry, ban, ownership or closed-room restrictions were relaxed. Eleven boundary/
+authorization unit assertions, server typechecking, VPS build/test, and six two-browser
+WebRTC/chat/reconnect scenarios (each with denied join and successful retry) passed.
+API release: `interview-join-feedback-20261102`; UI: `interview-join-ui-current-20261102`.
+The dashboard baseline changed during development to `2876a345-61c6-4480-99cb-63cb081bacde`;
+the deployment guard prevented overwriting it. The dashboard was rebuilt from the latest
+committed app export (`5640d788`) with the join fix overlaid, then regression-tested again.
+Published dashboard: `2b1089da-0065-432b-b910-4090ab46f094`; tutor:
+`a67ab17c-fce1-484c-88a3-d37c1bd6cdd0`. No booking was reopened/rescheduled to bypass entry rules.

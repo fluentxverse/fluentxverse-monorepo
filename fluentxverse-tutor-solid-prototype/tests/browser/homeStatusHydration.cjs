@@ -17,7 +17,7 @@ const api=/^(https:\/\/api\.fluentxverse\.(?:com|xyz)|http:\/\/(?:localhost|127\
   },theme);
   let releaseProof,releaseInterview;
   const proofGate=new Promise(resolve=>releaseProof=resolve),interviewGate=new Promise(resolve=>releaseInterview=resolve);
-  let qualified=true,failProof=false,examReads=0,proofReads=0;
+  let qualified=true,failProof=false,examReads=0,proofReads=0,identityStatus='accepted';
   const errors=[];
   await context.route(api,async route=>{
    const path=new URL(route.request().url()).pathname;
@@ -33,6 +33,7 @@ const api=/^(https:\/\/api\.fluentxverse\.(?:com|xyz)|http:\/\/(?:localhost|127\
    if(path.startsWith('/exam/')){examReads++;json.status={passed:true,percentage:95,attemptsThisMonth:1,maxAttemptsPerMonth:2};}
    if(path==='/notifications')json.data={notifications:[],unreadCount:0};
    if(path==='/schedule/week')json.data={slots:[]};
+   if(path==='/tutor-identity/status')json.data={enabled:true,record:{id:'identity-fixture',status:identityStatus,bookingDeadline:new Date(Date.now()+3600000).toISOString()}};
    if(path==='/tutor/lesson-issues')json.data={direction:'sent',summary:{sent:0,received:0},statusCounts:{submitted:0,under_review:0,resolved:0},items:[]};
    return route.fulfill({json});
   });
@@ -67,6 +68,17 @@ const api=/^(https:\/\/api\.fluentxverse\.(?:com|xyz)|http:\/\/(?:localhost|127\
   await expect(home.getByText('Your teaching journey',{exact:true})).toBeVisible();
   await expect(home.locator('.main-status-card')).toBeVisible();await expect(desk).toHaveCount(0);
   assert.ok(examReads>0,'Actual applicants still load assessment progress');
+  const identityStep=home.locator('.home-identity-step');
+  await expect(identityStep.getByRole('link')).toBeVisible();
+  await expect(identityStep.getByText('COMPLETED',{exact:true})).toHaveCount(0);
+  identityStatus='verified';await page.reload({waitUntil:'domcontentloaded'});
+  await expect(identityStep.getByText('COMPLETED',{exact:true})).toBeVisible();
+  await expect(identityStep.getByRole('link')).toHaveCount(0);
+  await expect(identityStep).toContainText('Your ID and live identity check are complete.');
+  await page.screenshot({path:`/tmp/fluentxverse-home-status/identity-completed-${theme}-${width}.png`,fullPage:true});
+  identityStatus='resubmit';await page.reload({waitUntil:'domcontentloaded'});
+  await expect(identityStep.getByRole('link',{name:'SUBMIT YOUR ID'})).toBeVisible();
+  await expect(identityStep.getByText('COMPLETED',{exact:true})).toHaveCount(0);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   assert.deepEqual(errors,[]);await context.close();
   console.log(`PASS home hydration ${theme} ${width}: no onboarding flash, complete status gate, stable refresh/retry and real approval changes`);

@@ -35,7 +35,7 @@ const portrait = fs.readFileSync(process.env.PROFILE_CARDS_PORTRAIT || '../fluen
     await expect(page.locator('.profile-avatar-large')).toBeVisible();
     await expect.poll(()=>page.locator('.profile-avatar-large img, img.profile-avatar-large').evaluateAll(images=>images.some(img=>img.complete&&img.naturalWidth>0))).toBe(true);
     const cards=page.locator('.profile-info-card');await expect(cards).toHaveCount(5);
-    for(const name of ['About Me','Education','Interests','Areas of Expertise'])await expect(page.getByRole('article',{name,exact:true})).toBeVisible();
+    for(const name of ['About Me','Qualifications','Interests','Areas of Expertise'])await expect(page.getByRole('article',{name,exact:true})).toBeVisible();
     const colors=await cards.evaluateAll(nodes=>nodes.map(el=>({background:getComputedStyle(el).backgroundColor,border:getComputedStyle(el).borderTopWidth,radius:getComputedStyle(el).borderRadius,nested:!!el.parentElement.closest('.profile-info-card,.profile-hero')})));
     for(const color of colors){assert.notEqual(color.background,'rgba(0, 0, 0, 0)');assert.equal(color.border,'1px');assert.equal(color.radius,'8px');assert.equal(color.nested,false);}
     await expect(page.locator('.hero-video-section video')).toBeVisible();

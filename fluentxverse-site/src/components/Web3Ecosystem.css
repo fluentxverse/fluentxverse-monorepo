@@ -1,0 +1,31 @@
+.web3-ecosystem { background: #f5f7f9; border-bottom: 1px solid var(--border); }
+.web3-ecosystem-heading { text-align: center; max-width: 760px; margin: 0 auto 48px; }
+.web3-ecosystem-heading .eyebrow { margin-bottom: 18px; }
+.web3-ecosystem-heading h2 { font-size: 44px; line-height: 1.22; letter-spacing: 0; }
+.web3-ecosystem-heading p { margin-top: 22px; font-size: 15px; }
+.web3-foundations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.web3-foundation { position: relative; display: flex; flex-direction: column; justify-content: center; gap: 20px; min-width: 0; min-height: 160px; padding: 32px 26px; background: #fff; border: 1px solid #e8edf2; border-radius: 8px; transition: border-color 180ms ease, transform 180ms ease; }
+.web3-foundation:hover { border-color: #b7cce5; transform: translateY(-3px); }
+.web3-brand { display: flex; align-items: center; gap: 10px; min-width: 0; height: 40px; color: #172126; font-size: 23px; font-weight: 650; line-height: 1.2; }
+.web3-brand img { flex-shrink: 0; object-fit: contain; object-position: left center; }
+.web3-foundation .web3-brand img { width: 195px; height: 40px; max-width: 100%; }
+.web3-zkverify .web3-brand img { width: 155px; }
+.web3-arbitrum .web3-brand img { width: 35px; height: 40px; }
+.web3-robinhood .web3-brand { font-size: 20px; }
+.web3-robinhood .web3-brand img { width: 35px; height: 35px; }
+.web3-role { color: #65717c; font-size: 12px; line-height: 1.6; }
+.web3-foundation > svg { position: absolute; top: 16px; right: 16px; color: #7f8b96; }
+.web3-provider-strip { margin-top: 48px; padding-top: 28px; border-top: 1px solid #dfe5eb; }
+.web3-provider-label { display: block; text-align: center; color: #6c7780; font-size: 9px; font-weight: 750; line-height: 1.6; margin-bottom: 28px; }
+.web3-provider-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+.web3-provider { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-width: 0; min-height: 74px; }
+.web3-provider .web3-brand { height: 30px; font-size: 22px; }
+.web3-provider .web3-brand img { width: 30px; height: 30px; }
+.web3-privy .web3-brand img { width: 146px; }
+.web3-openzeppelin .web3-brand img { width: 166px; }
+.web3-provider:hover .web3-role { color: var(--accent); }
+.web3-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 1100px) { .web3-foundations { gap: 12px; }.web3-foundation { padding: 28px 18px; }.web3-robinhood .web3-brand { font-size: 16px; gap: 7px; }.web3-robinhood .web3-brand img { width: 28px; height: 28px; } }
+@media (max-width: 900px) { .web3-ecosystem-heading { margin-bottom: 30px; }.web3-ecosystem-heading h2 { font-size: 34px; }.web3-ecosystem-heading p { font-size: 14px; }.web3-foundations { grid-template-columns: minmax(0, 1fr); gap: 12px; }.web3-foundation { min-height: 128px; gap: 14px; padding: 25px; }.web3-robinhood .web3-brand { font-size: 20px; }.web3-robinhood .web3-brand img { width: 35px; height: 35px; }.web3-provider-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 16px; }.web3-provider-strip { margin-top: 32px; }.web3-provider .web3-role { font-size: 11px; }.web3-privy .web3-brand img { width: 125px; }.web3-openzeppelin .web3-brand img { width: 140px; } }
+@media (max-width: 370px) { .web3-ecosystem-heading h2 { font-size: 29px; }.web3-openzeppelin .web3-brand img { width: 125px; }.web3-provider .web3-brand { font-size: 20px; } }
+@media (prefers-reduced-motion: reduce) { .web3-foundation { transition: none; }.web3-foundation:hover { transform: none; } }

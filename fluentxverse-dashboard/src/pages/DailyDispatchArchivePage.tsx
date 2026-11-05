@@ -1,17 +1,23 @@
+import { learningCategoryLabel } from '../../../shared/learningTerminology';
 /**
  * DailyDispatchArchivePage
  * Displays articles for a specific month archive
  */
 import { useState, useEffect } from 'preact/hooks';
 import { useRoute, useLocation } from 'preact-iso';
+import { useAdminTheme } from '../context/ThemeContext';
 import { getDispatchArticlesByMonth, getDispatchArchives, type ArchiveArticleItem, type ArchiveItem } from '../api/dailyDispatch.api';
-import DailyDispatchLogo from '../assets/icons/daily-dispatch-logo.svg';
+import { appArtworkSrc } from '../../../shared/appArtwork';
+const DailyDispatchLogo = appArtworkSrc('dispatch');
 import './DailyDispatchPreviewPage.css';
 import './DailyDispatchArchivePage.css';
 
 export default function DailyDispatchArchivePage() {
   const { params } = useRoute();
   const location = useLocation();
+  const { theme } = useAdminTheme();
+  const studentView = location.path.startsWith('/daily-dispatch/student/archives/');
+  const archiveBase = studentView ? '/daily-dispatch/student/archives' : '/daily-dispatch/archives';
   const [articles, setArticles] = useState<ArchiveArticleItem[]>([]);
   const [archives, setArchives] = useState<ArchiveItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,11 +70,11 @@ export default function DailyDispatchArchivePage() {
 
   const handleArticleClick = (articleId: string) => {
     // Open article preview in new tab
-    window.open(`/daily-dispatch/preview/${articleId}`, '_blank');
+    window.open(`/daily-dispatch/${studentView ? 'student' : 'preview'}/${encodeURIComponent(articleId)}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleArchiveClick = (archiveMonth: string) => {
-    location.route(`/daily-dispatch/archives/${encodeURIComponent(archiveMonth)}`);
+    location.route(`${archiveBase}/${encodeURIComponent(archiveMonth)}`);
   };
 
   const handleCategoryClick = (category: string) => {
@@ -87,7 +93,7 @@ export default function DailyDispatchArchivePage() {
 
   if (loading) {
     return (
-      <div className="ddp-loading">
+      <div className="ddp-loading" data-theme={theme}>
         <div className="ddp-loading-spinner" />
         <p>Loading articles...</p>
       </div>
@@ -95,7 +101,7 @@ export default function DailyDispatchArchivePage() {
   }
 
   return (
-    <div className="ddp-container">
+    <div className="ddp-container dda-page" data-theme={theme} data-view={studentView ? 'student' : 'tutor'}>
       {/* Header Bar with Logo and Categories */}
       <nav className="ddp-header-bar no-print">
         <div className="ddp-header-bar-inner">
@@ -111,7 +117,7 @@ export default function DailyDispatchArchivePage() {
                 onClick={() => handleCategoryClick(cat)}
                 style={{ cursor: 'pointer' }}
               >
-                {cat}
+                {learningCategoryLabel(cat)}
               </span>
             ))}
           </div>
@@ -142,7 +148,10 @@ export default function DailyDispatchArchivePage() {
                 <article 
                   key={article.id} 
                   className="dda-article-card"
+                  role="link"
+                  tabIndex={0}
                   onClick={() => handleArticleClick(article.id)}
+                  onKeyDown={event => { if (event.key === 'Enter') handleArticleClick(article.id); }}
                 >
                   <h2 className="dda-article-title">{article.title}</h2>
                   <p className="dda-article-date">{formatDate(article.createdAt)}</p>
@@ -154,7 +163,7 @@ export default function DailyDispatchArchivePage() {
                       className="dda-article-category-tag"
                       onClick={(e) => { e.stopPropagation(); handleCategoryClick(article.category); }}
                     >
-                      {article.category}
+                      {learningCategoryLabel(article.category)}
                     </span>
                   </p>
                 </article>
@@ -171,7 +180,7 @@ export default function DailyDispatchArchivePage() {
         </div>
 
         {/* Sidebar */}
-        <aside className="ddp-sidebar no-print">
+        <aside className="ddp-sidebar no-print" aria-label="Archive navigation">
           {/* Search */}
           <div className="ddp-sidebar-section">
             <h3 className="ddp-sidebar-title">
@@ -192,8 +201,8 @@ export default function DailyDispatchArchivePage() {
                 {archives.map((archive, i) => (
                   <li key={i} className={archive.month === month ? 'active' : ''}>
                     <a 
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); handleArchiveClick(archive.month); }}
+                      href={`${archiveBase}/${encodeURIComponent(archive.month)}`}
+                      aria-current={archive.month === month ? 'page' : undefined}
                     >
                       {archive.month}
                     </a>

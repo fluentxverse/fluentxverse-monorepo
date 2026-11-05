@@ -1,3 +1,4 @@
+import { learningCategoryLabel } from '../../../shared/learningTerminology';
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
@@ -7,21 +8,18 @@ import SideBar from '../Components/IndexOne/SideBar';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import { useAuthContext } from '../context/AuthContext';
 import { API_BASE_URL } from '../config/api';
+import { useLocation } from '../routing';
+import { dispatchToday, publishedDispatchArticles, type DispatchArticle } from '../utils/dispatchLibrary';
 import './DailyDispatchPage.css';
-interface DispatchArticle {
-    id: string;
-    title: string;
-    topic: string;
-    category: string;
-    createdAt: string;
-}
 export default function DailyDispatchPage() {
     const _state0 = useAuthContext();
+    const location = useLocation();
     const [articles, setArticles] = createSignal<DispatchArticle[]>([]);
     const [loading, setLoading] = createSignal(true);
     const [error, setError] = createSignal('');
     const [searchQuery, setSearchQuery] = createSignal('');
     const [selectedCategory, setSelectedCategory] = createSignal('All');
+    createEffect(on(() => location.search, search => setSearchQuery(new URLSearchParams(search).get('search') || '')));
     const CATEGORIES = [
         'All',
         'Technology',
@@ -45,13 +43,16 @@ export default function DailyDispatchPage() {
     const loadArticles = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`${API_BASE_URL}/dispatch`, {
+            setError('');
+            const response = await fetch(`${API_BASE_URL}/dispatch/classroom-library`, {
                 credentials: 'include'
             });
             if (!response.ok)
                 throw new Error('Failed to load articles');
             const data = await response.json();
-            setArticles(data);
+            if (!data.success || !Array.isArray(data.articles))
+                throw new Error('Invalid article library');
+            setArticles(publishedDispatchArticles(data.articles, dispatchToday()));
         }
         catch (err) {
             console.error('Failed to load articles:', err);
@@ -63,8 +64,9 @@ export default function DailyDispatchPage() {
     };
     const filteredArticles = createMemo(() => articles().filter(article => {
         const matchesCategory = selectedCategory() === 'All' || article.category === selectedCategory();
-        const matchesSearch = article.title.toLowerCase().includes(searchQuery().toLowerCase()) ||
-            article.topic.toLowerCase().includes(searchQuery().toLowerCase());
+        const query = searchQuery().trim().toLowerCase();
+        const matchesSearch = article.title.toLowerCase().includes(query) ||
+            (article.topic || '').toLowerCase().includes(query);
         return matchesCategory && matchesSearch;
     }));
     const formatDate = (dateStr: string) => {
@@ -112,7 +114,7 @@ export default function DailyDispatchPage() {
                 <input type="text" aria-label="Search articles" placeholder="Search articles..." value={searchQuery()} onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}/>
               </div>
               <select class="dispatch-category-select" value={selectedCategory()} onChange={(e) => setSelectedCategory((e.target as HTMLSelectElement).value)}>
-                {CATEGORIES.map(cat => (<option value={cat}>{cat}</option>))}
+                {CATEGORIES.map(cat => (<option value={cat}>{learningCategoryLabel(cat)}</option>))}
               </select>
             </div>
 
@@ -133,7 +135,7 @@ export default function DailyDispatchPage() {
             {!loading() && !error() && (<div class="dispatch-grid">
                 {filteredArticles().length > 0 ? (filteredArticles().map(article => (<div class="dispatch-card">
                       <div class="dispatch-card-header">
-                        <span class="dispatch-card-category">{article.category}</span>
+                        <span class="dispatch-card-category">{learningCategoryLabel(article.category)}</span>
                         <span class="dispatch-card-date">{formatDate(article.createdAt)}</span>
                       </div>
                       <h3 class="dispatch-card-title">{article.title}</h3>

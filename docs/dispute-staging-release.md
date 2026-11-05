@@ -1,5 +1,10 @@
 # Dispute Staging Release
 
+**Production update, November 3:** the scoped student-dispute workflow and chain
+relay were promoted separately; see [Arbitrum One activation](dispute-mainnet-production.md).
+The original broader staging workflow and its outstanding real-user/SMTP checks below
+must not be interpreted as completed by the synthetic mainnet test.
+
 2026-10-31: API and all three frontend builds deployed to a private VPS staging
 stack named `fxv-dispute-stage`. No production container, volume or Worker was
 replaced. There has been no production promotion or GitHub release commit.

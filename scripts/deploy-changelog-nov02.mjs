@@ -4,8 +4,11 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 
 const root = process.cwd();
-const baseline = join(root, 'output/release/site-changelog-20261031');
-const release = join(root, 'output/release/site-changelog-20261102');
+const releaseDate = process.env.CHANGELOG_RELEASE_DATE || '20261102';
+const baselineDate = process.env.CHANGELOG_BASELINE_DATE || '20261031';
+if (!/^\d{8}$/.test(releaseDate) || !/^\d{8}$/.test(baselineDate) || releaseDate <= baselineDate) throw Error('Invalid release dates');
+const baseline = join(root, `output/release/site-changelog-${baselineDate}`);
+const release = join(root, `output/release/site-changelog-${releaseDate}`);
 const cwd = join(release, 'site');
 const previous = JSON.parse(readFileSync(join(baseline, 'deployment.json'))).version;
 const env = { ...process.env, CI: '1', WRANGLER_LOG_PATH: '/tmp/fxv-changelog-nov02-wrangler.log' };

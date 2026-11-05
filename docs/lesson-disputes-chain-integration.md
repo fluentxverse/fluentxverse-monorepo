@@ -1,5 +1,8 @@
 # Lesson Disputes: Engine Integration
 
+**Production update, November 3:** the subsequent [Arbitrum One activation](dispute-mainnet-production.md)
+supersedes the staging-only boundary below. This document retains the earlier pilot record.
+
 ## Activation Boundary
 
 This is an application-attested audit integration, not trustless arbitration.

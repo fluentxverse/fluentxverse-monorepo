@@ -1,5 +1,8 @@
 # Lesson Disputes Engine Deployment
 
+**Production update, November 3:** see [Arbitrum One activation](dispute-mainnet-production.md)
+for the now-active production binding. The text below is the original template/pilot release record.
+
 Published November 2, 2026. This release makes the Lesson disputes contract
 template available in Engine. It does not deploy a smart contract or connect live
 lesson cases, refunds, or penalties to it.

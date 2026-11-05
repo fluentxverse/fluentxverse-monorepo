@@ -8,7 +8,7 @@ const CeoOrientationPage = () => {
         <span class="ceo-badge">CEO Orientation</span>
         <h1 class="ceo-title">
           Breaking Barriers in
-          <span class="ceo-gradient"> Language Education</span>
+          <span class="ceo-gradient"> Language Learning</span>
         </h1>
         <p class="ceo-subtitle">
           Connecting talented Filipino tutors with students in Vietnam, Korea, and Japan through
@@ -56,7 +56,7 @@ const CeoOrientationPage = () => {
         <div class="snapshot-card">
           <div class="snapshot-icon"><i class="ri-graduation-cap-line"></i></div>
           <div class="snapshot-title">Focus</div>
-          <div class="snapshot-value">ESL Education</div>
+          <div class="snapshot-value">ESL Learning</div>
         </div>
         <div class="snapshot-card">
           <div class="snapshot-icon"><i class="ri-global-line"></i></div>
@@ -91,7 +91,7 @@ const CeoOrientationPage = () => {
             <p>
               To become the world's most empowering digital language ecosystem where learners,
               tutors, and creators connect seamlessly across borders, unlocking global opportunities
-              through education and meaningful human interaction.
+              through learning and meaningful human interaction.
             </p>
           </div>
         </div>
@@ -167,7 +167,7 @@ const CeoOrientationPage = () => {
           <p>
             FluentXVerse was born from a simple observation: talented tutors worldwide struggle to
             reach students who need them most, while learners face barriers to accessing quality,
-            affordable education.
+            affordable learning.
           </p>
         </div>
       </section>

@@ -16,18 +16,18 @@ const comparisons = [
 export default function OnchainPage() {
   return (
     <>
-      <ArticleHero eyebrow="FLUENTXVERSE / WHY ONCHAIN" title="Onchain education" description="Learning happens between people. Its evidence should have a life beyond a single app." image="/assets/img/esl-japanese-student-v2.webp" alt="A student working on English lessons at a laptop" caption="AI-ILLUSTRATED LEARNING SCENE / OUR EDUCATION THESIS" subjectPosition="right" />
+      <ArticleHero eyebrow="FLUENTXVERSE / WHY ONCHAIN" title="Onchain learning" description="Learning happens between people. Its evidence should have a life beyond a single app." image="/assets/img/esl-japanese-student-v2.webp" alt="A student working on English lessons at a laptop" caption="AI-ILLUSTRATED LEARNING SCENE / OUR LEARNING THESIS" subjectPosition="right" />
       <TechnologyNav />
       <section class="section-space" aria-labelledby="thesis-title">
         <div class="container research-split">
           <div><span class="eyebrow">THE CASE WE BELIEVE IN</span><h2 id="thesis-title">Learning is personal.<br /><span class="muted-heading">Verification can be shared.</span></h2></div>
-          <div class="article-copy"><p class="lead-copy">Education is a strong candidate for onchain infrastructure because useful learning evidence needs to travel between people and institutions over time.</p><p>A screenshot of a badge is easy to share but hard to evaluate. A record inside one application is convenient until another organization needs to check it. Our thesis is that clearly defined, verifiable claims can help bridge that gap, with a public verification layer where shared trust actually matters.</p><p>This is our case for building, not a prediction of guaranteed adoption. Good teaching, meaningful assessment, affordable access, and institutional acceptance remain the foundations. A chain should strengthen those foundations, not distract from them.</p></div>
+          <div class="article-copy"><p class="lead-copy">Learning can benefit from onchain infrastructure because useful evidence of progress needs to travel between people and institutions over time.</p><p>A screenshot of a badge is easy to share but hard to evaluate. A record inside one application is convenient until another organization needs to check it. Our thesis is that clearly defined, verifiable claims can help bridge that gap, with a public verification layer where shared trust actually matters.</p><p>This is our case for building, not a prediction of guaranteed adoption. Good teaching, meaningful assessment, affordable access, and institutional acceptance remain the foundations. A chain should strengthen those foundations, not distract from them.</p></div>
         </div>
       </section>
       <section class="research-band section-space" aria-labelledby="reasons-title">
         <div class="container">
-          <div class="section-heading"><div><span class="eyebrow">FIVE REASONS TO BUILD</span><h2 id="reasons-title">Why bring online education onchain?</h2></div></div>
-          <p class="onchain-pillar-intro">More portable learning records. Better ways to verify a claim. Clearer incentives and educator payments. These are opportunities for education, not a list of features FluentXVerse has already launched.</p>
+          <div class="section-heading"><div><span class="eyebrow">FIVE REASONS TO BUILD</span><h2 id="reasons-title">Why bring online learning onchain?</h2></div></div>
+          <p class="onchain-pillar-intro">More portable learning records. Better ways to verify a claim. Clearer incentives and educator payments. These are opportunities for learning, not a list of features FluentXVerse has already launched.</p>
           <div class="onchain-pillars">
             <For each={onchainEducationPillars}>{(pillar, index) => (
               <article class="onchain-pillar" id={pillar.id} aria-labelledby={`${pillar.id}-title`}>
@@ -55,13 +55,13 @@ export default function OnchainPage() {
           <div class="section-heading"><div><span class="eyebrow">USE THE RIGHT LAYER</span><h2 id="fit-title">Not everything belongs onchain.</h2></div></div>
           <p class="comparison-intro">These tools solve different problems. A verifiable credential does not inherently require a blockchain, and a zero-knowledge proof can be checked without one.</p>
           <div class="comparison-table" role="region" aria-label="Technology fit comparison" tabindex="0">
-            <table><caption>Choosing infrastructure for an education need</caption><thead><tr><th scope="col">The need</th><th scope="col">A suitable layer</th><th scope="col">Why it fits</th></tr></thead><tbody><For each={comparisons}>{(row) => <tr><th scope="row">{row.need}</th><td>{row.fit}</td><td>{row.why}</td></tr>}</For></tbody></table>
+            <table><caption>Choosing infrastructure for a learning need</caption><thead><tr><th scope="col">The need</th><th scope="col">A suitable layer</th><th scope="col">Why it fits</th></tr></thead><tbody><For each={comparisons}>{(row) => <tr><th scope="row">{row.need}</th><td>{row.fit}</td><td>{row.why}</td></tr>}</For></tbody></table>
           </div>
         </div>
       </section>
       <section class="section-space" aria-labelledby="success-title">
         <div class="container research-split">
-          <div><span class="eyebrow">WHAT SUCCESS SHOULD MEAN</span><h2 id="success-title">Better evidence.<br /><span class="muted-heading">Less friction.</span></h2><p class="section-intro">We would judge this direction by educational usefulness, not token activity. These are evaluation goals, not results we have already achieved.</p></div>
+          <div><span class="eyebrow">WHAT SUCCESS SHOULD MEAN</span><h2 id="success-title">Better evidence.<br /><span class="muted-heading">Less friction.</span></h2><p class="section-intro">We would judge this direction by value for learners, not token activity. These are evaluation goals, not results we have already achieved.</p></div>
           <div class="purpose-list research-outcomes">
             <article><span>01</span><div><h3>Credentials people can actually use</h3><p>Measure whether a learner can export a meaningful record and whether another organization can verify and interpret it.</p></div></article>
             <article><span>02</span><div><h3>Privacy people can understand</h3><p>Make it clear what is shared, who can check it, what can be corrected, and what remains public after publication.</p></div></article>

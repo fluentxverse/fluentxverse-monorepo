@@ -7,3 +7,9 @@
 
 /index.html
   Cache-Control: no-store, no-cache, must-revalidate
+
+/daily-dispatch/*
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/daily-dispatch-preview/*
+  Cache-Control: no-store, no-cache, must-revalidate

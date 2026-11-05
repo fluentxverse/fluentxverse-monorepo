@@ -29,6 +29,9 @@ export function Header({ navigationOpen = false, onToggleNavigation }: { navigat
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [notifications, setNotifications] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activityLimit, setActivityLimit] = useState(25);
+  const [notificationError, setNotificationError] = useState('');
+  const activityRequest = useRef(0);
   const { user, logout } = useAuthContext();
   const { theme, toggle: toggleTheme } = useAdminTheme();
   const socketRef = useRef<RealtimeSocket | null>(null);
@@ -41,7 +44,7 @@ export function Header({ navigationOpen = false, onToggleNavigation }: { navigat
     // Refresh notifications every 30 seconds
     const interval = setInterval(loadNotifications, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activityLimit]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -64,16 +67,21 @@ export function Header({ navigationOpen = false, onToggleNavigation }: { navigat
   }, [showNotifications, showUserMenu]);
 
   const loadNotifications = useCallback(async () => {
+    const version = ++activityRequest.current;
     try {
       setLoading(true);
-      const data = await adminApi.getRecentActivity(10);
+      const data = await adminApi.getRecentActivity(activityLimit);
+      if (version !== activityRequest.current) return;
       setNotifications(data);
+      setNotificationError('');
     } catch (err) {
+      if (version !== activityRequest.current) return;
+      setNotificationError('Could not refresh activity. Please retry.');
       console.error('Failed to load notifications:', err);
     } finally {
-      setLoading(false);
+      if (version === activityRequest.current) setLoading(false);
     }
-  }, []);
+  }, [activityLimit]);
 
   // Real-time activity feed updates via native WebSocket notifications
   useEffect(() => {
@@ -111,6 +119,16 @@ export function Header({ navigationOpen = false, onToggleNavigation }: { navigat
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      case 'identity_submitted': case 'identity_reviewed': case 'identity_reset': case 'identity_credential_revoked':
+        return {icon:'ri-shield-user-line',class:'info'};
+      case 'identity_nft': case 'identity_credential_requested':
+        return {icon:'ri-nft-line',class:'success'};
+      case 'lesson_report': case 'issue_opened': case 'issue_reply': case 'issue_decision': case 'report_review':
+        return {icon:'ri-flag-line',class:'warning'};
+      case 'interview_booked': case 'interview_reviewed': case 'lesson_booked': case 'lesson_cancelled':
+        return {icon:'ri-calendar-event-line',class:'info'};
+      case 'payment': return {icon:'ri-bank-card-line',class:'success'};
+      case 'penalty_issued': case 'penalty_revoked': return {icon:'ri-error-warning-line',class:'warning'};
       case 'tutor_registered':
         return { icon: 'ri-user-add-line', class: 'info' };
       case 'exam_passed':
@@ -178,7 +196,7 @@ export function Header({ navigationOpen = false, onToggleNavigation }: { navigat
             className="header-btn notification-btn"
             aria-label="Activity feed"
             aria-expanded={showNotifications}
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={() => { setShowNotifications(!showNotifications); if (!showNotifications) void loadNotifications(); }}
           >
             <i className="ri-notification-3-line"></i>
             {notifications.length > 0 && <span className="notification-dot"></span>}
@@ -188,11 +206,12 @@ export function Header({ navigationOpen = false, onToggleNavigation }: { navigat
             <div className="notification-dropdown">
               <div className="notification-header">
                 <span>Activity Feed</span>
-                <button className="mark-read-btn" onClick={loadNotifications}>
+                <button className="mark-read-btn" disabled={loading} onClick={loadNotifications}>
                   <i className="ri-refresh-line"></i> Refresh
                 </button>
               </div>
               <div className="notification-list">
+                {notificationError && <p className="notification-error" role="alert">{notificationError}</p>}
                 {loading && notifications.length === 0 ? (
                   <div className="notification-empty">
                     <i className="ri-loader-4-line spin"></i>
@@ -214,6 +233,7 @@ export function Header({ navigationOpen = false, onToggleNavigation }: { navigat
                         <div className="notification-content">
                           <p>{notification.message}</p>
                           <ActivityTimestamp timestamp={notification.timestamp} now={now} />
+                          {notification.href && notification.href.startsWith('/') && !notification.href.startsWith('//') && <a className="notification-open" href={notification.href} onClick={() => setShowNotifications(false)}>View details <i aria-hidden="true" className="ri-arrow-right-line" /></a>}
                         </div>
                       </div>
                     );
@@ -222,6 +242,7 @@ export function Header({ navigationOpen = false, onToggleNavigation }: { navigat
               </div>
               <div className="notification-footer">
                 <span className="notification-count">{notifications.length} recent activities</span>
+                {notifications.length >= activityLimit && activityLimit < 250 && <button className="mark-read-btn" disabled={loading} onClick={() => setActivityLimit(value => Math.min(value + 25,250))}>Show more</button>}
               </div>
             </div>
           )}

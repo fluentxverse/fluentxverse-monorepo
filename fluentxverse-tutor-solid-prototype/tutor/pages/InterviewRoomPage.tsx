@@ -187,7 +187,7 @@ const InterviewRoomPage = (_props0: InterviewRoomProps) => {
         }
         catch (err) {
             console.error('Error joining room:', err);
-            setError('Failed to join interview room');
+            setError(err instanceof Error && err.message ? err.message : 'Unable to join the interview. Please retry.');
             setIsConnecting(false);
             call?.close();
         }

@@ -180,10 +180,11 @@ const AppContent = () => {
   }
 
   // Daily Dispatch archive page - standalone
-  if (path.startsWith('/daily-dispatch/archives')) {
+  if (path.startsWith('/daily-dispatch/archives') || path.startsWith('/daily-dispatch/student/archives')) {
     return (
       <Router>
         <Route path="/daily-dispatch/archives/:month" component={DailyDispatchArchivePage} />
+        <Route path="/daily-dispatch/student/archives/:month" component={DailyDispatchArchivePage} />
       </Router>
     );
   }

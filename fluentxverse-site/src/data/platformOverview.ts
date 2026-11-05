@@ -75,7 +75,7 @@ export const overviewChapters: OverviewChapter[] = [
     p('Materials are organized into courses, levels, chapters, and lesson pages. Tracks include conversational practice, Business English, Young Learners, discussion questions, and Daily Dispatch. A track in an editor does not mean every possible lesson is published.'),
     p('Tutors and students can receive different views of the same material. Answer keys, teaching guidance, and internal notes should not appear in a learner view. AI can assist with structured drafts, grammar, vocabulary explanations, pronunciation guidance, and transcript-based assessment support.'),
     list('Human review checks the learning objective, level, accuracy, and cultural suitability.', 'Assessment follows a rubric and retains the attempt and its approval evidence.', 'Providers receive only the information needed for the particular task.'),
-    note('Not a claim of verified AI', 'Models can make plausible mistakes. A proof about a signed assessment does not prove correct AI execution or educational judgment. The guide does not establish zkML, guaranteed cost savings, or measured learning gains.'),
+    note('Not a claim of verified AI', 'Models can make plausible mistakes. A proof about a signed assessment does not prove correct AI execution or learning judgment. The guide does not establish zkML, guaranteed cost savings, or measured learning gains.'),
   ] },
   { id: 'architecture', title: 'How the technology fits together', topic: 'Technology', summary: 'Interfaces, business rules, records, live media, and verification play different roles.', blocks: [
     table(['Layer', 'Responsibility'], [

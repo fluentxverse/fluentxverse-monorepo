@@ -9,8 +9,6 @@ import StudentLessonRecap from '../Components/StudentLessonRecap';
 import ClassroomLessonSurvey from '../Components/ClassroomLessonSurvey';
 import StudentLessonMaterialRequest from '../Components/StudentLessonMaterialRequest';
 import StudentLessonIssueReport from '../Components/StudentLessonIssueReport';
-import LessonEvidence from '../../../shared/ui/LessonEvidence';
-import { lessonPrivacyApi } from '../api/lessonPrivacy.api';
 import ProfileAvatar from '../Components/Common/ProfileAvatar';
 import StudentDialog from '../Components/Common/StudentDialog';
 import LessonJourney from '../Components/Booking/LessonJourney';
@@ -20,6 +18,8 @@ import { canCancelLesson } from '../utils/lessonCancellation';
 import { canJoinClassroom } from '../utils/classroomWindow';
 import './LessonPage.css';
 interface LessonDetails {
+    replacementBookingId?: string;
+    replacementFor?: string;
     paymentMethod?: string;
     bookingId: string;
     tutorId: string;
@@ -224,9 +224,10 @@ export const LessonPage = (_props0: {
                 </section>
               </div>
               <StudentLessonIssueReport bookingId={bookingId()!}/>
+              {lesson().replacementBookingId && <p role="status">Your lesson was transferred to another tutor at the same time. <a href={`/lesson/${encodeURIComponent(lesson().replacementBookingId!)}`}>View replacement lesson</a></p>}
+              {lesson().replacementFor && <p role="status">This is your replacement lesson. Your original payment or trial allowance was carried over.</p>}
               <LessonRecordingNotice/>
               <StudentLessonRecap bookingId={bookingId()!}/>
-              <LessonEvidence bookingId={bookingId()!} role="student" api={lessonPrivacyApi}/>
             </>}
         </div>
       </main>

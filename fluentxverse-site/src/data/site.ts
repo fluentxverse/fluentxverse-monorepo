@@ -44,11 +44,11 @@ export const teamMembers: {
   imagePosition?: string;
   linkedin?: string;
 }[] = [
-  { ...founder, bio: "Leading FluentXVerse's onchain education ecosystem." },
+  { ...founder, bio: "Leading FluentXVerse's onchain learning ecosystem." },
   {
     name: 'Mark Anthony Vibas',
     role: 'Head of Operations',
-    bio: "Leading operations across FluentXVerse's education ecosystem.",
+    bio: "Leading operations across FluentXVerse's learning ecosystem.",
     image: '/assets/img/team/mark.webp',
     imagePosition: 'center top',
     linkedin: 'https://www.linkedin.com/in/mark-anthony-vibas-306356b5/',
@@ -56,14 +56,14 @@ export const teamMembers: {
   {
     name: 'Yehna Lee',
     role: 'Head of Growth',
-    bio: "Leading growth for FluentXVerse's education ecosystem.",
+    bio: "Leading growth for FluentXVerse's learning ecosystem.",
     image: '/assets/img/team/yehna-v2.webp',
     linkedin: 'https://www.linkedin.com/in/yehna-lee-0b539b26a/',
   },
   {
     name: 'Agnes Atwel-Velasco',
     role: 'Head of Instructional Design',
-    bio: 'Agnes leads instructional design at FluentXVerse, shaping the curriculum, lesson materials, and learning experiences behind our education apps. Her work focuses on clear learning goals, practical activities, and resources that support tutors and help learners build skills with confidence.',
+    bio: 'Agnes leads instructional design at FluentXVerse, shaping the curriculum, lesson materials, and learning experiences behind our apps. Her work focuses on clear learning goals, practical activities, and resources that support tutors and help learners build skills with confidence.',
     image: '/assets/img/team/agnes-headshot-v2.webp',
     imagePosition: 'center top',
     linkedin: 'https://www.linkedin.com/in/agnes-atwel-161a60340/',

@@ -10,15 +10,15 @@ export function Footer() {
         <div class="footer-main">
           <div class="footer-brand">
             <Brand />
-            <p>Learning, backed by proof.<br />An ecosystem for onchain education.</p>
+            <p>Learning, backed by proof.<br />An ecosystem for onchain learning.</p>
           </div>
           <div class="footer-column">
             <h2>Discover</h2>
             <A href="/">Home</A>
             <A href="/about">About us</A>
             <A href="/technology">Technology</A>
-            <A href="/technology/ai">AI in education</A>
-            <A href="/onchain-education">Why onchain</A>
+            <A href="/technology/ai">AI in learning</A>
+            <A href="/onchain-learning">Why onchain</A>
             <A href="/#ecosystem">Our ecosystem</A>
             <A href="/changelog">Changelog</A>
           </div>
@@ -37,7 +37,7 @@ export function Footer() {
         </div>
         <div class="footer-bottom">
           <span>&copy; {new Date().getFullYear()} FluentXVerse. All rights reserved.</span>
-          <span>Education, connected onchain.</span>
+          <span>Learning, connected onchain.</span>
         </div>
       </div>
     </footer>

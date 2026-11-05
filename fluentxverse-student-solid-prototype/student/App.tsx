@@ -91,6 +91,7 @@ export default function App() {
     <Route path="/browse-tutors" component={Browse} />
     <Route path="/tutor/:tutorId" component={routeProps(Tutor)} />
     <Route path="/schedule" component={protect(Schedule)} />
+    <Route path="/reviews" component={() => <Navigate href="/home" />} />
     <Route path="/materials" component={protect(Materials)} />
     <Route path="/materials/daily-dispatch" component={protect(Dispatch)} />
     <Route path="/materials/daily-dispatch/archives/:month" component={protect(Archive)} />

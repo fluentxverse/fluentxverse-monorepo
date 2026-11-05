@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
+import { profileReviewProgress } from '../../../shared/profileReview';
 import { adminApi, type TutorApplication, type ApplicationCounts, type ApplicationFilter, PendingProfileReview, ProfileItemStatuses } from '../api/admin.api';
 import './ApplicationsPage.css';
 import ProfileAvatar from '../components/ProfileAvatar';
@@ -233,7 +234,7 @@ const ApplicationsPage = () => {
       profilePicture: 'Profile Photo',
       videoIntro: 'Introduction Video',
       bio: 'Bio',
-      education: 'Education',
+      education: 'Qualifications',
       interests: 'Interests'
     };
     return labels[key];
@@ -320,10 +321,7 @@ const ApplicationsPage = () => {
   };
 
   const getApprovalProgress = (statuses?: ProfileItemStatuses): { approved: number; total: number; percent: number } => {
-    if (!statuses) return { approved: 0, total: 6, percent: 0 };
-    const items = Object.values(statuses).filter(Boolean);
-    const approved = items.filter(s => s.status === 'approved').length;
-    return { approved, total: 6, percent: Math.round((approved / 6) * 100) };
+    return profileReviewProgress(statuses);
   };
 
   const getStatusInfo = (app: TutorApplication) => {
@@ -605,7 +603,7 @@ const ApplicationsPage = () => {
                         <span className="preview-badge has"><i className="ri-video-line"></i> Video</span>
                       )}
                       {profile.schoolAttended && (
-                        <span className="preview-badge has"><i className="ri-graduation-cap-line"></i> Education</span>
+                        <span className="preview-badge has"><i className="ri-graduation-cap-line"></i> Qualifications</span>
                       )}
                       {(profile.interests?.length ?? 0) > 0 && (
                         <span className="preview-badge has"><i className="ri-heart-line"></i> Interests</span>
@@ -953,7 +951,7 @@ const ApplicationsPage = () => {
                 <div className="item-header">
                   <div className="item-title">
                     <i className="ri-graduation-cap-line"></i>
-                    <h4>Education</h4>
+                    <h4>Qualifications</h4>
                   </div>
                   <div className={`item-status ${showProfileModal.profileItemStatuses?.education?.status || 'pending'}`}>
                     {showProfileModal.profileItemStatuses?.education?.status === 'approved' && <><i className="ri-check-line"></i> Approved</>}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { createPortal } from 'preact/compat';
 import { apiClient } from '../api/apiClient';
-import { acceptedTutorIds, type TutorIdentityRecord } from '../../../shared/tutorIdentity';
+import { acceptedTutorIds, type TutorIdentityReviewRecord } from '../../../shared/tutorIdentity';
 import '../../../shared/ui/tutor-identity.css';
 
 function FraudConfirmation(props: { busy: boolean; error: string; reason: string; onClose: () => void; onConfirm: () => void }) {
@@ -18,7 +18,7 @@ function FraudConfirmation(props: { busy: boolean; error: string; reason: string
 }
 
 export default function IdentityReview(props: { tutorId?: string; interviewId?: string; startPresentation?: () => Promise<void>; onResolved?: (mismatch: boolean) => void }) {
-  const [items, setItems] = useState<TutorIdentityRecord[]>([]);
+  const [items, setItems] = useState<TutorIdentityReviewRecord[]>([]);
   const [selected, setSelected] = useState('');
   const [image, setImage] = useState('');
   const [error, setError] = useState('');
@@ -37,7 +37,7 @@ export default function IdentityReview(props: { tutorId?: string; interviewId?: 
     try {
     const { data } = await apiClient.get('/tutor-identity/admin');
     if (!data.success) throw Error(data.error);
-    const rows = (data.data as TutorIdentityRecord[]).filter(i => !props.tutorId || i.tutorId === props.tutorId);
+    const rows = (data.data as TutorIdentityReviewRecord[]).filter(i => !props.tutorId || i.tutorId === props.tutorId);
     setItems(rows);
     if (props.tutorId && rows[0]) setSelected(rows[0].id);
     } finally { setLoading(false); }
@@ -94,6 +94,14 @@ export default function IdentityReview(props: { tutorId?: string; interviewId?: 
       {item ? <div className="identity-review-detail">
         <header className="identity-detail-header"><div>{!props.tutorId && <h3 className="identity-applicant-name">{item.name || item.tutorId}</h3>}<h3>{type?.[1]}</h3></div><strong className={`identity-review-badge status-${item.status}`}>{item.status.replaceAll('_', ' ')}</strong></header>
         {item.bookingDeadline && <p>Booking deadline: {new Date(item.bookingDeadline).toLocaleString('en-PH', { timeZone: 'Asia/Manila' })} Manila</p>}
+        <section className="identity-applicant-details" aria-label="Application details">
+          <h3>Application details</h3>
+          <dl>
+            <div><dt>Full name</dt><dd>{item.applicant?.fullName || item.name || 'Not provided'}</dd></div>
+            <div><dt>Date of birth</dt><dd>{item.applicant?.birthDate ? new Intl.DateTimeFormat('en-US',{timeZone:'UTC',month:'long',day:'numeric',year:'numeric'}).format(new Date(item.applicant.birthDate+'T00:00:00Z')) : 'Not provided'}</dd></div>
+            <div className="identity-applicant-address"><dt>Address</dt><dd>{item.applicant?.address || 'Not provided'}</dd></div>
+          </dl>
+        </section>
         <div className="identity-review-workspace"><section className="identity-document-area" aria-label="Submitted document">
         {!props.tutorId && !image && <div className="identity-document-placeholder"><i className="ri-file-user-line" aria-hidden="true"/><strong>{item.deletedAt ? 'Document deleted' : 'Submitted ID'}</strong></div>}
         {item.deletedAt ? <p>ID image deleted.</p> : <div className="identity-actions"><button disabled={busy} onClick={openImage}><i className="ri-eye-line" aria-hidden="true"/>View submitted ID</button>{image && <button onClick={() => setImage('')}><i className="ri-eye-off-line" aria-hidden="true"/>Hide ID</button>}</div>}

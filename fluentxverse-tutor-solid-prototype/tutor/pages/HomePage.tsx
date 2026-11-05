@@ -49,6 +49,7 @@ const HomePage = () => {
     const [identityError, setIdentityError] = createSignal(false);
     const [identityLoaded, setIdentityLoaded] = createSignal(false);
     const idAccepted = () => ['accepted', 'booked', 'verified'].includes(identity()?.status || '');
+    const identityCompleted = () => identityLoaded() && !identityError() && identity()?.status === 'verified';
     const identityLabel = () => ({ pending_review: 'ID review pending', accepted: 'ID accepted', booked: 'Present this same ID at your interview', verified: 'Identity verified', resubmit: 'Resubmission required', expired: 'Booking window expired', fraud: 'Account unavailable. Contact support.' })[identity()?.status || ''] || 'ID submission required';
     const interviewPassed = () => interview()?.result ? interview().result === 'pass' : approval()?.snapshot.interviewPassed === true;
     createEffect(on(() => [_state0.user?.userId, revision()], () => {
@@ -204,7 +205,7 @@ const HomePage = () => {
               <h2 class="page-title-gradient">{teachingApproved() ? `Welcome back, ${_state0.user?.firstName || "Tutor"}` : "Your teaching journey"}</h2>
             </div>
 
-            {teachingApproved() && <><nav class="tutor-home-shortcuts" aria-label="Teaching workspace">{([{ href: "/schedule", art: "schedule", title: "My schedule" }, { href: "/materials", art: "training", title: "Learning materials" }, { href: "/performance-metrics", art: "growth", title: "Performance metrics" }] as const).map(item => <a href={item.href}><TutorArt name={item.art} size={44}/><span>{item.title}</span><TutorIcon name="fa-arrow-right"/></a>)}</nav><FirstLessonGuide/><TeachingDesk/></>}
+            {teachingApproved() && <><nav class="tutor-home-shortcuts" aria-label="Teaching workspace">{([{ href: "/schedule", art: "schedule", title: "My schedule" }, { href: "/materials", art: "training", title: "Learning materials" }, { href: "/performance-metrics", art: "growth", title: "Performance metrics" }, { href: "/rewards", art: "growth", title: "Tutor rewards" }] as const).map(item => <a href={item.href}><TutorArt name={item.art} size={44}/><span>{item.title}</span><TutorIcon name="fa-arrow-right"/></a>)}</nav><FirstLessonGuide/><TeachingDesk/></>}
             {!teachingApproved() && statusError() && <StatusPanel kind="error" title="Could not refresh assessment progress" onRetry={() => setRevision(value => value + 1)}/>}
             {/* Main Status Card */}
             {!teachingApproved() && (!statusError() || (writtenStatus() && speakingStatus())) && <div class="main-status-card">
@@ -332,11 +333,11 @@ const HomePage = () => {
 
                 <div class="test-card home-identity-step">
                   <div class="test-icon test-icon--artwork"><TutorArt name="privacy" size={48}/></div>
-                  <div class="test-content"><div class="test-header"><h4>ID SUBMISSION</h4></div>
+                  <div class="test-content"><div class="test-header"><h4>ID SUBMISSION</h4>{identityCompleted() && <span class="test-status-badge passed">COMPLETED</span>}</div>
                     <span class="identity-home-status" role="status">{identityError() ? 'Identity status could not be refreshed.' : !identityLoaded() ? 'Checking identity status...' : identityLabel()}</span>
-                    <p>{!speakingStatus()?.passed ? 'Complete both assessments, then submit one accepted ID for staff review.' : idAccepted() ? 'Keep the same submitted document ready to present during your video interview.' : identity()?.status === 'pending_review' ? 'Your ID is with the recruitment team. Interview booking opens after staff accepts it.' : 'Your assessments are complete. Next, upload a readable ID for staff review before booking your interview.'}</p>
+                    <p>{identityCompleted() ? 'Your ID and live identity check are complete.' : !speakingStatus()?.passed ? 'Complete both assessments, then submit one accepted ID for staff review.' : idAccepted() ? 'Keep the same submitted document ready to present during your video interview.' : identity()?.status === 'pending_review' ? 'Your ID is with the recruitment team. Interview booking opens after staff accepts it.' : 'Your assessments are complete. Next, upload a readable ID for staff review before booking your interview.'}</p>
                     {identity()?.status === 'accepted' && <p>Book within 84 hours of ID acceptance. Deadline: {new Date(identity()!.bookingDeadline!).toLocaleString('en-PH', { timeZone: 'Asia/Manila' })} (Manila).</p>}
-                    <a class="action-btn blue" href="/interview">{identity()?.status === 'pending_review' ? 'VIEW ID SUBMISSION' : idAccepted() ? 'ID & INTERVIEW DETAILS' : 'SUBMIT YOUR ID'}</a>
+                    {!identityCompleted() && <a class="action-btn blue" href="/interview">{identity()?.status === 'pending_review' ? 'VIEW ID SUBMISSION' : idAccepted() ? 'ID & INTERVIEW DETAILS' : 'SUBMIT YOUR ID'}</a>}
                   </div>
                 </div>
 

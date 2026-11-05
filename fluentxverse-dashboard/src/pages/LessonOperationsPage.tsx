@@ -6,6 +6,7 @@ import { AdminArt } from '../components/AdminArt';
 import { adminApi } from '../api/admin.api';
 import PrivateDisputeEvidence from '../components/PrivateDisputeEvidence';
 import LessonOutcomeAssessment from '../components/LessonOutcomeAssessment';
+import TutorRewardsPanel from '../components/TutorRewardsPanel';
 import { completionDecisionLabels, lessonOutcomeLabels, type CompletionDecision, type LessonOutcomeCode } from '../../../shared/lessonOutcome';
 import './LessonOperationsPage.css';
 import './LessonOperationsWorkspace.css';
@@ -129,6 +130,7 @@ export default function LessonOperationsPage() {
     {notice && <div className="ops-message ops-message-success" role="status"><OpsIcon name="checkbox-circle" />{notice}</div>}
     {(accessError || error || tutorsError) && <div className="ops-message ops-message-error" role="alert"><OpsIcon name="error-warning" /><span>{accessError || error || tutorsError}</span><button type="button" onClick={() => access ? setReload(value => value + 1) : setAccessReload(value => value + 1)}>Retry</button></div>}
     {access && <div className="ops-view-heading"><h2>{current.title}</h2>{tab === 'live' && <span className="ops-live-indicator"><span />Live · 15s refresh</span>}{filters.search && <span className="ops-applied-filter">{tab === 'audit' ? 'Subject' : 'Search'}: {filters.search}<button type="button" aria-label="Clear search" title="Clear search" onClick={() => { setSearchDraft(''); update({ search: '' }); }}><OpsIcon name="close" /></button></span>}</div>}
+    {access && permitted && tab === 'payments' && <TutorRewardsPanel superadmin={access.role === 'superadmin'} refreshToken={reload} />}
     {access && permitted && (dateViews.includes(tab) || searchViews.includes(tab) || tab === 'performance') && <form className="ops-filter-bar" onSubmit={e => { e.preventDefault(); update({ search: searchDraft.trim() }); if (searchDraft.trim() === filters.search && currentPage === 1) setReload(value => value + 1); }}>
       {searchViews.includes(tab) && <label className="ops-search-field">{tab === 'audit' ? 'Subject ID' : 'Search'}<span><OpsIcon name="search" /><input aria-label={tab === 'audit' ? 'Subject ID' : 'Search'} value={searchDraft} placeholder={tab === 'audit' ? 'Booking, account, or subject ID' : tab === 'issues' ? 'Report, lesson ID, or assignee' : 'Tutor, student, or lesson ID'} onInput={e => setSearchDraft(e.currentTarget.value)} /><button type="submit" title="Search" aria-label="Search"><OpsIcon name="arrow-right" /></button></span></label>}
       {dateViews.includes(tab) && <><label>From<input type="date" required value={filters.from} onInput={e => update({ from: e.currentTarget.value })} /></label><label>To<input type="date" required value={filters.to} onInput={e => update({ to: e.currentTarget.value })} /></label><button type="button" className="ops-today" onClick={() => update({ from: today(), to: today() })}><OpsIcon name="calendar-event" />Today</button></>}

@@ -10,8 +10,8 @@ const routes = [
   { path: '/', title: /Learning, backed by proof/ },
   { path: '/about', title: /About/ },
   { path: '/technology', title: /^Technology/ },
-  { path: '/technology/ai', title: /^AI in Education/ },
-  { path: '/onchain-education', title: /^Why Onchain Education/ },
+  { path: '/technology/ai', title: /^AI in Learning/ },
+  { path: '/onchain-learning', title: /^Why Onchain Learning/ },
 ];
 
 (async () => {
@@ -30,6 +30,7 @@ const routes = [
         await page.locator('main h1').waitFor();
         assert.equal(await page.locator('main h1').count(), 1);
         assert.match(await page.title(), route.title);
+        assert.doesNotMatch(await page.locator('main').innerText(), /\b(?:education|educational)\b/i);
         const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
         assert.equal(canonical, `https://fluentxverse.com${route.path}`);
         for (const image of await page.locator('main img').all()) {
@@ -51,7 +52,7 @@ const routes = [
           assert.doesNotMatch(await page.locator('main').innerText(), /\b(WebRTC|TURN|RealtimeKit|Groth16|Circom|snarkjs|Sepolia|Volta|PostgreSQL|Memgraph)\b/);
           assert.equal(await page.locator('.status-list, .architecture-flow').count(), 0);
         }
-        if (route.path.startsWith('/technology') || route.path === '/onchain-education') {
+        if (route.path.startsWith('/technology') || route.path === '/onchain-learning') {
           assert.equal(await page.locator('.technology-nav .topic-active').count(), 1);
           assert.equal(await page.locator('.technology-nav .topic-active').getAttribute('href'), route.path);
           for (const detail of await page.locator('.research-faq details').all()) {
@@ -77,13 +78,17 @@ const routes = [
       await page.waitForURL(`${base}/technology`);
       await page.getByRole('heading', { level: 1, name: 'Technology for real learning.' }).waitFor();
       if (width <= 760) assert.equal(await page.getByRole('button', { name: 'Open menu' }).getAttribute('aria-expanded'), 'false');
-      await page.getByRole('navigation', { name: 'Technology topics' }).getByRole('link', { name: 'AI in education' }).click();
+      await page.getByRole('navigation', { name: 'Technology topics' }).getByRole('link', { name: 'AI in learning' }).click();
       await page.waitForURL(`${base}/technology/ai`);
-      await page.getByRole('heading', { level: 1, name: 'AI in education.' }).waitFor();
+      await page.getByRole('heading', { level: 1, name: 'AI in learning.' }).waitFor();
       await page.reload({ waitUntil: 'networkidle' });
-      assert.match(await page.title(), /^AI in Education/);
+      assert.match(await page.title(), /^AI in Learning/);
       await page.goBack({ waitUntil: 'networkidle' });
       await page.getByRole('heading', { level: 1, name: 'Technology for real learning.' }).waitFor();
+      await page.goto(`${base}/onchain-education?source=legacy#educator-payments`, { waitUntil: 'networkidle' });
+      await page.waitForURL(`${base}/onchain-learning?source=legacy#educator-payments`);
+      assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'), 'https://fluentxverse.com/onchain-learning');
+      await page.locator('#educator-payments').waitFor();
       await page.goto(`${base}/does-not-exist`, { waitUntil: 'networkidle' });
       assert.match(await page.title(), /Page Not Found/);
       assert.equal(await page.locator('main h1').textContent(), 'A different direction.');

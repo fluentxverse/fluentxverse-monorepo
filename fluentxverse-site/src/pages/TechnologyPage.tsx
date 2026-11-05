@@ -30,11 +30,11 @@ const layers = [
 export default function TechnologyPage() {
   return (
     <>
-      <ArticleHero eyebrow="FLUENTXVERSE / OUR TECHNOLOGY" title="Technology for real learning" description="AI, Web3 technology, and zero-knowledge proofs. We use them to support learning, build trust, and protect private information." image="/assets/img/office.webp" alt="A bright shared workspace" caption="EDUCATION FIRST. TECHNOLOGY WITH A PURPOSE." />
+      <ArticleHero eyebrow="FLUENTXVERSE / OUR TECHNOLOGY" title="Technology for real learning" description="AI, Web3 technology, and zero-knowledge proofs. We use them to support learning, build trust, and protect private information." image="/assets/img/office.webp" alt="A bright shared workspace" caption="LEARNING FIRST. TECHNOLOGY WITH A PURPOSE." />
       <TechnologyNav />
       <section class="section-space" aria-labelledby="layers-title">
         <div class="container">
-          <div class="section-heading"><div><span class="eyebrow">THREE TECHNOLOGIES. THREE CLEAR PURPOSES.</span><h2 id="layers-title">Support learning.<br /><span class="muted-heading">Strengthen trust.</span></h2></div><p>Each technology answers a different need<br />in the education experience.</p></div>
+          <div class="section-heading"><div><span class="eyebrow">THREE TECHNOLOGIES. THREE CLEAR PURPOSES.</span><h2 id="layers-title">Support learning.<br /><span class="muted-heading">Strengthen trust.</span></h2></div><p>Each technology answers a different need<br />in the learning experience.</p></div>
           <div class="technology-layers">
             <For each={layers}>{(layer, index) => (
               <article class="technology-layer">
@@ -48,15 +48,15 @@ export default function TechnologyPage() {
       <section class="research-band section-space" aria-labelledby="together-title">
         <div class="container research-split">
           <div><span class="eyebrow">HOW THEY WORK TOGETHER</span><h2 id="together-title">Better learning.<br /><span class="muted-heading">More trustworthy evidence.</span></h2></div>
-          <div class="article-copy"><p class="lead-copy">AI supports the learning experience. Web3 builds toward shared verification. ZK helps keep the underlying evidence private.</p><p>Together, they support our vision of an education ecosystem where useful learning experiences and trustworthy records grow side by side, starting with ESL and extending to other subjects and skills.</p><p>Technology supports that vision; it does not replace good teaching, meaningful assessment, or the judgment of the people who use a credential.</p></div>
+          <div class="article-copy"><p class="lead-copy">AI supports the learning experience. Web3 builds toward shared verification. ZK helps keep the underlying evidence private.</p><p>Together, they support our vision of a learning ecosystem where useful learning experiences and trustworthy records grow side by side, starting with ESL and extending to other subjects and skills.</p><p>Technology supports that vision; it does not replace good teaching, meaningful assessment, or the judgment of the people who use a credential.</p></div>
         </div>
       </section>
       <section class="section-space" aria-labelledby="explore-tech-title">
         <div class="container">
           <div class="section-heading"><div><span class="eyebrow">GO DEEPER</span><h2 id="explore-tech-title">The thinking behind the tools.</h2></div></div>
           <div class="research-links">
-            <A href="/technology/ai"><Sparkles size={25} /><div><h3>AI in education</h3><p>Where assistance helps, where it can fail, and why educators remain essential.</p></div><ArrowRight size={22} /></A>
-            <A href="/onchain-education"><Fingerprint size={25} /><div><h3>Why education belongs onchain</h3><p>Our case for shared verification, private evidence, and records with a life beyond one app.</p></div><ArrowRight size={22} /></A>
+            <A href="/technology/ai"><Sparkles size={25} /><div><h3>AI in learning</h3><p>Where assistance helps, where it can fail, and why educators remain essential.</p></div><ArrowRight size={22} /></A>
+            <A href="/onchain-learning"><Fingerprint size={25} /><div><h3>Why learning belongs onchain</h3><p>Our case for shared verification, private evidence, and records with a life beyond one app.</p></div><ArrowRight size={22} /></A>
           </div>
         </div>
       </section>

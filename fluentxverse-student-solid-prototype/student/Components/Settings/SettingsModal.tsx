@@ -7,6 +7,7 @@ import { updatePersonalInfo, updateEmail, updatePassword } from '../../api/auth.
 import { getStudentProfile, type StudentProfile } from '../../api/student.api';
 import { ENGLISH_LEVELS, JAPANESE_PREFECTURES } from '../../data/japanProfileOptions';
 import './SettingsModal.css';
+import ReplacementPreference from './ReplacementPreference';
 type View = 'main' | 'update-password' | 'update-email' | 'update-info';
 const goals = ['Conversational fluency', 'Business communication', 'Academic writing', 'Test preparation (IELTS/TOEFL)', 'Travel preparation', 'Career advancement', 'Personal enrichment'];
 const styles = ['Visual (pictures, diagrams)', 'Auditory (listening, speaking)', 'Reading/Writing (texts, notes)', 'Kinesthetic (hands-on activities)', 'Mixed approach'];
@@ -336,6 +337,7 @@ export default function SettingsModal(_props1: {
         {wallet() && <div class="account-wallet">{artwork('pay')}<div><span>Wallet address</span><code title={wallet()}>{wallet().slice(0, 6) + '...' + wallet().slice(-4)}</code></div><button type="button" class="account-icon-button" title={copied() ? 'Wallet address copied' : 'Copy wallet address'} aria-label={copied() ? 'Wallet address copied' : 'Copy wallet address'} disabled={copied()} onClick={() => void copyWallet(wallet())}>{copied() ? <Check size={18}/> : <Copy size={18}/>}</button></div>}
         {copied() && <p class="account-copy-status" role="status">Wallet address copied.</p>}
         {copyError() && <p class="account-message account-error" role="alert">{copyError()}</p>}
+        <ReplacementPreference/>
         <nav class="account-actions" aria-label="Account settings">
           <button type="button" onClick={() => navigate('update-email')}><Mail size={20}/><span>Email address</span><ChevronRight size={18}/></button>
           <button type="button" onClick={() => navigate('update-password')}><LockKeyhole size={20}/><span>Password</span><ChevronRight size={18}/></button>

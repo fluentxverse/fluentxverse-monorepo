@@ -51,7 +51,8 @@ body { background:var(--td-bg)!important; }
 .App.tutor-workspace .test-header h4 { font-size:16px; color:var(--td-text); }
 .App.tutor-workspace :is(.test-action-btn,.action-btn,.btn-submit-profile,.btn-save,.btn-video-action,.start-exam-btn,.interview-modal-btn-primary,.enter-classroom-btn) { background:var(--td-accent)!important; border:1px solid var(--td-accent)!important; color:var(--td-surface)!important; box-shadow:none!important; border-radius:6px!important; letter-spacing:0; transform:none!important; }
 .App.tutor-workspace :is(.test-action-btn,.action-btn,.btn-submit-profile,.btn-save,.btn-video-action,.start-exam-btn) { min-height:40px; font-size:13px; padding:10px 16px; }
-.tutor-home-shortcuts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; margin-bottom:28px; }
+.tutor-home-shortcuts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; margin-bottom:28px; }
+@media(min-width:769px) and (max-width:1200px){.tutor-home-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .tutor-home-shortcuts a { display:flex; gap:14px; align-items:center; padding:20px; border:1px solid var(--td-border); background:var(--td-surface); border-radius:8px; color:var(--td-text); font-size:14px; font-weight:600; }
 .tutor-home-shortcuts a >svg { margin-left:auto; color:var(--td-accent); }
 .App.tutor-workspace :is(.schedule-card,.profile-header-card,.lesson-info-card,.learning-profile-card,.student-context-card,.material-request-card,.lesson-notes-card,.lesson-issue-report-card,.profile-status-card,.profile-completeness-card,.notification-card,.current-booking-card,.course-card,.lesson-card,.dispatch-card,.yl-lesson-card) { background:var(--td-surface)!important; border:1px solid var(--td-border)!important; border-radius:8px!important; box-shadow:none!important; }
@@ -148,21 +149,21 @@ body { background:var(--td-bg)!important; }
 .App.tutor-workspace :is(.classroom-left,.classroom-header,.chat-header,.chat-input-area,.material-header,.material-topbar) { background:var(--td-surface)!important; color:var(--td-text)!important; box-shadow:none; border-color:var(--td-border); }
 .App.tutor-workspace .classroom-logo span { color:var(--td-accent); }
 .App.tutor-workspace :is(.control-btn,.attach-btn,.send-btn,.chat-settings-btn,.chat-history-btn) { border-radius:6px; box-shadow:none; }
-.App.tutor-workspace :is(.ddp-container,.csp-fullpage,.beve-preview) :is(button,a) { border-radius:6px; box-shadow:none; }
-.App.tutor-workspace .ddp-header-bar { background:var(--td-surface); color:var(--td-text); border-bottom:1px solid var(--td-border); }
-.App.tutor-workspace .ddp-toolbar-brand { color:var(--td-text); }
-.App.tutor-workspace .ddp-logo { width:40px; height:40px; object-fit:contain; }
-.App.tutor-workspace .ddp-title { font-size:28px; line-height:1.35; letter-spacing:0; }
-.App.tutor-workspace .ddp-section-header h2 { font-size:16px; letter-spacing:0; }
-.App.tutor-workspace .ddp-sidebar-section { background:transparent; border:0; border-bottom:1px solid var(--td-border); border-radius:0; }
+.App.tutor-workspace :is(.ddp-container:not([data-theme]),.csp-fullpage,.beve-preview) :is(button,a) { border-radius:6px; box-shadow:none; }
+.App.tutor-workspace .ddp-container:not([data-theme]) .ddp-header-bar { background:var(--td-surface); color:var(--td-text); border-bottom:1px solid var(--td-border); }
+.App.tutor-workspace .ddp-container:not([data-theme]) .ddp-toolbar-brand { color:var(--td-text); }
+.App.tutor-workspace .ddp-container:not([data-theme]) .ddp-logo { width:40px; height:40px; object-fit:contain; }
+.App.tutor-workspace .ddp-container:not([data-theme]) .ddp-title { font-size:28px; line-height:1.35; letter-spacing:0; }
+.App.tutor-workspace .ddp-container:not([data-theme]) .ddp-section-header h2 { font-size:16px; letter-spacing:0; }
+.App.tutor-workspace .ddp-container:not([data-theme]) .ddp-sidebar-section { background:transparent; border:0; border-bottom:1px solid var(--td-border); border-radius:0; }
 .App.tutor-workspace .yl-lesson-page { font-family:inherit; }
 .App.tutor-workspace .yl-lesson-header { background:var(--td-surface); color:var(--td-text); border-radius:0; box-shadow:none; border-bottom:1px solid var(--td-border); }
 .App.tutor-workspace .yl-lesson-header h1 { font-size:22px; }
 .App.tutor-workspace :is(.yl-back-button,.yl-nav-btn,.yl-audio-btn,.yl-lesson-error button) { border-radius:6px; box-shadow:none; }
 .App.tutor-workspace :is(.lesson-request-panel,.lesson-request-container,.materials-selector-panel,.classroom-modal) { border-radius:8px; box-shadow:none; border-color:var(--td-border); }
 .App.tutor-workspace :is(.classroom-control-btn,.chat-send-btn,.classroom-action-button) { border-radius:6px; box-shadow:none; }
-.App.tutor-workspace :is(.ddp-container,.lesson-fullpage,.csp-fullpage,.beve-preview-wrapper) { color:var(--td-text); }
-.App.tutor-workspace :is(.ddp-header,.ddp-toolbar,.csp-toolbar,.csp-topbar,.beve-toolbar,.yl-lesson-header) { box-shadow:none; border-radius:0; border-color:var(--td-border); }
+.App.tutor-workspace :is(.ddp-container:not([data-theme]),.lesson-fullpage,.csp-fullpage,.beve-preview-wrapper) { color:var(--td-text); }
+.App.tutor-workspace :is(.ddp-container:not([data-theme]) .ddp-header,.ddp-toolbar,.csp-toolbar,.csp-topbar,.beve-toolbar,.yl-lesson-header) { box-shadow:none; border-radius:0; border-color:var(--td-border); }
 .App.tutor-workspace .pdf-viewer-wrapper { background:var(--td-soft); color:var(--td-text); }
 .App.tutor-workspace .pdf-toolbar { background:var(--td-surface); border-color:var(--td-border); box-shadow:none; flex-wrap:wrap; gap:12px; }
 .App.tutor-workspace .pdf-toolbar .page-navigation { background:var(--td-soft); border-radius:6px; }
@@ -223,10 +224,23 @@ dialog.tutor-dialog.tutor-recording-dialog .recording-decline { background:var(-
 }
 /* Dialogs share geometry even when their fields have a component-specific stylesheet. */
 dialog.tutor-dialog { --sd-surface:var(--td-surface); --sd-text:var(--td-text); --sd-muted:var(--td-muted); --sd-border:var(--td-border); --sd-accent:var(--td-accent); --sd-tint:var(--td-tint); position:fixed!important; inset:0!important; margin:auto!important; max-width:calc(100vw - 32px)!important; max-height:calc(100dvh - 32px)!important; color:var(--td-text); background:var(--td-surface); border:1px solid var(--td-border); border-radius:8px!important; box-sizing:border-box; overflow:auto; }
-dialog.tutor-dialog .trouble-report-modal { background:transparent; border:0; padding:0; box-shadow:none; }
-dialog.tutor-dialog .trouble-report-header { padding:0 0 18px; background:transparent; }
-dialog.tutor-dialog .trouble-report-content { padding:20px 0; }
-dialog.tutor-dialog .trouble-report-actions { padding:16px 0 0; border-color:var(--td-border); background:transparent; }
+dialog.tutor-dialog.trouble-report-dialog { width:560px; padding:0; overflow:hidden; }
+dialog.tutor-dialog .trouble-report-modal { background:transparent; border:0; padding:0; box-shadow:none; max-height:calc(100dvh - 34px); }
+dialog.tutor-dialog .trouble-report-header { padding:20px 24px; background:transparent; align-items:flex-start; gap:16px; border-color:var(--td-border); }
+dialog.tutor-dialog .trouble-report-header h2 { margin:0; font-size:18px; line-height:1.4; }
+dialog.tutor-dialog .trouble-report-header h2 .tutor-art { flex-shrink:0; }
+dialog.tutor-dialog .trouble-report-close { width:32px; padding:0; }
+dialog.tutor-dialog .trouble-report-content { padding:20px 24px; }
+dialog.tutor-dialog .trouble-report-content h3 { line-height:1.5; }
+dialog.tutor-dialog .trouble-report-options button { min-height:44px; line-height:1.5; }
+dialog.tutor-dialog .trouble-report-actions { padding:14px 24px; border-color:var(--td-border); background:transparent; flex-wrap:wrap; }
+dialog.tutor-dialog .trouble-report-actions button { min-height:40px; }
+@media(max-width:480px) {
+  dialog.tutor-dialog .trouble-report-header { padding:16px; }
+  dialog.tutor-dialog .trouble-report-header h2 { font-size:16px; }
+  dialog.tutor-dialog .trouble-report-content { padding:16px; }
+  dialog.tutor-dialog .trouble-report-actions { padding:12px 16px; gap:8px; }
+}
 dialog.tutor-dialog .trouble-report-options button { background:var(--td-soft); border-color:var(--td-border); border-radius:6px; color:var(--td-text); }
 dialog.tutor-dialog .trouble-report-options button.selected { background:var(--td-tint); border-color:var(--td-accent); }
 dialog.tutor-dialog.trouble-report-dialog .trouble-report-modal .trouble-report-options button.selected { background:var(--td-tint); border-color:var(--td-accent); color:var(--td-accent); }

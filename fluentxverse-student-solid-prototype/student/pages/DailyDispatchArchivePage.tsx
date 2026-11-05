@@ -1,10 +1,12 @@
+import { learningCategoryLabel } from '../../../shared/learningTerminology';
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
 import { CircleAlert, Newspaper } from "lucide-solid";
 import { useRoute, useLocation } from "../routing";
 import { API_BASE_URL } from '../config/api';
-import DailyDispatchLogo from '../assets/icons/daily-dispatch-logo.svg';
+import { useThemeStore } from '../context/ThemeContext';
+import { appArtworkSrc } from '../../../shared/appArtwork';
 import './DailyDispatchArticlePage.css';
 interface ArchiveArticleItem {
     id: string;
@@ -25,6 +27,7 @@ export default function DailyDispatchArchivePage() {
     const [archives, setArchives] = createSignal<ArchiveItem[]>([]);
     const [loading, setLoading] = createSignal(true);
     const [error, setError] = createSignal('');
+    const archiveTheme = createMemo(() => useThemeStore(state => state.resolvedTheme));
     // Decode the month from URL params
     const month = createMemo(() => _state0.params?.month ? decodeURIComponent(_state0.params.month) : '');
     const CATEGORIES = [
@@ -94,9 +97,6 @@ export default function DailyDispatchArchivePage() {
     const handleArticleClick = (articleId: string) => {
         location.route(`/materials/daily-dispatch/${articleId}`);
     };
-    const handleArchiveClick = (archiveMonth: string) => {
-        location.route(`/materials/daily-dispatch/archives/${encodeURIComponent(archiveMonth)}`);
-    };
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
         return date.toLocaleDateString('en-US', {
@@ -108,22 +108,22 @@ export default function DailyDispatchArchivePage() {
     };
     return createMemo(() => {
         if (loading()) {
-            return (<div class="ddp-loading">
+            return (<div class="ddp-loading" data-theme={archiveTheme()}>
         <div class="ddp-loading-spinner"/>
         <p>Loading articles...</p>
       </div>);
         }
-        return (<div class="ddp-container dispatch-archive">
+        return (<div class="ddp-container dispatch-archive" data-theme={archiveTheme()}>
       {/* Header Bar with Logo and Categories */}
       <nav class="ddp-header-bar no-print">
         <div class="ddp-header-bar-inner">
           <a href="/materials/daily-dispatch" class="ddp-toolbar-brand" style={cssStyle({ textDecoration: 'none' })}>
-            <img src="/assets/img/home-icons/dispatch-v1.png" alt="Daily Dispatch" class="ddp-logo"/>
+            <img src={appArtworkSrc('dispatch')} alt="Daily Dispatch" class="ddp-logo"/>
             <span>Daily Dispatch</span>
           </a>
           <div class="ddp-categories-list">
             {CATEGORIES.map((cat) => (<span class="ddp-category-item">
-                {cat}
+                {learningCategoryLabel(cat)}
               </span>))}
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function DailyDispatchArchivePage() {
                   {article.excerpt && (<p class="dda-article-excerpt">{article.excerpt}...</p>)}
                   <p class="dda-article-category">
                     <span class="dda-article-category-tag">
-                      {article.category}
+                      {learningCategoryLabel(article.category)}
                     </span>
                   </p>
                 </article>))}
@@ -164,16 +164,16 @@ export default function DailyDispatchArchivePage() {
         </div>
 
         {/* Sidebar */}
-        <aside class="ddp-sidebar no-print">
+        <aside class="ddp-sidebar no-print" aria-label="Archive navigation">
           {/* Archives */}
           <div class="ddp-sidebar-section">
             <h3 class="ddp-sidebar-title">Archives</h3>
-            {archives().length > 0 ? (<ul class="ddp-archives-list">
+            {archives().length > 0 ? (<ul class="ddp-archives-list" aria-label="Archive months">
                 {archives().map((archive, i) => (<li class={archive.month === month() ? 'active' : ''}>
-                    <a href="#" onClick={(e) => { e.preventDefault(); handleArchiveClick(archive.month); }}>
-                      {archive.month}
+                    <a href={`/materials/daily-dispatch/archives/${encodeURIComponent(archive.month)}`} aria-current={archive.month === month() ? 'page' : undefined}>
+                      <span>{archive.month}</span>
+                      <span class="ddp-archive-count">({archive.count})</span>
                     </a>
-                    <span class="ddp-archive-count">({archive.count})</span>
                   </li>))}
               </ul>) : (<p class="ddp-sidebar-empty">No archives yet</p>)}
           </div>

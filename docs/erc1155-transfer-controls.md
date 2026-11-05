@@ -39,3 +39,29 @@ The release overlays only the generated-contract template and binary on the prev
 release. Contract, deployer and HTTP API tests passed; the transaction queue was clear and all
 36 pilot transactions were complete before restart. Engine health passed afterward. No new
 on-chain collection, credential, mint, transfer or ZK proof was created by this deployment.
+
+## ABI Metadata Correction
+
+The generated Solidity included transfer controls, but `erc1155EditionABI` in Engine's store
+still described the old contract. The generic console displays that saved ABI; no console
+function whitelist needed changing. The ABI template now includes both getters, both policy
+writes and the non-indexed `TransferPolicyUpdated(bool,bool)` event. Regression tests cover
+their signatures/mutability, uniqueness, source consistency and existing ERC-1155 functions.
+
+Release: `fluentxverse-cloud/gmr-engine:erc1155-abi-20261102`. The binary was built from the
+previous deployed source with only the ABI constant replaced, avoiding unrelated local Engine
+changes. Store, contract runtime, deployer and HTTP API tests passed. Queue preflight found no
+unsettled operations, all 36 pilot transactions were complete, and Engine health passed.
+
+FXVID on Arbitrum One (`0x25cbb57f2dccc478889a232a64fcee210fffd972`) was confirmed to expose
+both getters on-chain and both policy functions in its saved source. Its single saved ABI
+record was repaired with compare-and-set protection and a private VPS rollback copy. No ABI
+was added to unverified legacy deployments. Future editions receive the corrected template.
+No chain transaction, mint, transfer or policy change was performed. Getters remain
+`transfersEnabled=true` and `transfersPermanentlyLocked=false`.
+
+The published console passed desktop/mobile tests with synthetic API metadata and no writes.
+Refresh the project/reopen its console to load the repaired ABI. Under Write,
+`setTransfersEnabled(false)` is reversible unless permanently locked;
+`lockTransfersPermanently()` is irreversible. Both still require the owner's existing
+password-confirmed transaction workflow. Deployment tooling: `scripts/deploy-erc1155-abi.mjs`.

@@ -1,6 +1,6 @@
 # Technology Content Basis
 
-Technology is a high-level overview of why FluentXVerse uses AI, Web3, and zero-knowledge proofs. The AI in Education and Why Onchain pages provide deeper explanations of uses, boundaries, and future directions. They do not assert mainnet deployment, accreditation, partner acceptance, measured AI learning gains, or W3C credential conformance.
+Technology is a high-level overview of why FluentXVerse uses AI, Web3, and zero-knowledge proofs. The AI in Learning and Why Onchain pages provide deeper explanations of uses, boundaries, and future directions. They do not assert mainnet deployment, accreditation, partner acceptance, measured AI learning gains, or W3C credential conformance.
 
 ## Local Evidence
 

@@ -2,16 +2,16 @@ import{execFileSync}from'node:child_process';
 import{cpSync,mkdirSync,writeFileSync,readFileSync}from'node:fs';
 import{join,dirname}from'node:path';
 import{ssh,sshOptions,cloudHost,quote}from'./lib/cloud-ssh.mjs';
-const id='cancelled-interview-review-20261102',release=join(process.cwd(),'output/release',id),remote='/opt/fluentxverse/releases/'+id;
-const previous='fluentxverse-cloud/api:id-resubmission-20261102',image='fluentxverse-cloud/api:'+id;
+const id='identity-interview-pass-20261102',release=join(process.cwd(),'output/release',id),remote='/opt/fluentxverse/releases/'+id;
+const previous='fluentxverse-cloud/api:interview-join-feedback-20261102',image='fluentxverse-cloud/api:'+id;
 const rootSSH=cmd=>execFileSync('ssh',[...sshOptions,'root@'+cloudHost,cmd],{encoding:'utf8',timeout:180000,maxBuffer:6e6});
 if(process.argv.includes('--prepare')){
- for(const f of ['src/routes/interview.route.ts','tests/interviewCancelledRoom.test.ts']){const dest=join(release,'api',f);mkdirSync(dirname(dest),{recursive:true});cpSync(join('fluentxverse-server',f),dest);}
+ for(const f of ['src/services/tutorIdentity/service.ts','src/services/interview.services/interview.service.ts','tests/tutorIdentity.test.ts','tests/tutorIdentity.http.test.ts']){const dest=join(release,'api',f);mkdirSync(dirname(dest),{recursive:true});cpSync(join('fluentxverse-server',f),dest);}
  writeFileSync(join(release,'api/Dockerfile'),`FROM ${previous}\nCOPY --chown=appuser:appgroup src/ /app/src/\nCOPY --chown=appuser:appgroup tests/ /app/tests/\n`);
  const tar=execFileSync('tar',['-czf','-','-C',join(release,'api'),'.']);ssh(`mkdir -p ${remote}/api && tar -xzf - -C ${remote}/api`,{input:tar});
  console.log(ssh(`docker build --network none -t ${image} ${remote}/api`,{timeout:120000}));
  console.log(ssh(`docker run --rm --network none --entrypoint bun ${image} --no-env-file build src/index.ts --target=bun --outfile=/tmp/interview.js`,{timeout:90000}));
- console.log(ssh(`docker run --rm --network none --entrypoint bun ${image} --no-env-file test tests/interviewCancelledRoom.test.ts`,{timeout:60000}));
+ console.log(ssh(`docker run --rm --network none --entrypoint bun ${image} --no-env-file test tests/tutorIdentity.test.ts tests/tutorIdentity.http.test.ts`,{timeout:60000}));
  writeFileSync(join(release,'verification.json'),JSON.stringify({passed:true}));
 }else if(process.argv.includes('--activate')){
  if(!JSON.parse(readFileSync(join(release,'verification.json'))).passed)throw Error('Verify first');

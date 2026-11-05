@@ -26,7 +26,7 @@ const fs=require('node:fs/promises');
         if(p==='/notifications')json.data={notifications:[],unreadCount:0};
         return route.fulfill({json});
       });
-      const port={tutor:5197,student:5196,admin:5195}[role];await page.goto('http://127.0.0.1:'+port+'/inbox',{waitUntil:'networkidle'});
+      const port={tutor:5197,student:5196,admin:5195}[role];await page.goto((process.env.DISPUTE_PUBLIC_SMOKE==='1'?`https://${role==='admin'?'dashboard':role}.fluentxverse.com`:'http://127.0.0.1:'+port)+'/inbox',{waitUntil:'networkidle'});
       const section=page.getByRole('region',{name:role==='admin'?'Student dispute review':'Private lesson cases'});
       try{await section.locator('summary').click();}catch(e){console.error(role,page.url(),(await page.locator('body').innerText()).slice(0,1000),errors);throw e;}
       if(role==='tutor'){

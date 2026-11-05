@@ -29,6 +29,14 @@ const base = process.env.SITE_URL || 'http://127.0.0.1:5215';
         text: [...document.querySelectorAll('main h1,main h2,main p,main li,nav a')].filter(el => el.getBoundingClientRect().width && el.scrollWidth > el.clientWidth + 1).map(el => el.textContent),
       }));
       assert.equal(overflow.page, false); assert.deepEqual(overflow.text, []);
+      for (const [app, label] of [['site', 'Website'], ['dashboard', 'Dashboard']]) {
+        await page.getByRole('group', { name: 'Filter by app' }).getByRole('button', { name: label, exact: true }).click();
+        await expect(page.locator('.changelog-entry')).toHaveCount(entries.filter(entry => entry.apps.includes(app)).length);
+        await expect(page).toHaveURL(new RegExp('app=' + app));
+        await page.reload();
+        await expect(page.getByRole('button', { name: label, exact: true })).toHaveAttribute('aria-pressed', 'true');
+      }
+      await page.getByRole('button', { name: 'Reset filters', exact: true }).click();
       await page.getByRole('group', { name: 'Filter by app' }).getByRole('button', { name: 'Engine', exact: true }).click();
       await expect(page).toHaveURL(/app=engine/);
       await expect(page.locator('.changelog-entry')).toHaveCount(engineEntries.length);

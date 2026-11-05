@@ -5,7 +5,7 @@ import { useLocation } from "../../routing";
 import { JSX } from "solid-js";
 import { useAuthContext } from '../../context/AuthContext';
 import SettingsModal from '../Settings/SettingsModal';
-import { LibraryBig } from 'lucide-solid';
+import { LibraryBig, Gift } from 'lucide-solid';
 interface MenuItem {
     href: string;
     icon: string;
@@ -18,6 +18,7 @@ const menuItems: MenuItem[] = [
     { href: "/materials", icon: "fi-sr-book-alt" },
     { href: "/profile", icon: "fi-sr-user" },
     { href: "/performance-metrics", icon: "fi-sr-chart-histogram" },
+    { href: "/rewards", icon: "rewards", label: "Tutor Rewards" },
     { href: "/knowledge-base", icon: "knowledge-base", label: "Knowledge Base" },
 ];
 const SideBar = (): JSX.Element | null => {
@@ -40,7 +41,7 @@ const SideBar = (): JSX.Element | null => {
         <ul>
           {menuItems.map((item) => (<li class={_state0.path === item.href || _state0.path.startsWith(`${item.href}/`) ? "active" : ""}>
               <a href={item.href} aria-label={item.label || item.href.slice(1).replaceAll("-", " ")} title={item.label || item.href.slice(1).replaceAll("-", " ")} aria-current={_state0.path === item.href || _state0.path.startsWith(`${item.href}/`) ? "page" : undefined}>
-                {item.icon === 'knowledge-base' ? <LibraryBig size={24} class="sidebar-knowledge-icon" aria-hidden="true"/> : <i class={item.icon} aria-hidden="true"></i>}
+                {item.icon === 'knowledge-base' ? <LibraryBig size={24} class="sidebar-knowledge-icon" aria-hidden="true"/> : item.icon === 'rewards' ? <Gift size={24} aria-hidden="true"/> : <i class={item.icon} aria-hidden="true"></i>}
               </a>
             </li>))}
           

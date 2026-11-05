@@ -22,7 +22,7 @@ export const onchainEducationPillars = [
   {
     id: 'learning-incentives',
     title: 'Learn-to-earn incentives and scholarships',
-    introduction: 'Well-designed incentives could help learners sustain meaningful progress and make education more accessible. Rewards should reinforce learning, not turn education into a race to collect tokens.',
+    introduction: 'Well-designed incentives could help learners sustain meaningful progress and make learning more accessible. Rewards should reinforce learning, not turn learning into a race to collect tokens.',
     benefits: [
       { title: 'Recognition for useful progress', text: 'A funded program could award tokens or NFTs for assessed milestones, consistent practice, or helpful peer contributions, with rules that discourage farming and fabricated activity.' },
       { title: 'Global micro-scholarships', text: 'Sponsors could fund smart-contract programs that release support when agreed learning milestones are verified, including for learners in underserved regions.' },
@@ -32,7 +32,7 @@ export const onchainEducationPillars = [
   {
     id: 'educator-payments',
     title: 'Direct, borderless educator payments',
-    introduction: 'Educators and content creators should understand how they earn and how payments are calculated. Programmable payment rules could make revenue sharing clearer across a global education marketplace.',
+    introduction: 'Educators and content creators should understand how they earn and how payments are calculated. Programmable payment rules could make revenue sharing clearer across a global learning marketplace.',
     benefits: [
       { title: 'Programmable revenue sharing', text: 'Smart contracts could split payments between teachers, authors, and collaborators when course material is purchased through a participating system. Resale royalties depend on the rules being honored by that system.' },
       { title: 'Fewer payment intermediaries', text: 'Onchain settlement could reduce some cross-border payment friction and costs. Network fees, conversion, local access to funds, and platform charges still determine what an educator actually receives.' },

@@ -26,7 +26,7 @@ const CareerSection = () => {
               We focus on creating real opportunities: flexible schedules, fair compensation, and a supportive environment where tutors can grow their skills and build stable online careers. As we expand, we're committed to delivering high-quality lessons and meaningful learning experiences for students who value clear communication, cultural exchange, and professional guidance.
             </p>
             <p class="career-description">
-              Join us as we build a modern ESL ecosystem, one that empowers tutors, strengthens communities, and raises the standard of online education from day one.
+              Join us as we build a modern ESL ecosystem, one that empowers tutors, strengthens communities, and raises the standard of online learning from day one.
             </p>
             <a href="/become-tutor" class="career-btn">
               Learn more

@@ -92,7 +92,7 @@ s('accounts','Account security and notices',[
 'Maintain a working contact email. Notices about bookings, cancellations, payments, accounts, or security may appear in the app or email. Check current app status rather than relying solely on a notification.']),
 s('service','The learning service',[
 'FluentXVerse connects students and tutors for scheduled English lessons, with related materials, chat, notes, and feedback. Feature access depends on eligibility, availability, compatible devices, and supported integrations.',
-'Progress depends on participation and other factors. No particular fluency result, examination score, certification, or commercial result is guaranteed. Materials and AI suggestions are educational, not professional legal, medical, or financial advice.',
+'Progress depends on participation and other factors. No particular fluency result, examination score, certification, or commercial result is guaranteed. Materials and AI suggestions are for learning purposes, not professional legal, medical, or financial advice.',
 'Maintenance or feature changes are subject to appropriate notice where required and do not override mandatory rights or purchase-specific commitments.']),
 s('booking',tutor ? 'Availability and booked lessons' : 'Bookings and time zones',[
 tutor ? 'Published slots communicate your availability. Confirm presence during the window displayed in the schedule. The current confirmation window is 35 to 11 minutes before class; unconfirmed unbooked slots can close at the deadline. Keep booked time available.' : 'A booking exists when the service confirms it. A temporary checkout reservation can expire and is not a completed booking. Review availability, ticket eligibility, price, and cutoffs before confirmation.',

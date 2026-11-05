@@ -5704,7 +5704,7 @@ func missingTutorProfileFields(profile map[string]any) []string {
 	}
 	education, _ := profile["education"].([]any)
 	if strings.TrimSpace(stringFromAny(profile["schoolAttended"])) == "" && len(education) == 0 {
-		missing = append(missing, "Education")
+		missing = append(missing, "Qualifications")
 	}
 	interests, _ := profile["interests"].([]any)
 	if len(interests) == 0 {

@@ -177,6 +177,33 @@
   font-weight: 600;
 }
 
+.dda-page { color: var(--ddp-body-text); }
+html:has(.dda-page), body:has(.dda-page) { overflow-x: clip; overflow-y: visible; }
+.dda-page .ddp-header-bar { position: sticky; background: #121212; }
+.dda-page .ddp-header-bar-inner { min-height: 44px; }
+.dda-page .ddp-categories-list { min-width: 0; overflow-x: auto; }
+.dda-page .ddp-toolbar-brand { flex-shrink: 0; }
+.dda-page .ddp-layout { padding-top: 2rem; }
+.dda-page .dda-content { padding-top: 0 !important; background: var(--ddp-paper); }
+.dda-page .dda-month-title,
+.dda-page .dda-month-title span,
+.dda-page .dda-article-title { color: var(--ddp-ink); }
+.dda-page .dda-article-card { background: var(--ddp-paper); border-color: var(--ddp-border); border-left-color: var(--ddp-accent); }
+.dda-page .dda-article-card:hover { background: var(--ddp-hover); }
+.dda-page .dda-article-card:hover .dda-article-title { color: var(--ddp-ink); }
+.dda-page :is(.dda-article-date, .dda-article-excerpt, .dda-article-category) { color: var(--ddp-muted-text); }
+.dda-page .dda-no-articles { background: var(--ddp-panel); border-color: var(--ddp-border); color: var(--ddp-muted-text); }
+.dda-page .ddp-archives-list a[aria-current='page'] { color: var(--ddp-ink); text-decoration: underline; text-decoration-color: var(--ddp-accent); text-underline-offset: 5px; }
+.dda-page .dda-article-category-tag { color: #121212; }
+.dda-page .dda-article-card:focus-visible { outline: 2px solid var(--ddp-accent); outline-offset: 3px; }
+.dda-page .dda-error { background: var(--ddp-panel); color: var(--ddp-ink); }
+
+@media (max-width: 900px) {
+  .dda-page .ddp-layout { flex-direction: column; }
+  .dda-page .ddp-sidebar { display: block; order: -1; position: static; width: 100%; max-height: none; padding-top: 0; }
+  .dda-page .ddp-archives-list { max-height: 240px; }
+}
+
 /* ============================================================================
    RESPONSIVE
    ============================================================================ */

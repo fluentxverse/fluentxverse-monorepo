@@ -1,6 +1,6 @@
 # FluentXVerse Site
 
-The public website for FluentXVerse, an online English tutoring platform with learner, tutor, and operations applications. It explains the product, educational approach, and privacy technology, and links visitors to the appropriate application.
+The public website for FluentXVerse's onchain learning ecosystem, starting with online English tutoring and growing across subjects and skills. It explains the products, learning approach, and privacy technology, and links visitors to the appropriate application.
 
 Production entry points: https://fluentxverse.com and https://www.fluentxverse.com
 

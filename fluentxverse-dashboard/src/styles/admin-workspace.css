@@ -71,36 +71,46 @@
 .dashboard-layout .tutors-page .search-box input { min-width:0; }
 .dashboard-layout .tutors-page .btn-search { background:var(--admin-surface-soft, #edf2fa); color:var(--admin-accent, #0b4bb5); box-shadow:none; border-radius:4px; padding:7px 16px; }
 .dashboard-layout .tutors-table-card { overflow:auto; border-radius:8px; background:var(--admin-surface, #fff); }
-.dashboard-layout .tutors-table { table-layout:fixed; min-width:1400px; width:100%; }
-.dashboard-layout .tutors-table :is(th,td) { display:table-cell; vertical-align:middle; padding:16px 14px; overflow-wrap:anywhere; }
-.dashboard-layout .tutors-table th { white-space:normal; background:var(--admin-surface, #f8fafc); font-size:11px; line-height:1.5; color:var(--admin-muted, #65748a); height:55px; }
-.dashboard-layout .tutors-table th { overflow-wrap:normal; }
-.dashboard-layout .tutors-table td { font-size:13px; }
-.dashboard-layout .tutors-table .tutor-rate-link { font-size:13px; }
+.dashboard-layout .tutors-table { table-layout:fixed; min-width:0; width:100%; }
+.dashboard-layout .tutors-table :is(th,td) { display:table-cell; vertical-align:middle; padding:10px 6px; overflow-wrap:anywhere; }
+.dashboard-layout .tutors-table th { white-space:normal; background:var(--admin-surface, #f8fafc); font-size:10px; line-height:1.5; color:var(--admin-muted, #65748a); height:48px; }
+.dashboard-layout .tutors-table th { overflow-wrap:normal; text-transform:none; letter-spacing:0; }
+.dashboard-layout .tutors-table td { font-size:11px; }
+.dashboard-layout .tutors-table .tutor-rate-link { font-size:11px; gap:4px; white-space:normal; }
 .dashboard-layout .tutors-table tbody tr:hover { background:var(--admin-surface-soft, #f5f8fc); }
-.dashboard-layout .tutors-table col.tutor-column { width:236px; }
-.dashboard-layout .tutors-table col.rate-column { width:110px; }
-.dashboard-layout .tutors-table col.languages-column { width:100px; }
-.dashboard-layout .tutors-table col.exam-column { width:90px; }
-.dashboard-layout .tutors-table col.status-column { width:140px; }
-.dashboard-layout .tutors-table col.bookings-column { width:160px; }
-.dashboard-layout .tutors-table col.proof-column { width:120px; }
-.dashboard-layout .tutors-table col.sessions-column { width:84px; }
-.dashboard-layout .tutors-table col.rating-column { width:70px; }
-.dashboard-layout .tutors-table col.actions-column { width:200px; }
+.dashboard-layout .tutors-table col.tutor-column { width:14%; }
+.dashboard-layout .tutors-table col.rate-column { width:7%; }
+.dashboard-layout .tutors-table col.languages-column { width:6.5%; }
+.dashboard-layout .tutors-table col.exam-column { width:6%; }
+.dashboard-layout .tutors-table col.status-column { width:8%; }
+.dashboard-layout .tutors-table col.tutor-status-column { width:10%; }
+.dashboard-layout .tutors-table col.bookings-column { width:8%; }
+.dashboard-layout .tutors-table col.proof-column { width:7.5%; }
+.dashboard-layout .tutors-table col.sessions-column { width:6%; }
+.dashboard-layout .tutors-table col.rating-column { width:4%; }
+.dashboard-layout .tutors-table col.actions-column { width:9%; }
 .dashboard-layout .tutors-table .tutor-cell { min-width:0; }
-.dashboard-layout .tutors-table .tutor-info { min-width:0; gap:10px; }
+.dashboard-layout .tutors-table .tutor-info { min-width:0; gap:6px; }
+.dashboard-layout .tutors-table .tutor-avatar { width:30px; height:30px; }
 .dashboard-layout .tutors-table .tutor-details { min-width:0; }
-.dashboard-layout .tutors-table .tutor-name { font-size:13px; line-height:1.5; }
-.dashboard-layout .tutors-table .tutor-email { font-size:11px; line-height:1.5; color:var(--admin-muted, #6c7a8e); }
+.dashboard-layout .tutors-table .tutor-name { font-size:12px; line-height:1.4; }
+.dashboard-layout .tutors-table .tutor-email { font-size:10px; line-height:1.5; color:var(--admin-muted, #6c7a8e); }
 .dashboard-layout .tutors-table .tutor-email { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
-.dashboard-layout .tutors-table .action-buttons { display:flex; flex-wrap:wrap; gap:6px; }
-.dashboard-layout .tutors-table .action-btn { width:30px; height:30px; flex:0 0 30px; border:1px solid var(--admin-border, #dfe5ee); background:var(--admin-surface, #fff); color:var(--admin-muted, #59697d); border-radius:5px; }
+.dashboard-layout .tutors-table .action-buttons { display:flex; flex-wrap:wrap; gap:4px; }
+.dashboard-layout .tutors-table .action-btn { width:26px; height:26px; flex:0 0 26px; border:1px solid var(--admin-border, #dfe5ee); background:var(--admin-surface, #fff); color:var(--admin-muted, #59697d); border-radius:5px; }
 .dashboard-layout .tutors-table .action-btn:hover { background:var(--admin-surface-soft, #edf2fa); color:var(--admin-accent, #0b4bb5); transform:none; }
 .dashboard-layout .tutors-table .action-btn.suspend { color:var(--admin-warning, #b2640d); }
 .dashboard-layout .tutor-avatar.suspended { background:var(--admin-surface-soft, #fff1f2)!important; border-color:var(--admin-border, #f5c9d0); color:var(--admin-danger, #b13045); }
 .dashboard-layout .tutors-table .status-badge,.dashboard-layout .proof-badge { border-radius:5px; font-size:11px; padding:4px 7px; gap:4px; }
 .dashboard-layout .tutors-table .language-tag { background:var(--admin-surface-soft, #edf2fa); color:var(--admin-accent, #3163a6); }
+.dashboard-layout .tutors-table :is(.status-badge,.proof-badge) { max-width:100%; box-sizing:border-box; white-space:normal; overflow-wrap:normal; font-size:10px; line-height:1.4; padding:3px 5px; gap:3px; }
+.dashboard-layout .tutors-table :is(.status-badge,.proof-badge) i { flex-shrink:0; }
+.dashboard-layout .tutors-table .proof-status-wrap { min-width:0; }
+.dashboard-layout .tutors-table :is(.booking-access-status,.exam-score,.not-taken,.processing-text) { font-size:11px; }
+.dashboard-layout .tutors-table .language-tag { font-size:10px; padding:3px 5px; }
+@media (max-width:1100px) {
+  .dashboard-layout .tutors-table { min-width:1000px; }
+}
 .dashboard-layout .dashboard-page .stats-grid { gap:16px; margin-bottom:28px; }
 .dashboard-layout .dashboard-page .stat-card { border-radius:8px; padding:22px 18px; box-shadow:none; gap:14px; }
 .dashboard-layout .dashboard-page .stat-card:hover { transform:none; border-color:var(--admin-border, #aabbd7); box-shadow:none; }

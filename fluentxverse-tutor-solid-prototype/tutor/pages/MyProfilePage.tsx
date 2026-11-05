@@ -31,6 +31,7 @@ import { toast, toastConfirm } from '../Components/Common/Toast';
 import './MyProfilePage.css';
 import { proofApi } from '../api/proof.api';
 import { hasTeachingAccess } from '../utils/teachingAccess';
+import { profileReviewProgress } from '../../../shared/profileReview';
 import { useLocation } from '../routing';
 const profileErrorMessage = (error: unknown): string => {
     if (isAxiosError(error)) {
@@ -167,6 +168,12 @@ export const MyProfilePage = () => {
             if (request === profileRequest) setLoading(false);
         }
     };
+    createEffect(() => {
+        const refreshReview = () => { if (document.visibilityState === 'visible' && profileData()?.profileStatus === 'pending_review') void loadProfile(true); };
+        const timer = setInterval(refreshReview, 15000);
+        window.addEventListener('focus',refreshReview);
+        onCleanup(() => { clearInterval(timer); window.removeEventListener('focus',refreshReview); });
+    });
     const handleSettingsClose = () => {
         setSettingsOpen(false);
         // Unchanged settings reuse memory; successful writes invalidate it in the client.
@@ -430,6 +437,13 @@ export const MyProfilePage = () => {
     const handleSubmitForReview = async () => {
         if (submittingProfile())
             return;
+        try {
+            const {data}=await client.get('/tutor-identity/status');
+            if(data.success && data.data.issuanceMode==='production' && !data.data.walletConsentRecorded){
+                toast.error('Confirm your tutor credential in Interview > Identity verification before submitting your profile.');
+                return;
+            }
+        } catch { toast.error('Could not check credential confirmation. Please try again.'); return; }
         if (!await toastConfirm('Are you sure you want to submit your profile for review? Once submitted, you cannot edit your profile until it is reviewed.', 'Submit Profile')) {
             return;
         }
@@ -480,7 +494,7 @@ export const MyProfilePage = () => {
             { name: 'Bio', complete: !!(profileData()?.bio && profileData().bio.length > 10) },
             { name: 'Profile Picture', complete: !!currentAvatar() },
             { name: 'Introduction Video', complete: !!profileData()?.videoIntroUrl },
-            { name: 'Education', complete: !!((profileData()?.schoolAttended && profileData()?.major) || (profileData()?.education && profileData().education.length > 0)) },
+            { name: 'Qualifications', complete: !!((profileData()?.schoolAttended && profileData()?.major) || (profileData()?.education && profileData().education.length > 0)) },
             { name: 'Interests', complete: !!(profileData()?.interests && profileData().interests.length > 0) },
         ]);
         const completedCount = createMemo(() => profileFields().filter(f => f.complete).length);
@@ -631,7 +645,7 @@ export const MyProfilePage = () => {
                 {incompleteFields().length > 0 && (<div class="completeness-missing">
                     <span class="missing-label">Complete your profile:</span>
                     <div class="missing-items">
-                      {incompleteFields().map((field, idx) => (field.name === 'Education' || field.name === 'Preferred nickname' ? <button type="button" class="missing-item" onClick={() => startEditing(field.name === 'Education' ? 'education' : 'nickname', '')}>
+                      {incompleteFields().map((field, idx) => (field.name === 'Qualifications' || field.name === 'Preferred nickname' ? <button type="button" class="missing-item" onClick={() => startEditing(field.name === 'Qualifications' ? 'education' : 'nickname', '')}>
                           <TutorIcon name="fi-sr-plus-small"/> {field.name}
                         </button> : <span class="missing-item">
                           <TutorIcon name="fi-sr-plus-small"/>
@@ -642,7 +656,7 @@ export const MyProfilePage = () => {
               </div>)}
 
             {/* Profile Status Card - Show when profile is 100% complete or has a status */}
-            {(profileData()?.profileStatus === 'pending_review' || profileData()?.profileStatus === 'rejected' || (profileApproved() ? profileData()?.hasPendingChanges : completionPercent() === 100)) && (<div class={`profile-status-card status-${profileData()?.profileStatus || 'ready'}`}>
+            {(profileApproved() || profileData()?.profileStatus === 'pending_review' || profileData()?.profileStatus === 'rejected' || completionPercent() === 100) && (<div class={`profile-status-card status-${profileData()?.profileStatus || 'ready'}`}>
                 {profileData()?.profileStatus === 'pending_review' && (<>
                     <div class="status-icon pending">
                       <TutorIcon name="fi-sr-time-half-past"/>
@@ -652,11 +666,11 @@ export const MyProfilePage = () => {
                       <p>Your profile has been submitted and is awaiting admin review. You'll be notified once it's approved.</p>
                       {profileData().profileItemStatuses && (<div class="review-progress">
                           <div class="progress-label">
-                            Review Progress: {Object.values(profileData().profileItemStatuses).filter(s => s?.status === 'approved').length}/5 items approved
+                            Review Progress: {profileReviewProgress(profileData().profileItemStatuses).approved}/{profileReviewProgress(profileData().profileItemStatuses).total} items approved
                           </div>
                           <div class="progress-bar-container">
                             <div class="progress-bar-fill" style={cssStyle({ get width() {
-                                return `${(Object.values(profileData().profileItemStatuses).filter(s => s?.status === 'approved').length / 5) * 100}%`;
+                                return `${profileReviewProgress(profileData().profileItemStatuses).percent}%`;
                             } })}/>
                           </div>
                         </div>)}
@@ -666,8 +680,10 @@ export const MyProfilePage = () => {
                     </div>
                   </>)}
                 {profileData()?.profileStatus === 'approved' && (<>
+                    <div class="status-icon approved"><TutorIcon name="fi-sr-check"/></div>
                     <div class="status-content">
-                      
+                      <h3>Profile Approved</h3>
+                      <p>Your profile review is complete.</p>
                       {/* Show pending changes if any */}
                       {profileData().hasPendingChanges && profileData().pendingProfileChanges && profileData().pendingProfileChanges.length > 0 && (<div class="pending-changes-notice">
                           <div class="pending-changes-header">
@@ -684,7 +700,7 @@ export const MyProfilePage = () => {
                                 'bio': 'Bio',
                                 'profilePicture': 'Profile Photo',
                                 'videoIntro': 'Introduction Video',
-                                'education': 'Education',
+                                'education': 'Qualifications',
                                 'interests': 'Interests'
                             };
                             return (<div class="pending-change-item">
@@ -717,7 +733,7 @@ export const MyProfilePage = () => {
                               <span class="feedback-reason">{profileData().profileItemStatuses.bio.rejectionReason || 'Needs improvement'}</span>
                             </div>)}
                           {profileData().profileItemStatuses.education?.status === 'rejected' && (<div class="feedback-item">
-                              <span class="feedback-label"><TutorIcon name="fi-sr-graduation-cap"/> Education:</span>
+                              <span class="feedback-label"><TutorIcon name="fi-sr-graduation-cap"/> Qualifications:</span>
                               <span class="feedback-reason">{profileData().profileItemStatuses.education.rejectionReason || 'Needs improvement'}</span>
                             </div>)}
                           {profileData().profileItemStatuses.interests?.status === 'rejected' && (<div class="feedback-item">
@@ -736,7 +752,7 @@ export const MyProfilePage = () => {
                           <div class="approved-badges">
                             {profileData().profileItemStatuses.profilePicture?.status === 'approved' && (<span class="approved-badge"><TutorIcon name="fi-sr-check"/> Photo</span>)}
                             {profileData().profileItemStatuses.bio?.status === 'approved' && (<span class="approved-badge"><TutorIcon name="fi-sr-check"/> Bio</span>)}
-                            {profileData().profileItemStatuses.education?.status === 'approved' && (<span class="approved-badge"><TutorIcon name="fi-sr-check"/> Education</span>)}
+                            {profileData().profileItemStatuses.education?.status === 'approved' && (<span class="approved-badge"><TutorIcon name="fi-sr-check"/> Qualifications</span>)}
                             {profileData().profileItemStatuses.interests?.status === 'approved' && (<span class="approved-badge"><TutorIcon name="fi-sr-check"/> Interests</span>)}
                             {profileData().profileItemStatuses.videoIntro?.status === 'approved' && (<span class="approved-badge"><TutorIcon name="fi-sr-check"/> Video</span>)}
                           </div>
@@ -752,8 +768,8 @@ export const MyProfilePage = () => {
                       <TutorIcon name="fi-sr-rocket-lunch"/>
                     </div>
                     <div class="status-content">
-                      <h3>Profile Complete!</h3>
-                      <p>Your profile is 100% complete. Submit it for review to start teaching on FluentXVerse.</p>
+                      <h3>Profile details complete</h3>
+                      <p>Confirm your tutor credential in <a href="/interview">Identity verification</a>, then submit your profile for review.</p>
                       <button class="btn-submit-profile" onClick={handleSubmitForReview} disabled={submittingProfile()}>
                         {submittingProfile() ? (<>
                             <span class="btn-spinner"></span>
@@ -802,9 +818,9 @@ export const MyProfilePage = () => {
                     <div class="profile-tab-title-row">
                       <h2 class="profile-tab-title">
                         <TutorArt name="training" size={32}/>
-                        Education
+                        Qualifications
                       </h2>
-                      <button type="button" class="btn-edit-inline" aria-label="Edit education" title="Edit education" onClick={() => startEditing('education', '')}>
+                      <button type="button" class="btn-edit-inline" aria-label="Edit qualifications" title="Edit qualifications" onClick={() => startEditing('education', '')}>
                         <TutorIcon name="fas fa-pencil-alt"/>
                       </button>
                     </div>
@@ -827,7 +843,7 @@ export const MyProfilePage = () => {
                                   <strong>{edu}</strong>
                                 </div>
                               </div>))) : <p class="education-empty">Add your school and degree or field of study.</p>}
-                          {profileData()?.educationalAttainment && <div class="education-row"><span class="education-label">Educational attainment:</span><strong>{profileData().educationalAttainment}</strong></div>}
+                          {profileData()?.educationalAttainment && <div class="education-row"><span class="education-label">Highest qualification:</span><strong>{profileData().educationalAttainment}</strong></div>}
                           <div class="education-row"><span class="education-label">Teaching experience:</span><strong>{profileData()?.teachingExperience || 'Not added yet'}</strong></div>
                           {!!profileData()?.teachingQualifications?.length && <div class="education-row"><span class="education-label">Teaching qualifications:</span><strong>{profileData().teachingQualifications.join(', ')}</strong></div>}
                         </div>

@@ -37,6 +37,7 @@ const InterviewRoomPage = (props: InterviewRoomPageProps) => {
   const [roomLoading, setRoomLoading] = useState(true);
   const tutorId = room?.tutorId;
   const tutorName = room?.tutorName;
+  const savedResult = room?.result === 'pass' || room?.result === 'fail' ? room.result : null;
   const [ended, setEnded] = useState(false);
   const [identityCheckActive, setIdentityCheckActive] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<'identity' | 'evaluation' | 'chat'>('identity');
@@ -194,7 +195,7 @@ const InterviewRoomPage = (props: InterviewRoomPageProps) => {
       return;
     }
 
-    if (isSaving || recordingUploading) return;
+    if (isSaving || recordingUploading || savedResult) return;
     setIsSaving(true);
     try {
       if (pendingRecording.current && !await uploadRecording()) throw Error('Upload the recording before submitting the result.');
@@ -210,8 +211,9 @@ const InterviewRoomPage = (props: InterviewRoomPageProps) => {
       if (!response.data.success) throw Error(response.data.error || 'Failed to submit result');
 
       setResultSubmitted(true);
+      setRoom(current => current ? { ...current, result } : current);
       const savedRoom = await interviewApi.getRoom(interviewId);
-      setRoom(savedRoom);
+      setRoom({ ...savedRoom, result: savedRoom.result || result });
       localStorage.removeItem(`interview-${interviewId}`);
     } catch (err: any) {
       setError(err.response?.data?.error || err.message || 'Failed to submit result');
@@ -355,7 +357,7 @@ const InterviewRoomPage = (props: InterviewRoomPageProps) => {
       if (mounted.current && !endedRef.current) setSetupComplete(true);
     } catch (err) {
       console.error('Error joining room:', err);
-      setError('Failed to join interview room');
+      setError(err instanceof Error && err.message ? err.message : 'Unable to join the interview. Please retry.');
       setIsConnecting(false);
       callRef.current?.close(); socketRef.current?.disconnect();
     }
@@ -531,6 +533,7 @@ const InterviewRoomPage = (props: InterviewRoomPageProps) => {
               </div>
               <h1>Interview Room</h1>
               <p>{roomLoading ? 'Loading booked interview...' : tutorName || 'Interview unavailable'}</p>
+              {room && <p className="interview-entry-window">{new Date(room.date + 'T00:00:00').toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' })} · {room.time} Manila time. Entry opens 15 minutes before the scheduled start.</p>}
             </div>
 
             {error && (
@@ -774,7 +777,7 @@ const InterviewRoomPage = (props: InterviewRoomPageProps) => {
                   <button 
                     className="btn-result btn-pass"
                     onClick={() => setShowPassConfirm(true)}
-                    disabled={isSaving || recordingUploading}
+                    disabled={isSaving || recordingUploading || Boolean(savedResult)}
                   >
                     <i className="ri-checkbox-circle-fill"></i>
                     {isSaving ? 'Submitting...' : 'Pass'}
@@ -782,7 +785,7 @@ const InterviewRoomPage = (props: InterviewRoomPageProps) => {
                   <button 
                     className="btn-result btn-fail"
                     onClick={() => setShowFailConfirm(true)}
-                    disabled={isSaving || recordingUploading}
+                    disabled={isSaving || recordingUploading || Boolean(savedResult)}
                   >
                     <i className="ri-close-circle-fill"></i>
                     {isSaving ? 'Submitting...' : 'Fail'}
@@ -790,7 +793,7 @@ const InterviewRoomPage = (props: InterviewRoomPageProps) => {
                 </div>
                 <p className="result-hint">
                   <i className="ri-information-line"></i>
-                  Save the result independently of the call. Results can be reviewed and corrected later.
+                  {savedResult ? 'Result saved. Corrections can be made from the interview review.' : 'Save the result independently of the call.'}
                 </p>
               </div>
               </div>

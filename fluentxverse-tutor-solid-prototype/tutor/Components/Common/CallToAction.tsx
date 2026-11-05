@@ -11,7 +11,7 @@ const CallToAction = () => {
         <div class="cta-content">
           <h2 class="cta-title">Ready to Start Your Teaching Journey?</h2>
           <p class="cta-description">
-            Join FluentXVerse today and become part of a growing community of Filipino tutors making a difference in ESL education.
+            Join FluentXVerse today and become part of a growing community of Filipino tutors making a difference in ESL learning.
           </p>
           <div class="cta-buttons">
             <a href="/register" class="home-cta-btn primary">

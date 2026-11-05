@@ -114,3 +114,8 @@
   .student-account-dialog .account-dialog-header { gap: 8px; }
   .student-account-dialog .account-dialog-header:has(.account-icon-button:first-child) .account-art { display: none; }
 }
+.account-replacement { padding:16px 0; border-bottom:1px solid var(--fxv-border,#dfe5ed); }
+.account-replacement h3 { font-size:14px; margin:0 0 12px; }
+.account-replacement label { display:flex; align-items:center; justify-content:space-between; gap:16px; font-size:13px; font-weight:600; color:inherit; }
+.account-replacement input { flex:0 0 32px; width:32px; height:20px; accent-color:#2563eb; }
+.account-replacement p { font-size:12px; line-height:1.6; margin:8px 0 0; }

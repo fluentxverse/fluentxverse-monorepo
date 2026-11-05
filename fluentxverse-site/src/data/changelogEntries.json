@@ -2,6 +2,323 @@
   "schemaVersion": 1,
   "entries": [
     {
+      "id": "FXV-20261105-005",
+      "date": "2026-11-05",
+      "apps": ["student", "tutor", "dashboard"],
+      "type": "fixed",
+      "title": "Reliable Daily Dispatch archive and search navigation",
+      "summary": "Article search, archive links, and student or tutor preview modes now stay consistent as readers move between Daily Dispatch views.",
+      "details": [
+        "Tutor sidebar search includes older published articles in the classroom library, rather than only the default administrative list.",
+        "Student archive navigation and dashboard student/tutor archive routes preserve the selected view when changing months or opening an article.",
+        "Desktop and mobile checks covered direct links, reloads, browser back, both themes, and student answer visibility."
+      ]
+    },
+    {
+      "id": "FXV-20261105-004",
+      "date": "2026-11-05",
+      "apps": ["student", "tutor", "dashboard"],
+      "type": "improved",
+      "title": "One Daily Dispatch reading experience across apps",
+      "summary": "Daily Dispatch articles now share a renderer, typography, theme behavior, source links, and the updated newspaper mark across the student, tutor, and dashboard apps.",
+      "details": [
+        "Standalone articles and classroom frames use the same template and follow the selected light or dark theme. Student views do not expose tutor answers.",
+        "Legacy source text is displayed as readable attribution and labeled links. Opaque Google News RSS links are not assigned invented publisher names, and persisted article records are unchanged.",
+        "Published layouts, classroom frames, font controls, citations, and desktop/mobile parity passed browser checks with intercepted API fixtures."
+      ]
+    },
+    {
+      "id": "FXV-20261105-003",
+      "date": "2026-11-05",
+      "apps": ["student"],
+      "type": "changed",
+      "title": "Feedback history removed from student navigation",
+      "summary": "The student app no longer links to the feedback-history page, and existing /reviews links return to Home.",
+      "details": [
+        "The sidebar Feedback entry and My feedback link were removed without deleting existing records or changing backend review policies.",
+        "Live desktop and mobile checks confirmed the redirect and absence of feedback-history API requests from that route."
+      ]
+    },
+    {
+      "id": "FXV-20261105-002",
+      "date": "2026-11-05",
+      "apps": ["site"],
+      "type": "improved",
+      "title": "Clearer mission and technology ecosystem on the website",
+      "summary": "The About page clarifies FluentXVerse's learning mission, and the homepage identifies the networks and providers used across the ecosystem.",
+      "details": [
+        "The ecosystem section covers Arbitrum, zkVerify, Robinhood Chain, Alchemy, Privy, OpenZeppelin, and Aero, with locally served logos and links to their official websites.",
+        "Technology usage is not a claim of sponsorship, endorsement, or a formal commercial partnership.",
+        "The updated About copy and homepage section passed live asset and desktop/mobile browser checks."
+      ]
+    },
+    {
+      "id": "FXV-20261105-001",
+      "date": "2026-11-05",
+      "apps": ["tutor", "backend", "engine"],
+      "type": "added",
+      "title": "Tutor reward quotes and managed claiming",
+      "summary": "Tutors have a Rewards page to review released balances, request an asset quote, and confirm a sponsored claim through their managed wallet.",
+      "details": [
+        "The backend binds each quote to the authenticated tutor, receiving wallet, available reward balance, token, minimum output, nonce, and deadline. Engine/Vault authorizes the exact claim without exposing signing credentials to the browser.",
+        "Uncertain submissions reuse durable authorization and idempotency records. Pending transactions are not displayed as completed before canonical success and finality checks.",
+        "Only the reviewed NVDA route was enabled initially. At rollout, the treasury and reserved reward balances were zero; no real tutor payout or paid mainnet claim was performed. Browser financial writes used controlled fixtures."
+      ]
+    },
+    {
+      "id": "FXV-20261104-005",
+      "date": "2026-11-04",
+      "apps": ["backend", "engine"],
+      "type": "added",
+      "title": "Aero reward purchases with bounded execution",
+      "summary": "The reward system gained a pinned Aero adapter and a FluentXVerse-operated, Alchemy-backed price feed on Robinhood Chain.",
+      "details": [
+        "Approved routes enforce exact input spending, minimum received amounts, expiry, recipient delivery checks, and cleared router allowances. Quotes fail when prices are stale or execution falls outside the configured limits.",
+        "The price feed trusts Alchemy's data and our publisher; it is not an official Alchemy oracle or a cryptographic proof of the upstream HTTPS response.",
+        "Contract receipts and runtime bindings were checked. Purchase and delivery tests used synthetic assets and an isolated mainnet fork; no real tutor funds were spent. These are internal checks, not an independent security audit."
+      ]
+    },
+    {
+      "id": "FXV-20261104-004",
+      "date": "2026-11-04",
+      "apps": ["dashboard", "backend", "engine"],
+      "type": "added",
+      "title": "Monthly tutor reward administration",
+      "summary": "Finance staff can inspect the rewards treasury and monthly lesson totals, while superadmins can submit audited reward-period and funding operations through Engine.",
+      "details": [
+        "The reward contract was deployed on Robinhood Chain, separate from the Arbitrum booking and dispute contracts. Monthly thresholds, per-lesson USD rates, and release dates are configured for future periods.",
+        "Eligibility uses reconciled completed booked lessons. Active TA-301 penalties exclude lessons, unresolved reports hold reconciliation, and finalization requires staged onchain counts to match the reviewed snapshot.",
+        "Funding, finalization, and unlocking remain explicit operations. Deployment did not choose a launch rate or pay date, fund tutor entitlements, or make a payout. Automatic recurring reward periods were not included."
+      ]
+    },
+    {
+      "id": "FXV-20261104-003",
+      "date": "2026-11-04",
+      "apps": ["engine"],
+      "type": "improved",
+      "title": "Automatic booking receipt batches of up to 32",
+      "summary": "Engine can publish consecutive new-booking commitments together, reducing repeated transaction overhead while keeping application booking confirmation immediate.",
+      "details": [
+        "Batches contain up to 32 untouched consecutive booking events and do not wait to become full. Cancellations, amendments, disputes, and previously planned transactions preserve queue-order boundaries.",
+        "Frozen membership, saved signed bytes, and atomic finality tracking make retries reuse the original transaction rather than creating new business actions.",
+        "A live synthetic eight-booking batch was verified. This is commitment batching, not ZK-proof aggregation; no mainnet percentage gas saving or independent security audit is claimed."
+      ]
+    },
+    {
+      "id": "FXV-20261104-002",
+      "date": "2026-11-04",
+      "apps": ["backend", "engine"],
+      "type": "added",
+      "title": "Combined booking and dispute registry on Arbitrum",
+      "summary": "New confirmed bookings can enter a durable background workflow for issuer-attested onchain commitments, with related amendments and disputes tied to the same opaque booking key.",
+      "details": [
+        "Publication is asynchronous and does not hold up application booking confirmation. Personal identities, schedules, complaint messages, and supporting artifacts remain offchain under application access controls.",
+        "Historical bookings are not retroactively enrolled, and their existing dispute workflow remains available. Attendance, refund, and tutor compensation policies are unchanged.",
+        "The production deployment and a synthetic booking receipt were verified through canonical finalized receipts. A commitment does not independently prove attendance, teaching quality, or learning."
+      ]
+    },
+    {
+      "id": "FXV-20261104-001",
+      "date": "2026-11-04",
+      "apps": ["student", "tutor", "dashboard", "site", "backend"],
+      "type": "changed",
+      "title": "Learning-first language across FluentXVerse",
+      "summary": "Product copy now describes FluentXVerse as an ecosystem of onchain learning applications, starting with ESL and expanding across subjects and skills.",
+      "details": [
+        "The refresh covers website pages, metadata, navigation, app guides, classroom categories, and profile labels. Academic background sections use Qualifications rather than changing actual degree names.",
+        "The canonical website route is /onchain-learning, with old /onchain-education links redirected. Saved categories and database field names remain compatible with existing records.",
+        "The four frontends and scoped backend labels were deployed and checked on the active .com domains. Existing legacy domain configuration was not changed."
+      ]
+    },
+    {
+      "id": "FXV-20261103-009",
+      "date": "2026-11-03",
+      "apps": ["student", "tutor", "backend"],
+      "type": "added",
+      "title": "Opt-in replacement lessons after tutor absence",
+      "summary": "Students can save an automatic-replacement preference for eligible new bookings when the original tutor is absent or misses the Present confirmation deadline.",
+      "details": [
+        "The preference defaults off. A replacement requires an open, Present slot at the same lesson time and duration, with compatible language and tutor tier, before the five-minute cutoff.",
+        "A successful transfer reuses the original entitlement without a second payment. Superseded bookings retain their penalties and history; opt-out or no-match cases follow the existing refund process.",
+        "Activation is prospective, not a retroactive change to historical bookings. Isolated database and desktop/mobile checks covered preference persistence, concurrency, classroom denial, and refund idempotency."
+      ]
+    },
+    {
+      "id": "FXV-20261103-008",
+      "date": "2026-11-03",
+      "apps": ["student", "tutor", "dashboard", "backend", "engine"],
+      "type": "added",
+      "title": "Private lesson dispute conversations and decisions",
+      "summary": "Students, tutors, and authorized staff have a structured inbox for lesson issue threads, replies, and recorded decisions, connected to the deployed dispute workflow.",
+      "details": [
+        "The conversation and supporting material remain private application records. Onchain records use bounded issuer-attested commitments rather than publishing complaint messages or personal evidence.",
+        "The release preserves existing report forms, attendance rules, and refund deduplication. A receipt alone does not establish that a complaint is true or that a refund has been delivered.",
+        "Controlled browser and API checks verified access boundaries and the case lifecycle. Production configuration and receipt verification do not constitute an independent security audit."
+      ]
+    },
+    {
+      "id": "FXV-20261103-007",
+      "date": "2026-11-03",
+      "apps": ["tutor", "dashboard", "backend"],
+      "type": "fixed",
+      "title": "Consistent profile-review progress and approval states",
+      "summary": "Profile review now counts the same six required items across tutor screens, dashboard controls, and backend approval decisions.",
+      "details": [
+        "Legacy extra keys cannot inflate progress or block completion. Repeated submissions preserve existing approved or pending status instead of creating duplicate submission notifications.",
+        "Tutor profiles display approval explicitly and refresh pending-review status while visible. Backend decisions remain authoritative; UI progress alone cannot grant approval."
+      ]
+    },
+    {
+      "id": "FXV-20261103-006",
+      "date": "2026-11-03",
+      "apps": ["dashboard", "backend"],
+      "type": "improved",
+      "title": "Broader dashboard activity history",
+      "summary": "The dashboard bell and overview show more recent operational events with links to the relevant staff screens and bounded load-more controls.",
+      "details": [
+        "The feed covers persisted events across applications, identity review, interviews, lessons, reports, messages, payments, and materials, subject to the caller's access.",
+        "Sensitive documents, recordings, private proving inputs, and report descriptions are excluded from the new projections. Failed refreshes retain the previous list and offer a retry.",
+        "This is a recent activity view, not a complete immutable audit log or a reconstruction of every historical state change."
+      ]
+    },
+    {
+      "id": "FXV-20261103-005",
+      "date": "2026-11-03",
+      "apps": ["tutor", "backend"],
+      "type": "improved",
+      "title": "Clearer credential status and staff verification details",
+      "summary": "Tutor identity screens now distinguish proof finalization, receipt availability, and completed issuance, while authorized staff can inspect credential metadata and transaction references.",
+      "details": [
+        "Pending requests do not display a metadata link before finalized issuance. Historical credentials remain distinguishable from currently valid issuer approval.",
+        "Public credential metadata reads now have bounded request rates and concurrency. These protections do not make the metadata private or guarantee protection against every denial-of-service attack.",
+        "Staff tutor tables also received more compact spacing. Published layouts and focused API checks passed without changing applicant decisions."
+      ]
+    },
+    {
+      "id": "FXV-20261103-004",
+      "date": "2026-11-03",
+      "apps": ["tutor", "backend"],
+      "type": "added",
+      "title": "Production tutor identity credentials with verified issuance",
+      "summary": "Production identity issuance is enabled for eligible, consenting tutors, and a completed mainnet issuance has been verified through its finalized mint and recipient ownership.",
+      "details": [
+        "The workflow verifies a proof on zkVerify mainnet and independently checks its official Arbitrum receipt before issuing a permanently transfer-locked credential on Arbitrum One.",
+        "Explicit production consent is required before the wallet link is published. ID images, document numbers, birth dates, and personal names are excluded from credential metadata and proof inputs; a public wallet can still be linked to a person elsewhere.",
+        "Metadata reflects current issuer approval. Historical receipts are not erased by invalidation, and wallet recovery requires support-led review rather than transferring the locked token.",
+        "This confirms the issuance workflow, not an independent security audit. The application issuer remains trusted, and metadata availability depends on FluentXVerse."
+      ]
+    },
+    {
+      "id": "FXV-20261103-003",
+      "date": "2026-11-03",
+      "apps": ["tutor", "backend"],
+      "type": "improved",
+      "title": "Clearer production wallet disclosure and identity checklist",
+      "summary": "Tutor application guidance explains the public wallet link and separates identity review, interview approval, and credential issuance.",
+      "details": [
+        "Production profile submission requires current wallet-publication confirmation. Historical test consent does not count as production consent, and draft editing remains available.",
+        "Completed identity states and application checklists have clearer labels. Scoped desktop and mobile checks passed with controlled API responses."
+      ]
+    },
+    {
+      "id": "FXV-20261103-002",
+      "date": "2026-11-03",
+      "apps": ["backend"],
+      "type": "improved",
+      "title": "Safer interview-result controls",
+      "summary": "The administrator interview room disables Pass and Fail controls after a result is saved, making the recorded decision clearer and preventing repeat submission from the room.",
+      "details": [
+        "Corrections remain available through interview review. This dashboard update preserves the existing backend rules and does not change applicant results.",
+        "The scoped build and browser verification passed before deployment."
+      ]
+    },
+    {
+      "id": "FXV-20261103-001",
+      "date": "2026-11-03",
+      "apps": ["tutor"],
+      "type": "improved",
+      "title": "Refreshed tutor homepage introduction",
+      "summary": "The tutor homepage has updated photo framing and horizontal supporting badges in its introductory section.",
+      "details": [
+        "The original teaching scene is preserved with revised decorative positioning and responsive layouts.",
+        "Published-asset and browser checks passed. Application policies and backend behavior are unchanged."
+      ]
+    },
+    {
+      "id": "FXV-20261102-013",
+      "date": "2026-11-02",
+      "apps": ["tutor", "backend"],
+      "type": "fixed",
+      "title": "Identity issuance waits for a passed interview",
+      "summary": "A successful live ID comparison alone no longer creates an issuance-ready credential request; the bound interview must also be passed.",
+      "details": [
+        "Correcting an interview result to fail cancels an unissued request. Existing pending requests were reconciled against the required gates.",
+        "This release established the approval gate without submitting a proof or mint. Production issuance was activated separately on November 3."
+      ]
+    },
+    {
+      "id": "FXV-20261102-012",
+      "date": "2026-11-02",
+      "apps": ["engine"],
+      "type": "fixed",
+      "title": "ERC-1155 transfer controls appear in the Engine console",
+      "summary": "Engine's saved contract interface now includes transfer-policy getters and owner actions, matching the updated ERC-1155 template.",
+      "details": [
+        "The correction covers new editions and the specifically verified existing collection record. Unverified legacy deployments are not assigned unsupported functions.",
+        "Console checks used synthetic data without writes. Updating the saved interface did not change an onchain transfer policy or mint a token."
+      ]
+    },
+    {
+      "id": "FXV-20261102-011",
+      "date": "2026-11-02",
+      "apps": ["tutor", "backend"],
+      "type": "fixed",
+      "title": "Interview entry errors explain when a room can be joined",
+      "summary": "Authorized applicants and staff now receive specific feedback for early entry, expired windows, and closed interview bookings instead of a generic join failure.",
+      "details": [
+        "The existing fifteen-minute early-entry window and ownership restrictions remain unchanged. Unauthorized requests continue to receive generic denial.",
+        "Boundary checks and two-browser video, chat, reconnection, and retry scenarios passed with synthetic data. No interview was reopened to bypass its entry rules."
+      ]
+    },
+    {
+      "id": "FXV-20261102-010",
+      "date": "2026-11-02",
+      "apps": ["backend"],
+      "type": "improved",
+      "title": "More focused interview and identity-review workspaces",
+      "summary": "The staff interview room separates Identity, Evaluation, and Chat into accessible tabs, and identity review has a searchable applicant queue with clearer decision controls.",
+      "details": [
+        "Video remains uncropped, call controls stay outside the scrolling tools area, and tab changes preserve drafts and notes.",
+        "Fraud rejection requires explicit confirmation; Cancel and Escape do not submit a decision. Authorized staff can inspect a cancelled interview record without reopening its media session.",
+        "Responsive review flows and two-peer interview checks passed using synthetic documents, messages, and decisions."
+      ]
+    },
+    {
+      "id": "FXV-20261102-009",
+      "date": "2026-11-02",
+      "apps": ["tutor"],
+      "type": "improved",
+      "title": "A clearer ID upload and pending-review experience",
+      "summary": "Tutor identity screens now show submission, review, and booking progress alongside an accessible image picker, local preview, and submission checklist.",
+      "details": [
+        "Applicants can preview or remove an image before submission. File-type and size guidance is clearer, with expandable retention information.",
+        "Pending-review screens separate status refresh, review-time guidance, and outcome-email information. Existing consent, review, and resubmission rules are unchanged.",
+        "Desktop, mobile, light-theme, and dark-theme checks used synthetic images rather than real identity documents."
+      ]
+    },
+    {
+      "id": "FXV-20261102-008",
+      "date": "2026-11-02",
+      "apps": ["tutor", "backend"],
+      "type": "improved",
+      "title": "Clearer interview availability and application progress",
+      "summary": "Interview booking groups available times by date and shows the ID-acceptance deadline above the schedule, while staff application rows use consistently aligned progress steps.",
+      "details": [
+        "Empty interview availability offers a single message and refresh action. Future slots are not hidden merely because the current time is in a different part of the day.",
+        "Booking confirmation, cancellation, and eligibility rules remain unchanged. Responsive booking and administrator column-alignment checks passed."
+      ]
+    },
+    {
       "id": "FXV-20261102-007",
       "date": "2026-11-02",
       "apps": ["tutor", "backend"],

@@ -1,3 +1,4 @@
+import { learningCategoryLabel } from '../../../shared/learningTerminology';
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
@@ -78,7 +79,7 @@ export default function DispatchMaterialPicker(_props0: {
     const days = createMemo(() => month() ? new Date(Date.UTC(Number(year() || '2000'), Number(month()), 0)).getUTCDate() : 31);
     const renderArticle = (article: DispatchArticle) => (<div class="dp-article">
       <time dateTime={dispatchPostDate(article)!}>{dateLabel.format(new Date(`${dispatchPostDate(article)}T00:00:00Z`))}</time>
-      <div class="dp-article-copy"><strong>{article.title}</strong><span class="dp-category">{article.category || 'General'}</span></div>
+      <div class="dp-article-copy"><strong>{article.title}</strong><span class="dp-category">{learningCategoryLabel(article.category || 'General')}</span></div>
       <button type="button" class="dp-open" onClick={() => _props0["onOpen"](article)} aria-label={`Open article: ${article.title}`}><TutorIcon name="fas fa-book-open" aria-hidden="true"/><span>Open article</span></button>
     </div>);
     return createMemo(() => {

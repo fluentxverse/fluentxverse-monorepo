@@ -1,4 +1,4 @@
-import { A, Route, Router, useLocation } from '@solidjs/router';
+import { A, Navigate, Route, Router, useLocation } from '@solidjs/router';
 import { createEffect, lazy, Suspense } from 'solid-js';
 import type { ParentProps } from 'solid-js';
 import { ArrowLeft } from 'lucide-solid';
@@ -29,31 +29,32 @@ const metadata: Record<string, { title: string; description: string }> = {
   },
   '/': {
     title: 'FluentXVerse | Learning, backed by proof.',
-    description: 'Learning, backed by proof. FluentXVerse builds onchain education applications, starting with ESL and growing across subjects and skills.',
+    description: 'Learning, backed by proof. FluentXVerse builds onchain learning applications, starting with ESL and growing across subjects and skills.',
   },
   '/about': {
     title: 'About | FluentXVerse',
-    description: 'Meet the team building FluentXVerse\'s onchain education ecosystem, starting with online ESL and expanding to new subjects, skills, and learning formats.',
+    description: 'Meet the team building FluentXVerse\'s onchain learning ecosystem, starting with online ESL and expanding to new subjects, skills, and learning formats.',
   },
   '/technology': {
     title: 'Technology | FluentXVerse',
     description: 'Why FluentXVerse uses AI, Web3 technology, and zero-knowledge proofs to support learning, build trust, and protect private information.',
   },
   '/technology/ai': {
-    title: 'AI in Education | FluentXVerse',
+    title: 'AI in Learning | FluentXVerse',
     description: 'How FluentXVerse uses AI for language assistance, lesson authoring, and assessment support, with human judgment and clear limitations.',
   },
-  '/onchain-education': {
-    title: 'Why Onchain Education | FluentXVerse',
-    description: 'Five reasons to bring online education onchain: verifiable credentials, learner-held records, learning incentives, educator payments, and community governance, with privacy and rollout boundaries.',
+  '/onchain-learning': {
+    title: 'Why Onchain Learning | FluentXVerse',
+    description: 'Five reasons to bring online learning onchain: verifiable credentials, learner-held records, learning incentives, educator payments, and community governance, with privacy and rollout boundaries.',
   },
 };
 
 function Layout(props: ParentProps) {
   const location = useLocation();
   createEffect(() => {
-    const pathname = location.pathname.replace(/\/$/, '') || '/';
-    const page = metadata[pathname] ?? { title: 'Page Not Found | FluentXVerse', description: 'Explore FluentXVerse, an ecosystem for onchain education.' };
+    const requestedPath = location.pathname.replace(/\/$/, '') || '/';
+    const pathname = requestedPath === '/onchain-education' ? '/onchain-learning' : requestedPath;
+    const page = metadata[pathname] ?? { title: 'Page Not Found | FluentXVerse', description: 'Explore FluentXVerse, an ecosystem for onchain learning.' };
     document.title = page.title;
     const description = page.description;
     document.querySelector('meta[name="description"]')?.setAttribute('content', description);
@@ -84,6 +85,10 @@ function NotFound() {
   );
 }
 
+function LegacyOnchainPage() {
+  return <Navigate href={({ location }) => `/onchain-learning${location.search}${location.hash}`} />;
+}
+
 export default function App() {
   return (
     <Router root={Layout}>
@@ -91,7 +96,8 @@ export default function App() {
       <Route path="/about" component={AboutPage} />
       <Route path="/technology" component={TechnologyPage} />
       <Route path="/technology/ai" component={AiPage} />
-      <Route path="/onchain-education" component={OnchainPage} />
+      <Route path="/onchain-learning" component={OnchainPage} />
+      <Route path="/onchain-education" component={LegacyOnchainPage} />
       <Route path="/esl-tutor-app" component={EslTutorAppPage} />
       <Route path="/esl-student-app" component={EslStudentAppPage} />
       <Route path="/changelog" component={ChangelogPage} />

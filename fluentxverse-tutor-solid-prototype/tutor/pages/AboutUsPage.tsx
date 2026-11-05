@@ -54,7 +54,7 @@ const AboutUsPage = () => {
                 </h2>
                 <p class="about-description">
                   To deliver accessible, high-quality English learning through innovative tools, personalized tutoring, and responsible Web3 features that reward consistency, celebrate progress, and build a thriving, global learning community.
-                  We aim to support working professionals, and elevate ESL education with transparency, trust, and technology that feels human.
+                  We aim to support working professionals, and elevate ESL learning with transparency, trust, and technology that feels human.
                 </p>
               </div>
             </div>
@@ -76,7 +76,7 @@ const AboutUsPage = () => {
                   The World's Most Empowering Digital Language Ecosystem
                 </h2>
                 <p class="about-description">
-                  To become the world's most empowering digital language ecosystem where learners, tutors, and creators connect seamlessly across borders, unlocking global opportunities through education, technology, and meaningful human interaction.
+                  To become the world's most empowering digital language ecosystem where learners, tutors, and creators connect seamlessly across borders, unlocking global opportunities through learning, technology, and meaningful human interaction.
                 </p>
               </div>
             </div>
@@ -137,13 +137,13 @@ const AboutUsPage = () => {
                 <span class="about-label">OUR STORY</span>
                 <h2 class="about-section-title">From Vision to Reality</h2>
                 <p class="about-description">
-                  FluentXVerse was born from a simple observation: talented tutors worldwide struggle to reach students who need them most, while learners face barriers to accessing quality, affordable education.
+                  FluentXVerse was born from a simple observation: talented tutors worldwide struggle to reach students who need them most, while learners face barriers to accessing quality, affordable learning.
                 </p>
                 <p class="about-description">
                   We envisioned a platform where geography doesn't limit opportunity, where a tutor in Manila can inspire a professional in Tokyo or Seoul, where Web3 technology rewards dedication, and where every interaction builds toward something bigger than a single lesson.
                 </p>
                 <p class="about-description">
-                  Today, we're building that future. Through innovative technology, transparent practices, and a deep commitment to human connection, FluentXVerse is redefining what's possible in language education.
+                  Today, we're building that future. Through innovative technology, transparent practices, and a deep commitment to human connection, FluentXVerse is redefining what's possible in language learning.
                 </p>
               </div>
               
@@ -174,7 +174,7 @@ const AboutUsPage = () => {
                   </div>
                   <div class="highlight-content">
                     <h4>Focus</h4>
-                    <p>ESL Education</p>
+                    <p>ESL Learning</p>
                   </div>
                 </div>
               </div>
@@ -205,7 +205,7 @@ const AboutUsPage = () => {
                 <div className="team-member-info">
                   <h4>Founder & CEO</h4>
                   <p className="team-member-role">Visionary Leader</p>
-                  <p className="team-member-bio">Pioneering the future of digital language education with innovative Web3 solutions.</p>
+                  <p className="team-member-bio">Pioneering the future of digital language learning with innovative Web3 solutions.</p>
                 </div>
               </div>
 
@@ -216,7 +216,7 @@ const AboutUsPage = () => {
                   }} />
                 </div>
                 <div className="team-member-info">
-                  <h4>Head of Education</h4>
+                  <h4>Head of Learning</h4>
                   <p className="team-member-role">Curriculum Expert</p>
                   <p className="team-member-bio">Designing learning experiences that make language acquisition effective and enjoyable.</p>
                 </div>

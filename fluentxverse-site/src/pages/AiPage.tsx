@@ -23,12 +23,12 @@ const questions = [
 export default function AiPage() {
   return (
     <>
-      <ArticleHero eyebrow="FLUENTXVERSE / ARTIFICIAL INTELLIGENCE" title="AI in education" description="More useful preparation. More relevant practice. Human judgment at the center of the learning experience." image="/assets/img/esl-tutor-tailored.webp" alt="An online English tutor teaching from her laptop" caption="AI-ILLUSTRATED TEACHING SCENE / FLUENTXVERSE ESL" subjectPosition="left" />
+      <ArticleHero eyebrow="FLUENTXVERSE / ARTIFICIAL INTELLIGENCE" title="AI in learning" description="More useful preparation. More relevant practice. Human judgment at the center of the learning experience." image="/assets/img/esl-tutor-tailored.webp" alt="An online English tutor teaching from her laptop" caption="AI-ILLUSTRATED TEACHING SCENE / FLUENTXVERSE ESL" subjectPosition="left" />
       <TechnologyNav />
       <section class="section-space" aria-labelledby="ai-purpose-title">
         <div class="container research-split">
           <div><span class="eyebrow">OUR APPROACH</span><h2 id="ai-purpose-title">Assist the educator.<br /><span class="muted-heading">Serve the learner.</span></h2></div>
-          <div class="article-copy"><p class="lead-copy">The point of AI in education is not to produce more content. It is to make the work around a good learning experience more useful.</p><p>A tutor still needs to understand a learner's hesitation, decide when to challenge them, and explain an idea in a way that makes sense. AI can help with drafts, language questions, and structured feedback. It does not supply the whole educational relationship.</p><p>Our implemented services use Mastra agents with OpenAI models, alongside audio transcription. The opportunity is practical: give educators more ways to prepare and learners more focused ways to practice. We have not established a measured learning-outcome improvement from these tools.</p></div>
+          <div class="article-copy"><p class="lead-copy">The point of AI in learning is not to produce more content. It is to make the work around a good learning experience more useful.</p><p>A tutor still needs to understand a learner's hesitation, decide when to challenge them, and explain an idea in a way that makes sense. AI can help with drafts, language questions, and structured feedback. It does not supply the relationship between a learner and a tutor.</p><p>Our implemented services use Mastra agents with OpenAI models, alongside audio transcription. The opportunity is practical: give educators more ways to prepare and learners more focused ways to practice. We have not established a measured learning-outcome improvement from these tools.</p></div>
         </div>
       </section>
       <section class="research-band section-space" aria-labelledby="ai-use-title">
@@ -43,7 +43,7 @@ export default function AiPage() {
           <ol class="editorial-steps">
             <li><span>01</span><div><h3>Start with the skill</h3><p>For example: help a learner make a polite request in a workplace conversation.</p></div></li>
             <li><span>02</span><div><h3>Give the model a useful brief</h3><p>Specify the level, target language, activity format, and relevant reference material.</p></div></li>
-            <li><span>03</span><div><h3>Review the educational content</h3><p>Check accuracy, natural language, cultural context, and whether the activity actually exercises the intended skill.</p></div></li>
+            <li><span>03</span><div><h3>Review the learning content</h3><p>Check accuracy, natural language, cultural context, and whether the activity actually exercises the intended skill.</p></div></li>
             <li><span>04</span><div><h3>Let the tutor adapt</h3><p>Use the learner's response to adjust pace, clarify a misunderstanding, or change the example.</p></div></li>
           </ol>
         </div>
@@ -56,13 +56,13 @@ export default function AiPage() {
             <article><span class="value-number">02 / PRIVACY</span><h3>Minimize what is shared.</h3><p>Use the information needed for a specific task. Consent, retention, provider settings, and age-appropriate safeguards matter. A zero-knowledge credential is not a substitute for responsible AI data handling.</p></article>
             <article><span class="value-number">03 / HUMAN AGENCY</span><h3>Make room for judgment.</h3><p>Educators and reviewers must be able to question model output. We do not treat generated feedback or a verified proof as a complete account of a learner's ability or a tutor's quality.</p></article>
           </div>
-          <p class="source-note">UNESCO's guidance emphasizes human-centered educational use, privacy, and the evaluation of AI tools. These principles inform our approach; they are not a claim of external certification. <a href="https://www.unesco.org/en/articles/guidance-generative-ai-education-and-research" target="_blank" rel="noopener noreferrer">Read the UNESCO guidance <ArrowUpRight size={13} /></a>.</p>
+          <p class="source-note">UNESCO's guidance emphasizes human-centered use of AI for learning, privacy, and the evaluation of AI tools. These principles inform our approach; they are not a claim of external certification. <a href="https://www.unesco.org/en/articles/guidance-generative-ai-education-and-research" target="_blank" rel="noopener noreferrer">Read the UNESCO guidance <ArrowUpRight size={13} /></a>.</p>
         </div>
       </section>
       <section class="section-space" aria-labelledby="ai-faq-title">
         <div class="container research-split">
           <div><span class="eyebrow">A FEW IMPORTANT QUESTIONS</span><h2 id="ai-faq-title">What AI does.<br /><span class="muted-heading">And what it doesn't.</span></h2></div>
-          <div class="research-faq"><For each={questions}>{(question) => <details><summary>{question.title}<Plus size={18} /></summary><p>{question.text}</p></details>}</For><A class="text-link" href="/onchain-education">How evidence becomes verifiable <ArrowRight size={18} /></A></div>
+          <div class="research-faq"><For each={questions}>{(question) => <details><summary>{question.title}<Plus size={18} /></summary><p>{question.text}</p></details>}</For><A class="text-link" href="/onchain-learning">How evidence becomes verifiable <ArrowRight size={18} /></A></div>
         </div>
       </section>
       <ContactBand />

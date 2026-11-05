@@ -84,7 +84,7 @@ const chapters: OverviewChapter[] = [
   ] },
   { id: 'student-outcomes', title: 'What progress should mean', topic: 'Business', summary: 'Participation and useful follow-up matter more than unqualified activity counts.', blocks: [
     { kind: 'paragraph', text: 'A meaningful learner journey moves from finding a suitable tutor to attending, practising, receiving feedback, and choosing the next step. More bookings alone do not establish learning gains; a completed lesson, an optional review, and a proficiency improvement are different measures.' },
-    { kind: 'list', items: ['Evaluate discovery-to-booking friction, attendance, cancellations, and repeat engagement.', 'Review the usefulness and timeliness of lesson notes, support resolution, and feedback.', 'Measure educational outcomes with an explicit methodology rather than treating a badge or transaction as learning evidence.', 'Separate synthetic test activity from real learners and delivered lessons.'] },
+    { kind: 'list', items: ['Evaluate discovery-to-booking friction, attendance, cancellations, and repeat engagement.', 'Review the usefulness and timeliness of lesson notes, support resolution, and feedback.', 'Measure learning outcomes with an explicit methodology rather than treating a badge or transaction as learning evidence.', 'Separate synthetic test activity from real learners and delivered lessons.'] },
     { kind: 'note', title: 'For responsible expansion', text: 'Curriculum evaluation, accessibility, reliable classroom delivery, privacy review, and sound access/refund controls are useful partnership priorities. They are not published traction, guaranteed fluency, accredited results, or a promise of grant funding.' },
   ] },
 ];

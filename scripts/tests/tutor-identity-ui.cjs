@@ -7,12 +7,14 @@ const out = require('node:path').resolve(__dirname, '../../output/screenshots/tu
   await fs.mkdir(out, { recursive: true });
   const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   try {
-    for (const app of ['tutor', 'admin']) for (const width of [1440, 390, 320]) {
+    for (const app of (process.env.IDENTITY_ONLY_TUTOR ? ['tutor'] : process.env.IDENTITY_ONLY_ADMIN ? ['admin'] : ['tutor', 'admin'])) for (const width of [1440, 390, 320]) {
       const base = (app === 'tutor' ? process.env.IDENTITY_TUTOR_URL : process.env.IDENTITY_DASHBOARD_URL) || `http://127.0.0.1:${app === 'tutor' ? 5192 : 5191}`;
       const context = await browser.newContext({ viewport: { width, height: 950 } });
       if(process.env.IDENTITY_THEME)await context.addInitScript(theme=>localStorage.setItem('fxv_admin_theme',theme),process.env.IDENTITY_THEME);
-      let record = null, actions = [];
-      const pending = { id: 'cb17722c-bc58-4f42-9bfe-0c5702439f3b', tutorId: 'identity-test', name: 'Test Applicant', idType: 'national', status: 'pending_review', createdAt: new Date().toISOString() };
+      let record = null, actions = [], consentRecorded=false;
+      const production=process.env.IDENTITY_PRODUCTION==='1';
+      const version=production?'tutor-identity-wallet.arbitrum-mainnet.v1':'tutor-identity-wallet.v1';
+      const pending = { id: 'cb17722c-bc58-4f42-9bfe-0c5702439f3b', tutorId: 'identity-test', name: 'Test Applicant', idType: 'national', status: 'pending_review', createdAt: new Date().toISOString(),applicant:{fullName:'Test Applicant',birthDate:'2000-01-01',address:'12 Example Street, Example City, Example Province, Example Region, 1234, Philippines'} };
       await context.route('**/*', async route => {
         const request = route.request(), url = new URL(request.url()), path = url.pathname;
         if (url.origin === base) return route.continue();
@@ -25,8 +27,9 @@ const out = require('node:path').resolve(__dirname, '../../output/screenshots/tu
         if (path === '/interview/my-booking') json.data = null;
         if (path.includes('/unread-count')) json.data = { unreadCount: 0 };
         if (path.includes('/notifications')) json.data = { notifications: [], unreadCount: 0 };
-        if (path === '/tutor-identity/status') json.data = { enabled: true, record };
-        if (path === '/tutor-identity/submit') { record = pending; json.data = { enabled: true, record }; }
+        if (path === '/tutor-identity/status') json.data = { enabled: true, record,issuanceMode:production?'production':'pilot',walletConsentVersion:version,walletConsentRecorded:consentRecorded };
+        if (path === '/tutor-identity/submit') { assert(request.postData().includes(version));record = pending; json.data = { enabled: true, record }; }
+        if (path === '/tutor-identity/wallet-consent') { assert.deepEqual(request.postDataJSON(),{version,consent:true});consentRecorded=true; }
         if (path === '/tutor-identity/admin') json.data = [record || pending];
         if (path.endsWith('/review')) { actions.push(request.postDataJSON()); record = { ...pending, status: 'accepted' }; }
         return route.fulfill({ headers, json });
@@ -48,7 +51,8 @@ const out = require('node:path').resolve(__dirname, '../../output/screenshots/tu
         await page.getByRole('button',{name:'Remove image',exact:true}).click();
         await expect(page.getByAltText('Selected ID preview')).toHaveCount(0);
         await page.getByLabel('ID image', { exact: true }).setInputFiles({ name: 'test.png', mimeType: 'image/png', buffer: png });
-        await page.getByRole('checkbox').check();
+        await page.getByRole('checkbox', {name:/I consent to staff/}).check();
+        await page.getByRole('checkbox', {name:/I agree to receive a public/}).check();
         await page.evaluate(()=>window.scrollTo(0,0));
         await page.screenshot({ path: `${out}/tutor-${width}-form.png`, fullPage: true });
         await page.getByRole('button', { name: 'Submit ID for review' }).click();
@@ -63,9 +67,27 @@ const out = require('node:path').resolve(__dirname, '../../output/screenshots/tu
         await expect(page.getByText('Your previous ID is awaiting deletion.', { exact: false })).toHaveCount(0);
         await page.getByLabel('Date of birth').fill('2000-01-01');
         await page.getByLabel('ID image', { exact: true }).setInputFiles({ name: 'replacement.png', mimeType: 'image/png', buffer: png });
-        await page.getByRole('checkbox').check();
+        await page.getByRole('checkbox', {name:/I consent to staff/}).check();
+        await page.getByRole('checkbox', {name:/I agree to receive a public/}).check();
         await page.getByRole('button', { name: 'Submit ID for review' }).click();
         await expect(page.getByRole('heading', { name: 'We are reviewing your ID' })).toBeVisible();
+        if(production){
+          record={...pending,status:'verified',credentialStatus:'awaiting_credential_configuration'};
+          await page.reload();
+          const confirm=page.getByRole('button',{name:'Confirm wallet credential',exact:true});
+          await expect(confirm).toBeDisabled();
+          await page.getByRole('checkbox',{name:/I understand what will be public/}).check();
+          await expect(page.getByText('Arbitrum One',{exact:false})).toBeVisible();
+          await page.screenshot({path:`${out}/production-consent-${width}.png`,fullPage:true});
+          await confirm.click();await expect(confirm).toHaveCount(0);assert(consentRecorded);
+          if(process.env.IDENTITY_RECEIPT_STATUS){
+            record={...record,credentialStatus:'credential_awaiting_arbitrum_finality'};await page.reload();
+            await expect(page.getByText('Waiting for Arbitrum confirmation',{exact:false})).toBeVisible();
+            await expect(page.getByText('Your tutor credential has been issued',{exact:false})).toHaveCount(0);
+            record={...record,credentialStatus:'credential_issued'};await page.reload();
+            await expect(page.getByText('Your tutor credential has been issued',{exact:false})).toBeVisible();
+          }
+        }
       } else {
         await expect(page.getByRole('heading',{name:'Identity reviews',exact:true})).toBeVisible();
         await page.getByRole('textbox',{name:'Search applicants',exact:true}).fill('no matching applicant');
@@ -75,6 +97,10 @@ const out = require('node:path').resolve(__dirname, '../../output/screenshots/tu
         await expect(page.getByText('No matching applicants.',{exact:true})).toBeVisible();
         await page.getByLabel('Filter identity status').selectOption('all');
         await page.getByRole('button', { name: /Test Applicant/ }).click();
+        const details=page.getByRole('region',{name:'Application details',exact:true});
+        await expect(details).toContainText('Test Applicant');
+        await expect(details).toContainText('January 1, 2000');
+        await expect(details).toContainText(pending.applicant.address);
         await expect(page.getByRole('heading', { name: 'Philippine National ID (PhilID / ePhilID)' })).toBeVisible();
         await expect(page.getByText('Issuer tools are supporting evidence', { exact: false })).toHaveCount(0);
         await page.screenshot({ path: `${out}/admin-${width}-review.png`, fullPage: true });

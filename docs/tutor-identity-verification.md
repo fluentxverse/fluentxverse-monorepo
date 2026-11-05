@@ -1,5 +1,11 @@
 # Tutor Identity Verification
 
+Current credential status (2026-11-03): the separate identity circuit and automatic
+TEST-only proof/NFT worker are now implemented and deployed. The finalized Volta/Arbitrum
+Sepolia pilot passed. See [the identity credential pilot](tutor-identity-credential-pilot.md).
+Production Arbitrum One identity issuance remains disabled. Earlier release notes below
+describe the state of those releases, not the current testnet capability.
+
 Tutor home now includes identity-submission status before interview booking and an illustrated
 preparation section. `/interview-guide` is a protected applicant guide with setup and speaking
 tips, same-ID instructions, staff-review expectations, booking rules and an interactive pre-call
@@ -34,9 +40,15 @@ New ID submissions mark that applicant as identity-required. Lesson search and b
 identity-required tutors until approval, and reject banned tutors. Existing certified tutors
 are not silently retrofitted with an ID requirement; decide their migration separately.
 
-Identity approval and teaching approval are distinct. The live identity decision creates one
-durable `TutorIdentityCredential` request per submission, with `expiresAt = 0`. This is not a
-proof and is not an NFT. Its explicit status is `awaiting_configuration`.
+Identity approval and teaching approval are distinct. A live ID match now records
+`awaiting_interview_pass` without creating an issuance request. Saving a passed interview
+creates one durable `TutorIdentityCredential` request per verified submission, with
+`expiresAt = 0`, bound to that interview and its passed timestamp. This is not a proof or
+NFT. Its explicit status remains `awaiting_configuration` until the issuance pipeline exists.
+Correcting a pass to fail cancels the pending request; a later pass reuses the same request.
+An eventual issuance worker must recheck the latest interview result, current identity and
+wallet binding before proof generation and minting; old pre-policy requests require that
+same eligibility check and must not be processed solely by their queued status.
 
 The identity-specific ZK circuit, approved proving release, Engine proof/mint worker and
 non-transferable credential contract are **not implemented in this release**. No existing
@@ -321,3 +333,16 @@ browser coverage includes file validation, real PNG preview/removal, replacement
 pending review and all twelve booking viewport/theme cases. No real documents were used.
 Published tutor version: `d392ade3-169a-4fdc-bb11-13f79fbd550d`. API and admin dashboard
 unchanged by this release.
+
+### Interview-Pass Credential Gate
+
+Deployed API image: `fluentxverse-cloud/api:identity-interview-pass-20261102`.
+Live ID matching now leaves the credential awaiting interview pass. A passed interview
+creates the pending credential request; correcting the result to fail cancels an unissued
+request. Proof generation and NFT issuance remain unconnected, not enabled by this release.
+
+Server typechecking passed, the persistence lifecycle test passed with 100 assertions,
+and the image's focused identity tests passed (7 tests, 36 assertions). The API was healthy
+after activation. Existing unissued requests were reconciled; a read-only check confirmed
+the single pending request has both a verified identity and a passed, bound interview.
+No chain transactions were submitted.

@@ -41,7 +41,7 @@ export function Navbar() {
           <A href="/" end activeClass="is-active">Home</A>
           <A href="/about" activeClass="is-active">About</A>
           <A href="/technology" activeClass="is-active">Technology</A>
-          <A href="/onchain-education" activeClass="is-active">Why onchain</A>
+          <A href="/onchain-learning" activeClass="is-active">Why onchain</A>
           <A href="/#ecosystem" class="ecosystem-nav" onClick={() => setOpen(false)}>Our ecosystem</A>
           <A href="/changelog" class="changelog-nav" activeClass="is-active">Changelog</A>
           <a class="nav-contact" href={`mailto:${contactEmail}`}>Let's connect <ArrowUpRight size={17} /></a>

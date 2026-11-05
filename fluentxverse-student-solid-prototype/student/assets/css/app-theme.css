@@ -152,7 +152,7 @@ main,
 [data-theme='dark'] .daily-dispatch-page,
 [data-theme='dark'] .lesson-fullpage,
 [data-theme='dark'] .register-container,
-[data-theme='dark'] .ddp-container {
+[data-theme='dark'] .ddp-container:not([data-theme]) {
   color: var(--fxv-text);
 }
 
@@ -306,7 +306,7 @@ main,
 [data-theme='dark'] .dispatch-category-select,
 [data-theme='dark'] .dispatch-card,
 [data-theme='dark'] .dispatch-article-card,
-[data-theme='dark'] .ddp-sidebar-section,
+[data-theme='dark'] .dispatch-archive .ddp-sidebar-section,
 [data-theme='dark'] .lesson-back-btn,
 [data-theme='dark'] .lesson-fullpage-error .error-icon {
   background: var(--fxv-surface);
@@ -500,14 +500,14 @@ main,
   box-shadow: none;
 }
 
-[data-theme='dark'] .ddp-container,
-[data-theme='dark'] .ddp-loading,
-[data-theme='dark'] .ddp-error {
+[data-theme='dark'] .ddp-container:not([data-theme]),
+[data-theme='dark'] .ddp-loading:not([data-theme]),
+[data-theme='dark'] .ddp-error:not([data-theme]) {
   background: var(--fxv-bg);
   color: var(--fxv-text);
 }
 
-[data-theme='dark'] .ddp-container {
+[data-theme='dark'] .ddp-container:not([data-theme]) {
   --ddp-white: #1e1e1e;
   --ddp-black: #f3f4f6;
   --ddp-gray-50: #1a1a1a;
@@ -523,36 +523,36 @@ main,
   --ddp-link: #93c5fd;
 }
 
-[data-theme='dark'] .ddp-header-bar {
+[data-theme='dark'] .dispatch-archive .ddp-header-bar {
   background: #111111;
   border-bottom-color: rgba(250, 204, 21, 0.65);
 }
 
-[data-theme='dark'] .ddp-category-item {
+[data-theme='dark'] .dispatch-archive .ddp-category-item {
   color: #9ca3af;
 }
 
-[data-theme='dark'] .ddp-category-item:hover {
+[data-theme='dark'] .dispatch-archive .ddp-category-item:hover {
   color: #f3f4f6;
 }
 
-[data-theme='dark'] .ddp-category-item.active {
+[data-theme='dark'] .dispatch-archive .ddp-category-item.active {
   color: #fde047;
   border-bottom-color: #fde047;
 }
 
-[data-theme='dark'] .ddp-sidebar-search input,
+[data-theme='dark'] .dispatch-archive .ddp-sidebar-search input,
 [data-theme='dark'] .dispatch-category-select,
 [data-theme='dark'] .filter-select {
   appearance: none;
 }
 
-[data-theme='dark'] .ddp-sidebar-search-btn {
+[data-theme='dark'] .dispatch-archive .ddp-sidebar-search-btn {
   background: rgba(255, 255, 255, 0.05);
   color: var(--fxv-text);
 }
 
-[data-theme='dark'] .ddp-sidebar-search-btn:hover {
+[data-theme='dark'] .dispatch-archive .ddp-sidebar-search-btn:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 

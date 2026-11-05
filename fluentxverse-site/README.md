@@ -30,9 +30,9 @@ bun run preview
 - `src/pages/HomePage.tsx`: home page content.
 - `src/pages/EslTutorAppPage.tsx`: public partner/funder platform guide at `/esl-tutor-app`, adapted from the dashboard guide without importing dashboard code or calling protected APIs. Content and source mapping are in `docs/platform-overview-content.md`.
 - `src/pages/EslStudentAppPage.tsx`: original learner-focused guide at `/esl-student-app`, sourced from the student interface. Both guides use the shared `PublicAppGuide` reader. See `docs/student-overview-content.md` for source coverage and claim boundaries.
-- `src/pages/TechnologyPage.tsx`: overview of AI, Web3, and zero-knowledge proofs and why we use them for education.
+- `src/pages/TechnologyPage.tsx`: overview of AI, Web3, and zero-knowledge proofs and why we use them for learning.
 - `src/pages/AiPage.tsx`: AI uses, instructional approach, and limitations.
-- `src/pages/OnchainPage.tsx`: the case for onchain education, proof boundaries, and FAQs.
+- `src/pages/OnchainPage.tsx`: the case for onchain learning, proof boundaries, and FAQs.
 - `src/pages/AboutPage.tsx`: company story and principles.
 - `src/styles/main.css`: shared styles and responsive layout.
 - `public/assets/img/`: locally served imagery. Existing team portraits remain in `team/` for use when member details are confirmed.
