@@ -31,6 +31,15 @@ Only publish public-safe descriptions. Never include student or tutor records,
 private scores, payment records, wallet secrets, credentials, internal URLs,
 or unpublished vulnerability details. Entries are plain text, not HTML.
 
+Focus new entries on shipped product changes. Do not announce newly authored
+lesson materials, lesson-by-lesson content revisions, or curriculum production
+progress. A deployed application fix may still be documented without describing
+the lesson content. Preserve existing release history.
+
+Record curriculum authoring and draft status separately in
+[`docs/conversational-skills-authoring-changelog.md`](../../docs/conversational-skills-authoring-changelog.md),
+not in the public product feed.
+
 The app filter, change type and search are shareable query parameters. Entry
 permalinks intentionally omit filters so the linked update remains visible.
 Engine's filtered view is `/changelog?app=engine` and uses the same entries as

@@ -68,3 +68,27 @@ test('website and dashboard updates have distinct searchable filters', () => {
   expect(filterChangelog(changelog, 'site').every(entry => entry.apps.includes('site'))).toBe(true);
   expect(filterChangelog(changelog, 'dashboard').every(entry => entry.apps.includes('dashboard'))).toBe(true);
 });
+
+test('November Engine releases retain stable links and explicit rollout limits', () => {
+  const ids = ['FXV-20261110-001', 'FXV-20261109-003', 'FXV-20261109-002', 'FXV-20261109-001'];
+  for (const id of ids) {
+    const entry = changelog.find(value => value.id === id)!;
+    expect(entry).toBeDefined();
+    expect(entry.apps).toEqual(['engine']);
+    expect(changelogUrl(id)).toBe(`https://fluentxverse.com/changelog#${id}`);
+    expect(filterChangelog(changelog, 'engine', '', id)).toEqual([entry]);
+  }
+  expect(changelog.find(e => e.id === 'FXV-20261110-001')!.details.join(' ')).toContain('does not enable mainnet checkout');
+  expect(changelog.find(e => e.id === 'FXV-20261109-002')!.details.join(' ')).toContain('not a zero-knowledge proof');
+});
+
+test('listening language-support fix is shared across apps without announcing draft curricula', () => {
+  const entry = changelog.find(value => value.id === 'FXV-20261111-001')!;
+  expect(entry).toBeDefined();
+  expect(entry.date).toBe('2026-11-11');
+  expect(entry.type).toBe('fixed');
+  expect(entry.apps).toEqual(['student', 'tutor', 'dashboard']);
+  expect(entry.details.join(' ')).toContain('transcripts remain tutor-only');
+  for (const app of entry.apps) expect(filterChangelog(changelog, app, 'fixed', 'Useful Language')).toContainEqual(entry);
+  expect(changelog.filter(value => value.date >= '2026-11-11').map(value => `${value.title} ${value.summary}`).join(' ')).not.toMatch(/Chapter [1-5]|Two Cities|Work, Dreams|draft curricula/);
+});

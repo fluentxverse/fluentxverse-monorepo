@@ -2,6 +2,83 @@
   "schemaVersion": 1,
   "entries": [
     {
+      "id": "FXV-20261111-001",
+      "date": "2026-11-11",
+      "apps": ["student", "tutor", "dashboard"],
+      "type": "fixed",
+      "title": "Useful language restored in listening challenges",
+      "summary": "Configured Useful Language now appears in listening challenges across the student and tutor material views and dashboard preview.",
+      "details": [
+        "Listening missions use the same configured language support as the other activity types, rather than silently omitting it.",
+        "Listening transcripts remain tutor-only. This renderer correction does not change lesson records, student notes, exercise marks, or backend APIs.",
+        "The deployed student, tutor, and dashboard builds passed desktop and mobile checks in light and dark themes."
+      ]
+    },
+    {
+      "id": "FXV-20261110-001",
+      "date": "2026-11-10",
+      "apps": ["engine"],
+      "type": "added",
+      "title": "Managed-user wallets for queued contract writes",
+      "summary": "Engine can execute authorized contract writes from an active managed-user wallet within the authenticated project, alongside existing server-wallet operations.",
+      "details": [
+        "The worker resolves the managed signer through Engine/Vault and rejects missing or cross-project wallets. Existing API scopes, chain and contract restrictions, and wallet locks remain enforced.",
+        "Signing credentials stay inside Engine/Vault. This is a trusted-backend capability, not permission for browser clients to choose arbitrary wallets or access project API keys.",
+        "The backend release passed its Go tests. The connected shop workflow was exercised on Arbitrum Sepolia using a separately funded test wallet; this does not enable mainnet checkout or change FluentXVerse lesson booking."
+      ]
+    },
+    {
+      "id": "FXV-20261109-003",
+      "date": "2026-11-09",
+      "apps": ["engine"],
+      "type": "improved",
+      "title": "Marketplace V3 API reference and checkout guidance",
+      "summary": "Engine's API reference now documents the deployed Marketplace V3 interface, including direct listings, approvals, supported currencies, checkout, and transaction polling.",
+      "details": [
+        "Examples use the pinned contract ABI and Engine's string-array argument format, including JSON-encoded tuples, explicit managed signers, and idempotency keys for writes.",
+        "Listing guidance covers empty marketplaces, bounded inclusive page reads, status and time checks, ownership, and approvals. A queued HTTP response is not presented as completed payment or delivered inventory.",
+        "Desktop and mobile reference checks used mocked API calls. The documented testnet connection does not imply that every preview product has minted inventory or a live listing."
+      ]
+    },
+    {
+      "id": "FXV-20261109-002",
+      "date": "2026-11-09",
+      "apps": ["engine"],
+      "type": "improved",
+      "title": "Durable contract-write retries for score publication",
+      "summary": "Generic Engine contract writes now support project-scoped idempotency keys so a backend can recover uncertain submissions without creating a replacement transaction.",
+      "details": [
+        "Retries with the same project, key, and transaction data return the original operation, including after API-key rotation. Reusing a key with changed transaction data is rejected.",
+        "A connected game backend uses a durable outbox to publish validated personal-best scores on Arbitrum Sepolia, with canonical receipt checks, restart recovery, and reorganization repair.",
+        "Concurrency, key rotation, historical transaction adoption, and ambiguous-response recovery were tested. Onchain publication records a backend-validated result; it is not a zero-knowledge proof of gameplay or a change to tutor-screening verification."
+      ]
+    },
+    {
+      "id": "FXV-20261109-001",
+      "date": "2026-11-09",
+      "apps": ["engine"],
+      "type": "added",
+      "title": "Prebuilt marketplace, ERC-1155, and leaderboard templates",
+      "summary": "Engine gained deployment forms and APIs for pinned thirdweb Marketplace V3 and TokenERC1155 implementations, plus a publisher-controlled leaderboard contract.",
+      "details": [
+        "The contract catalog exposes ABIs and upstream source references. Queued deployments retain project ownership checks, API scopes, chain restrictions, Vault signing, and receipt tracking.",
+        "Existing deployed contracts keep their original addresses and ABIs. New marketplace and collection instances use atomically initialized proxies; template changes do not upgrade historical non-upgradeable contracts.",
+        "Sample deployments, roles, marketplace routes, and leaderboard registration were checked on Arbitrum Sepolia. Upstream thirdweb fees still apply where specified; source verification and internal tests are not an independent security audit."
+      ]
+    },
+    {
+      "id": "FXV-20261107-001",
+      "date": "2026-11-07",
+      "apps": ["student", "tutor", "dashboard"],
+      "type": "fixed",
+      "title": "Consistent tip-marker alignment across apps",
+      "summary": "Tip markers now align with the first line of text, including when a tip wraps onto multiple lines.",
+      "details": [
+        "The same spacing correction is live in the student and tutor views and the dashboard preview.",
+        "Published styles passed desktop and mobile checks in light and dark themes. This was a visual correction only; application behavior and APIs are unchanged."
+      ]
+    },
+    {
       "id": "FXV-20261105-005",
       "date": "2026-11-05",
       "apps": ["student", "tutor", "dashboard"],

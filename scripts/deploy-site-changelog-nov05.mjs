@@ -3,9 +3,10 @@ import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, symlinkSync, 
 import { resolve, join } from 'node:path';
 import { createHash } from 'node:crypto';
 
-const root = process.cwd(), release = resolve('output/release/site-changelog-20261105'), cwd = join(release, 'site');
-const baseline = resolve('output/release/site-web3-ecosystem-20261105/site');
-const previous = '6e78498f-ef2f-4382-95c2-a84694c66c34';
+const november7 = process.argv.includes('--nov07');
+const root = process.cwd(), release = resolve(`output/release/site-changelog-${november7 ? '20261107' : '20261105'}`), cwd = join(release, 'site');
+const baseline = resolve(november7 ? 'output/release/site-changelog-20261105/site' : 'output/release/site-web3-ecosystem-20261105/site');
+const previous = november7 ? '404708da-681f-4a84-ab38-00458582eea3' : '6e78498f-ef2f-4382-95c2-a84694c66c34';
 const sources = ['src/data/changelogEntries.json', 'src/data/changelog.ts', 'tests/changelog.test.ts'];
 const hash = value => createHash('sha256').update(value).digest('hex');
 const fileHash = file => hash(readFileSync(file));
@@ -42,7 +43,7 @@ if (process.argv.includes('--prepare')) {
   for (const entry of old.entries) if (JSON.stringify(next.entries.find(value => value.id === entry.id)) !== JSON.stringify(entry)) throw Error('Published entry changed: ' + entry.id);
   for (const file of sources) cpSync(resolve('fluentxverse-site', file), join(cwd, file));
   console.log(run('bun', ['run', 'build']));
-  record('manifest.json', { previous, entries: next.entries.length, added: next.entries.length - old.entries.length, publishedHistoryPreserved: true, scope: 'Changelog content and Website/Dashboard filters only', sources: Object.fromEntries(sources.map(file => [file, fileHash(join(cwd, file))])), html: fileHash(join(cwd, 'dist/index.html')), feed: fileHash(join(cwd, 'dist/changelog.json')) });
+  record('manifest.json', { previous, entries: next.entries.length, added: next.entries.length - old.entries.length, publishedHistoryPreserved: true, scope: november7 ? 'Changelog content only; excludes lesson-material authoring updates' : 'Changelog content and Website/Dashboard filters only', sources: Object.fromEntries(sources.map(file => [file, fileHash(join(cwd, file))])), html: fileHash(join(cwd, 'dist/index.html')), feed: fileHash(join(cwd, 'dist/changelog.json')) });
 } else if (process.argv.includes('--verify')) {
   const m = verifySources();
   const child = spawn(process.execPath, [join(root, 'node_modules/vite/bin/vite.js'), 'preview', '--host', '127.0.0.1', '--port', '5350', '--strictPort'], { cwd, detached: true, stdio: 'ignore' });

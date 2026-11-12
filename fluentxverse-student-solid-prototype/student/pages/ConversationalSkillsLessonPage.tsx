@@ -2002,6 +2002,18 @@ function MissionSection(_props7: MissionSectionProps) {
         {_props7["data"].instructionTranslation && (<p class="csp-mission-translation">{_props7["data"].instructionTranslation}</p>)}
       </div>)}
 
+      {_props7["data"].showGrammarTip && _props7["data"].grammarTipItems.length > 0 && (
+        <div class="csp-mission-grammar-tip">
+          <div class="csp-grammar-tip-header">
+            <i class="ri-lightbulb-line"/>
+            <span>{_props7["data"].grammarTipTitle}</span>
+          </div>
+          <ul class="csp-grammar-tip-items">
+            {_props7["data"].grammarTipItems.map(item => <li>{item}</li>)}
+          </ul>
+        </div>
+      )}
+
       {/* Image */}
       {_props7["data"].image && (<div class="csp-mission-image">
           <img src={_props7["data"].image} alt="Mission"/>

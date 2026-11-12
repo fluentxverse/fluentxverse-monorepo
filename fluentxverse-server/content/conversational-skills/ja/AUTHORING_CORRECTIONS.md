@@ -4,8 +4,8 @@ Apply these rules to every new or regenerated lesson in this course edition.
 
 ## Introduction
 
-1. The tutor introduces the lesson goal before the situation.
-2. Use a natural opening such as: "Our goal for today is: [goal]. Is it clear?"
+1. The tutor introduces the lesson objective before the situation. Use "lesson objective" consistently.
+2. Use a natural opening such as: "Our lesson objective today is to [task]. Is it clear?"
 3. Introduce the context next with: "Here's our situation. [situation]"
 4. Do not repeat the same situation text as both the visible introduction and an unexplained tutor script.
 
@@ -22,12 +22,22 @@ Apply these rules to every new or regenerated lesson in this course edition.
 3. Prefer concrete questions such as "Where are you from?" and "What is your job?"
 4. Avoid vague or teacher-like prompts such as "Tell me one thing about yourself" and "What can you ask me?"
 5. Use later prompts only as support when the learner needs help; allow the conversation to flow naturally.
+6. Assign a concrete role directly: "You are Emma. Your tutor is Leo." Do not add alternate-character choices or personal/romantic-information disclaimers. Keep learner instructions inside the story situation.
 
 ## Review Checklist
 
-- Goal comes before situation in the tutor guide.
+- Lesson objective comes before situation in the tutor guide.
 - Apply situation fields contain no HTML.
 - Japanese support uses the translation field.
 - Comprehension questions are separate from the situation.
 - Tutor starts every speaking roleplay with a natural spoken line.
 - Roleplay questions sound like real conversation, not instructions about conversation.
+
+## Tutor Guide Standard
+
+- Use the current Level 3, Chapter 1, Lesson 3 guide as the editorial reference: concise numbered instructions, spoken scripts, separate tips, and structured questions/answer keys.
+- Keep Intro, Learn, and Grammar Tip scripts in their existing single-string fields; Apply, Exercise, Mission, and Feedback use arrays. Do not change renderer schemas merely to standardize wording.
+- Learn has five vocabulary steps, five discussion steps, and five pronunciation steps. Adapt sounds, examples, and questions to the lesson.
+- Keep full listening transcripts in dedicated tutor-only blocks, never in student-facing text. Listening missions may need one extra step for delivery.
+- Preserve each lesson's questions, answer keys, dialogue, roleplay lines, and listening scripts. Standardize presentation, not the content skill.
+- Feedback always uses the reference lesson's fixed six-step guide: introduce Feedback, read the lesson objective, check achievement, score Challenge 1, give range/accuracy/fluency feedback, wrap up.

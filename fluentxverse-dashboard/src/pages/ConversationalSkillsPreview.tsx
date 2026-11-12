@@ -2365,6 +2365,18 @@ function MissionSection({ data, hideHeader = false }: MissionSectionProps) {
       </div>
       )}
 
+      {data.showGrammarTip && data.grammarTipItems.length > 0 && (
+        <div className="csp-mission-grammar-tip">
+          <div className="csp-grammar-tip-header">
+            <i className="ri-lightbulb-line" />
+            <span>{data.grammarTipTitle}</span>
+          </div>
+          <ul className="csp-grammar-tip-items">
+            {data.grammarTipItems.map((item, idx) => <li key={idx}>{item}</li>)}
+          </ul>
+        </div>
+      )}
+
       {/* Image */}
       {data.image && (
         <div className="csp-mission-image">
