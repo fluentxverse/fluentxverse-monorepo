@@ -23,6 +23,11 @@ All site source is under `fluentxverse-site/`:
 - `public/assets/`: artwork and public assets.
 - `docs/`: content references and image provenance notes.
 
+The export also includes `shared/learningTerminology.ts` for terminology tests
+and the repository authoring-history document linked from the changelog guide.
+Standalone terminology checks cover the website and that helper. The monorepo
+continues to run the full student/tutor/dashboard terminology check.
+
 ## Local Development
 
 Use Node.js 22+, npm, and Bun. From the repository root:

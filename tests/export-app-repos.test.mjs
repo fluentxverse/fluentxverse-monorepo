@@ -35,6 +35,12 @@ test('dashboard includes its compensation contract and mobile includes its API c
   assert.ok(applications.find(app => app.name === 'fluentxverse-mobile').contracts.includes('fluentxverse-server/MOBILE_API.md'));
 });
 
+test('website includes its terminology helper and linked authoring history without exporting sibling apps', () => {
+  const site = applications.find(app => app.name === 'fluentxverse-site');
+  assert.equal(site.shared, undefined);
+  assert.deepEqual(site.contracts, ['shared/learningTerminology.ts', 'docs/conversational-skills-authoring-changelog.md']);
+});
+
 test('repository READMEs use no emojis and describe limitations', () => {
   for (const app of applications) {
     const text = readFileSync(join(root, 'docs/app-repositories', `${app.name}.md`), 'utf8');
@@ -59,6 +65,9 @@ test('export uses committed source and refuses to overwrite an existing reposito
     assert.equal(source.commit, result.commit);
     assert.match(source.commit, /^[a-f0-9]{40}$/);
     assert.ok(source.includedFiles.includes('fluentxverse-site/package.json'));
+    assert.ok(source.includedFiles.includes('shared/learningTerminology.ts'));
+    assert.ok(source.includedFiles.includes('docs/conversational-skills-authoring-changelog.md'));
+    assert.equal(source.includedFiles.some(file => /^(?:fluentxverse-dashboard|fluentxverse-student-solid-prototype|fluentxverse-tutor-solid-prototype)\//.test(file)), false);
     assert.equal(source.includedFiles.some(excluded), false);
     const packageJson = JSON.parse(readFileSync(join(target, 'package.json'), 'utf8'));
     assert.equal(packageJson.scripts.build, 'npm --prefix fluentxverse-site run build');
@@ -66,6 +75,18 @@ test('export uses committed source and refuses to overwrite an existing reposito
     writeFileSync(marker, 'do not overwrite');
     assert.throws(() => cli(['--app', 'fluentxverse-site', '--destination', destination]), /Refusing to overwrite/);
     assert.equal(readFileSync(marker, 'utf8'), 'do not overwrite');
+  } finally {
+    rmSync(destination, { recursive: true, force: true });
+  }
+});
+
+test('student source checks compile without borrowing production identity-provider configuration', () => {
+  const destination = mkdtempSync(join(tmpdir(), 'fxv-student-export-test-'));
+  try {
+    cli(['--app', 'fluentxverse-student', '--destination', destination]);
+    const workflow = readFileSync(join(destination, 'fluentxverse-student/.github/workflows/checks.yml'), 'utf8');
+    assert.match(workflow, /- run: npm run build\n        env:\n          VITE_PRIVY_APP_ID: source-check-only-not-a-real-app-id/);
+    assert.doesNotMatch(workflow, /PRIVY_APP_SECRET|secrets\./);
   } finally {
     rmSync(destination, { recursive: true, force: true });
   }

@@ -1,11 +1,13 @@
 import { describe, expect, test } from 'bun:test';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 import { learningCategoryLabel } from '../../shared/learningTerminology';
 
 const root = path.resolve(import.meta.dir, '../..');
-const sourceRoots = [
+const isStandaloneSite = existsSync(path.join(root, 'SOURCE.json'))
+  && JSON.parse(readFileSync(path.join(root, 'SOURCE.json'), 'utf8')).app === 'fluentxverse-site';
+const sourceRoots = isStandaloneSite ? ['fluentxverse-site/src', 'shared'] : [
   'fluentxverse-site/src',
   'fluentxverse-student-solid-prototype/student',
   'fluentxverse-tutor-solid-prototype/tutor',

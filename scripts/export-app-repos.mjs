@@ -8,7 +8,7 @@ export const applications = [
   { name: 'fluentxverse-student', directory: 'fluentxverse-student-solid-prototype', kind: 'web', lock: true, shared: true, homepage: 'https://student.fluentxverse.com', description: 'SolidJS student app for tutor discovery, lesson booking, live classrooms, and private learning workflows.' },
   { name: 'fluentxverse-tutor', directory: 'fluentxverse-tutor-solid-prototype', kind: 'web', lock: true, shared: true, homepage: 'https://tutor.fluentxverse.com', description: 'SolidJS tutor app for applications, screening, schedules, live lessons, and teaching operations.' },
   { name: 'fluentxverse-dashboard', directory: 'fluentxverse-dashboard', kind: 'web', shared: true, contracts: ['fluentxverse-server/src/shared/tutorCompensation.ts'], homepage: 'https://dashboard.fluentxverse.com', description: 'Administration dashboard for tutor screening, interviews, lesson operations, compensation, and release acceptance.' },
-  { name: 'fluentxverse-site', directory: 'fluentxverse-site', kind: 'web', homepage: 'https://fluentxverse.com', description: 'Public FluentXVerse website describing the tutoring platform, ecosystem, and privacy technology.' },
+  { name: 'fluentxverse-site', directory: 'fluentxverse-site', kind: 'web', contracts: ['shared/learningTerminology.ts', 'docs/conversational-skills-authoring-changelog.md'], homepage: 'https://fluentxverse.com', description: 'Public FluentXVerse website describing the tutoring platform, ecosystem, and privacy technology.' },
   { name: 'fluentxverse-server', directory: 'fluentxverse-server', kind: 'server', shared: true, support: ['archive/custom-contracts-20261019/', 'zk/review-tally/'], description: 'Bun and Elysia application API for tutoring, scheduling, screening evidence, recordings, and compensation.' },
   { name: 'fluentxverse-mobile', directory: 'fluentxverse-mobile', kind: 'mobile', contracts: ['fluentxverse-server/MOBILE_API.md'], description: 'Kotlin Multiplatform student client with Android Compose, iOS SwiftUI, mobile authentication, and an offline demo.' },
   { name: 'fluentxverse-go-server', directory: 'fluentxverse-go-server', kind: 'go', description: 'Go Fiber backend migration workstream; not a replacement for the active Bun API by default.' },
@@ -48,6 +48,7 @@ function rootPackage(app) {
 function workflow(app) {
   const check = app.kind === 'web' ? 'npm run build' : 'npm run typecheck';
   const tests = ['fluentxverse-student', 'fluentxverse-tutor'].includes(app.name) ? '\n      - run: npm test' : '';
+  const buildEnv = app.name === 'fluentxverse-student' ? '\n        env:\n          VITE_PRIVY_APP_ID: source-check-only-not-a-real-app-id' : '';
   return `name: Source Checks
 on: [push, pull_request, workflow_dispatch]
 permissions:
@@ -64,7 +65,7 @@ jobs:
         with:
           bun-version: '1.3.3'
       - run: npm run setup
-      - run: ${check}${tests}
+      - run: ${check}${buildEnv}${tests}
 `;
 }
 

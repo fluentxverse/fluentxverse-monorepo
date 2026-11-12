@@ -38,6 +38,11 @@ npm run preview
 
 `npm test` runs the standalone unit suite. Backend harnesses under `backend/`, live-provider browser tests, and cross-app integration checks require the monorepo and isolated test infrastructure; do not point mutation tests at production.
 
+CI supplies an explicitly nonfunctional public app ID for compilation only.
+It cannot sign users in and must not be used in a deployment. Local production
+builds need your own public `VITE_PRIVY_APP_ID`; no provider secret is needed
+for compilation, and none is included in the repository.
+
 ## Deployment and Privacy Boundaries
 
 The production build is written to `fluentxverse-student-solid-prototype/dist/`. The app's Wrangler configuration describes its existing production domains; review account, routes, environment, and acceptance checks before any manual deployment. This repository's CI checks source only and does not deploy.
