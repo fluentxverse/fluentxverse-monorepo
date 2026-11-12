@@ -69,7 +69,7 @@ jobs:
 `;
 }
 
-const ignore = `node_modules/
+const ignore = `node_modules
 dist/
 build/
 target/

@@ -71,6 +71,7 @@ test('export uses committed source and refuses to overwrite an existing reposito
     assert.equal(source.includedFiles.some(excluded), false);
     const packageJson = JSON.parse(readFileSync(join(target, 'package.json'), 'utf8'));
     assert.equal(packageJson.scripts.build, 'npm --prefix fluentxverse-site run build');
+    assert.ok(readFileSync(join(target, '.gitignore'), 'utf8').split('\n').includes('node_modules'), 'Ignore dependency symlinks as well as directories');
     const marker = join(target, 'preserve.txt');
     writeFileSync(marker, 'do not overwrite');
     assert.throws(() => cli(['--app', 'fluentxverse-site', '--destination', destination]), /Refusing to overwrite/);
