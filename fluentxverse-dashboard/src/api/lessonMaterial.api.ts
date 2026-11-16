@@ -10,7 +10,7 @@ import type { WorkplaceCommunicationData } from '../../../shared/workplaceCommun
 // ============================================================================
 
 export type Skill = 'speaking' | 'listening' | 'reading' | 'writing' | 'review';
-export type LevelBadge = 'STARTER' | 'BEGINNER' | 'ELEMENTARY' | 'INTERMEDIATE' | 'ADVANCED' | 'HIGH BEGINNER' | 'HIGH INTERMEDIATE';
+export type LevelBadge = 'STARTER' | 'BEGINNER' | 'ELEMENTARY' | 'INTERMEDIATE' | 'ADVANCED' | 'HIGH BEGINNER' | 'HIGH INTERMEDIATE' | 'TOEIC 785–940';
 
 // Introduction Section Types
 export interface IntroText {

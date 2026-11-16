@@ -1,5 +1,12 @@
 # Level 3, Chapter 3: Everyday Life & Unexpected Moments
 
+Current language target: **Level 3, TOEIC 10-220** (owner authoring range, not a CEFR conversion).
+The original chapter builder below is a story baseline. Current simplified
+episodes are in `../toeic-revisions-v1/` and are composed with
+`buildToeicLesson()`. Use the guarded current updater, not a historical direct
+import, over saved lessons. See [the language policy](../../../../../docs/conversational-language-targets.md).
+Lesson authoring is offline; do not use application or external model API keys.
+
 Based on the user's eight-episode outline. The continuing Kamo House story
 balances Emma's design work and relationship with Leo, Claire's cafe, and Nao's
 development as a ceramic artist. Each episode has a practical task, a problem

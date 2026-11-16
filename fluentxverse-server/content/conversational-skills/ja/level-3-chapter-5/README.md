@@ -1,5 +1,12 @@
 # Level 3, Chapter 5: Two Cities, One Secret
 
+Current language target: **Level 3, TOEIC 10-220** (owner authoring range, not a CEFR conversion).
+The original chapter builder below is a story baseline. Current simplified
+episodes are in `../toeic-revisions-v1/` and are composed with
+`buildToeicLesson()`. Use the guarded current updater, not a historical direct
+import, over saved lessons. See [the language policy](../../../../../docs/conversational-language-targets.md).
+Lesson authoring is offline; do not use application or external model API keys.
+
 Adapted from the supplied eight-episode outline. The physical-intimacy scene is
 replaced throughout with a hidden private dinner and a false work message. The
 last lesson reveals that dinner, not a different incident. Regret, honesty, trust

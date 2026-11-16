@@ -1,5 +1,12 @@
 # Level 3, Chapter 4: Work, Dreams & Decisions
 
+Current language target: **Level 3, TOEIC 10-220** (owner authoring range, not a CEFR conversion).
+The original chapter builder below is a story baseline. Current simplified
+episodes are in `../toeic-revisions-v1/` and are composed with
+`buildToeicLesson()`. Use the guarded current updater, not a historical direct
+import, over saved lessons. See [the language policy](../../../../../docs/conversational-language-targets.md).
+Lesson authoring is offline; do not use application or external model API keys.
+
 The user supplied a Chapter 4 fragment beginning with Claire's workshop proposal
 and continuing through Nao's first customer, Emma's interview, Leo's success,
 the job offer and a hybrid-work request. The first two opening episodes are

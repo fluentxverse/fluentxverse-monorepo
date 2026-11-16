@@ -1,5 +1,12 @@
 # Level 3, Chapter 1: A New Beginning
 
+Current language target: **Level 3, TOEIC 10-220** (owner authoring range, not a CEFR conversion).
+The original chapter builder below is a story baseline. Current simplified
+episodes are in `../toeic-revisions-v1/` and are composed with
+`buildToeicLesson()`. Use the guarded current updater, not a historical direct
+import, over saved lessons. See [the language policy](../../../../../docs/conversational-language-targets.md).
+Lesson authoring is offline; do not use application or external model API keys.
+
 English lessons for adults, with Japanese supporting translations.
 The revised lessons follow residents of fictional Kamo House in Kyoto.
 Lesson 1 is published in Memgraph; Lessons 2-4 and 6-9 are
@@ -61,6 +68,111 @@ Their six PNG masters and optimized WebP assets live in `images/`; prompts and
 character/style references are recorded in `new-beginning-watercolor-prompts.json`.
 Use `scripts/apply-new-beginning-watercolor.ts` for guarded, image-only uploads
 and Memgraph reference changes. It preserves lesson text, notes, and publication states.
+
+Lesson 3, **A Shared Hobby**, also uses approved watercolor scenes for Introduce,
+Apply, and Challenge 1. Emma meets Nao through their shared photography hobby,
+reads Nao's profile on the residents' board, and discusses Nao's invitation with
+Claire. They have not gone on the photo walk yet. The PNG masters and WebP
+assets use the `lesson3-*-new-beginning-watercolor-v1` filenames in `images/`.
+Use `scripts/apply-shared-hobby-watercolor.ts` (dry run, then `--write` with
+the reviewed `--expected` revision) for image-only persistence. It backs up
+the record, refuses different files at existing asset URLs, guards concurrent
+edits, and verifies the complete record after saving. Realistic full-scene preview
+variants were not selected or added to these three sections.
+
+Lesson 3's six Step A vocabulary cards use separately approved realistic photos:
+shared hobby, ceramics, free time, explore, cafe entrance, and bring your camera.
+The PNG masters and optimized WebP assets are in `images/` with the
+`lesson3-vocabulary-*-photo-v1` filenames. The three main watercolor scenes stay
+unchanged. Use `scripts/apply-lesson3-vocabulary-photos.ts` (dry run, then `--write`
+with the reviewed `--expected` revision) for phrase-matched, guarded image-only
+persistence. It does not change vocabulary text, tutor guides or learner data.
+
+Lesson 4, **A Walk Through Kyoto**, uses the approved watercolor scenes for
+Introduce (old street and temple gate), Apply (sharing a garden photo), and
+Challenge 1 (talking after the walk beside the river). Apply uses the corrected
+`lesson4-apply-new-beginning-watercolor-v2` image: the camera's screen faces Nao,
+not the viewer. PNG masters and WebP copies are in `images/`. Use
+`scripts/apply-shared-hobby-watercolor.ts --lesson=4` for the dry run, then add
+`--write --expected=<reviewed revision>` for guarded, image-only persistence.
+It preserves vocabulary artwork, lesson text, guides, status and learner data.
+
+Lesson 4's Step A vocabulary also has six approved realistic photos for
+walked through, visited, photos, peaceful, favorite place, and feel at home.
+The `lesson4-vocabulary-*-photo-v1` PNG masters and WebP copies are in `images/`.
+Use `scripts/apply-lesson3-vocabulary-photos.ts --lesson=4` for a dry run, then
+add `--write --expected=<reviewed revision>` to update only the six phrase-matched
+image fields. Main watercolor scenes, text and learner data are preserved.
+
+Lesson 6, **An Interesting Idea**, uses approved watercolor scenes for Introduce
+(four friends planning), Apply (Claire and Emma discussing the exhibition), and
+Challenge 1 (dividing tasks beside the still-empty display wall). These show
+planning, not the completed exhibition or the later bakery problem. The final
+Challenge 1 asset is `lesson6-challenge1-new-beginning-watercolor-v3`: Emma's legs
+are naturally aligned, with the table and photo samples behind her. Masters and
+WebP files are in `images/`. Run `scripts/apply-shared-hobby-watercolor.ts --lesson=6`
+as a dry run, then add `--write --expected=<reviewed revision>` to persist only
+the artwork references under the existing backup/concurrency guards.
+
+Lesson 6's Step A cards use six separately approved realistic vocabulary photos:
+organize an exhibition, display our photos, bring her ceramic pieces, prepare
+snacks, make a poster, and invite the neighbors. These illustrate the assigned
+activities; they do not rewrite the story or mean the exhibition has happened.
+The `lesson6-vocabulary-*-photo-v1` masters/WebP files live in `images/`.
+Use `scripts/apply-lesson3-vocabulary-photos.ts --lesson=6` for a dry run, then
+add `--write --expected=<reviewed revision>` for phrase-matched image-only saves.
+All three main watercolor scenes, text, guides and learner records are preserved.
+
+Lesson 7, **An Unexpected Problem**, uses the approved watercolor scenes for
+Introduce (Leo brings the bakery news), Apply (Claire offers the cafe kitchen),
+and Challenge 1 (Emma and Leo divide unfinished preparation jobs). The bakery's
+broken oven is distinct from the cafe's working oven. PNG masters and optimized
+WebP copies use `lesson7-*-new-beginning-watercolor-v1` in `images/`.
+Use `scripts/apply-shared-hobby-watercolor.ts --lesson=7` with the same dry-run,
+exact-revision, backup and image-only write guards.
+
+Lesson 7's Step A uses six approved realistic photos: is broken, worried about,
+enough, instead, Could you help me, and finish by. The worried-about image uses
+the final `v3` correction with visible wrists and adult-proportioned hands.
+PNG masters and WebP copies use `lesson7-vocabulary-*-photo-v1` filenames except
+`lesson7-vocabulary-worried-about-photo-v3`. Run
+`scripts/apply-lesson3-vocabulary-photos.ts --lesson=7` as a dry run, then use
+`--write --expected=<reviewed revision>` for the guarded image-only update.
+The three watercolor scenes, text, guides, status and learner data are preserved.
+
+Lesson 8, **The Exhibition**, uses the approved `v2` watercolor scenes for
+Introduce, Apply and Challenge 1. Visitors have distinct older faces; the four
+main characters retain their established designs. PNG masters and optimized
+WebP copies use `lesson8-*-new-beginning-watercolor-v2` in `images/`.
+Use `scripts/apply-shared-hobby-watercolor.ts --lesson=8` with the same dry-run,
+exact-revision, backup and image-only write guards. The reading challenge also
+includes its approved scene as an image block after the unchanged program.
+
+Lesson 8's Step A uses six approved realistic photos: exhibition, on display,
+ceramic cups and bowls, free, welcomes visitors, and guest book. Visitors retain
+their distinct older designs. The free-entry and guest-book images use small
+physical signs to clarify their meanings. PNG masters and optimized WebP copies
+use `lesson8-vocabulary-*-photo-v1` filenames in `images/`.
+Use `scripts/apply-lesson3-vocabulary-photos.ts --lesson=8` with the same dry-run,
+exact-revision, backup and image-only write guards. Text, reading evidence,
+guides, watercolor scenes, draft status and learner data are preserved.
+
+Lesson 9, **A Place to Call Home**, uses the approved watercolor scenes beside
+the Kamo River: all four friends in Introduce, Claire and Emma in Apply, and
+Emma and Nao in Challenge 1. Leo no longer wears his cafe apron outdoors.
+PNG masters and WebP copies use `lesson9-*-new-beginning-watercolor-v1` in
+`images/`. Run `scripts/apply-shared-hobby-watercolor.ts --lesson=9` with the
+same dry-run, exact-revision, backup and image-only write guards. Canonical
+defaults now include approved main-scene artwork for all eight story lessons.
+
+Lesson 9's Step A uses six approved realistic photos: proud of, special memory,
+at first, belong here, your support, and looking forward to. Exhibition memories
+are distinguished from the current riverside scene; the next photo outing
+remains a plan. PNG masters and optimized WebP copies use
+`lesson9-vocabulary-*-photo-v1` filenames in `images/`. Run
+`scripts/apply-lesson3-vocabulary-photos.ts --lesson=9` with the same dry-run,
+exact-revision, backup and image-only write guards. Lesson text, guides,
+watercolor scenes, feedback, draft status and learner data are preserved.
 
 ## Review in Admin
 

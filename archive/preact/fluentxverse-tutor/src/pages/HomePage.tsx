@@ -302,7 +302,7 @@ const HomePage = () => {
                   </div>
                   <div className="test-content">
                     <p>
-                      Review our interview guide to learn what to expect and how to showcase your teaching skills.
+                      Review our interview guide to learn what to expect and how to showcase your competence.
                     </p>
                     <button className="action-btn blue" onClick={() => location.route('/become-tutor')}>
                       INTERVIEW GUIDE

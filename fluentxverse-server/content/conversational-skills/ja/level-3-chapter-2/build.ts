@@ -149,14 +149,30 @@ export const chapter2Episodes: Record<StoryLessonNumber, Episode> = {
 };
 
 export const chapter2Id = (number: StoryLessonNumber) => `conversational-skills-L3-C2-${number}-${chapter2Episodes[number].skill}-ja-v1`;
+export const chapter2Watercolor = (number: 1 | 2 | 3 | 4 | 6 | 7 | 8 | 9, apiBase: string) => {
+  const url = (section: string) => `${apiBase.replace(/\/$/, '')}/lesson/files/lessons/conversational-skills/ja/l3-c2/exploring-kyoto-watercolor-v1/lesson${number}-${section}-exploring-kyoto-watercolor-${number === 7 ? 'v3' : (number === 1 && section === 'challenge1') || (number === 9 && section === 'introduce') ? 'v2' : 'v1'}.webp`;
+  return { introduce: url('introduce'), apply: url('apply'), challenge1: url('challenge1') };
+};
 export function buildKyotoLesson(number: StoryLessonNumber, previous: any = {}, reference?: any) {
   const index = storyLessonNumbers.indexOf(number);
   const lesson = buildNewBeginningLesson(number, previous, 'https://api.fluentxverse.com', reference, {
     episode: chapter2Episodes[number], id: chapter2Id(number), chapterName: 'Exploring Kyoto',
     setting: 'Kyoto, Japan: Kamo House cafe, train journeys, Gion, Nishiki Market, Arashiyama, Kiyomizu-dera, a ceramics shop, and the Kamo River. All four recurring characters are adults.',
     previousSummary: index === 0 ? 'After Chapter 1, Emma has settled into Kamo House and found friendship through the cafe exhibition.' : chapter2Episodes[storyLessonNumbers[index - 1]].closing,
-    storyNotes: 'Based on the user-supplied Exploring Kyoto story. Eight episodes map to Lessons 1-4 and 6-9; 5 and 10 remain personalized checkpoints. Light romance develops only between fictional adult Emma and Leo; learner roles remain optional and consent-respecting. Kyoto locations supply story context, not live travel advice. Routes, shops, prices, product rules, times and station details are fictional teaching examples, explicitly labeled where used. No new images; no inherited Chapter 1 artwork or subplot. Keep language A2-B1, short dialogues and tutor-first roleplays. Never require personal romantic disclosures.',
+    storyNotes: 'Based on the user-supplied Exploring Kyoto story. Eight episodes map to Lessons 1-4 and 6-9; 5 and 10 remain personalized checkpoints. Light romance develops only between fictional adult Emma and Leo; learner roles remain optional and consent-respecting. Kyoto locations supply story context, not live travel advice. Routes, shops, prices, product rules, times and station details are fictional teaching examples, explicitly labeled where used. Use approved Chapter 2 artwork only; no inherited Chapter 1 scene assets or subplot. Keep language A2-B1, short dialogues and tutor-first roleplays. Never require personal romantic disclosures.',
   });
+  if (number === 1 || number === 2 || number === 3 || number === 4 || number === 6 || number === 7 || number === 8 || number === 9) {
+    const art = chapter2Watercolor(number, 'https://api.fluentxverse.com');
+    lesson.backgroundImage = previous?.backgroundImage || art.introduce;
+    lesson.introductionData.introImage = previous?.introductionData?.introImage || art.introduce;
+    lesson.applyData.situationImage = previous?.applyData?.situationImage || art.apply;
+    lesson.missionData.image = previous?.missionData?.image || art.challenge1;
+    if ((number === 3 || number === 8) && !lesson.missionData.readingPassage.blocks.some((block: any) => block.type === 'images' && block.images?.includes(lesson.missionData.image))) {
+      lesson.missionData.readingPassage.blocks.push({ type: 'images', images: [lesson.missionData.image] });
+    }
+    const existingVocabulary = previous?.learnData?.steps?.find((step: any) => step.stepType === 'vocabulary')?.vocabularyItems;
+    for (const [index, item] of lesson.learnData.steps[0].vocabularyItems.entries()) item.image = existingVocabulary?.[index]?.image || '';
+  }
   return { course: 'conversational-skills', level: 3, chapter: 2, lessonNumber: number, levelBadge: 'BEGINNER', chapterLabel: 'Chapter 2: Exploring Kyoto', status: previous?.status || 'draft', overlayColor: '#17252bcc', supportLanguage: 'ja', ...lesson };
 }
 export function buildKyotoChapter(reference?: any) {

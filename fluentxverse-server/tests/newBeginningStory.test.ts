@@ -5,9 +5,9 @@ import { conversationalLessonErrors } from '../src/utils/conversationalLessonVal
 
 const chapter = buildChapter('https://api.fluentxverse.com');
 const lessons = storyLessonNumbers.map(number => chapter[number - 1] as any);
-test('new chapter generation uses the six watercolor scene assets for the first two lessons', () => {
+test('new chapter generation uses twenty-four watercolor scenes for all eight story lessons', () => {
   const urls = new Set<string>();
-  for (const number of [1, 2] as const) {
+  for (const number of storyLessonNumbers) {
     const art = newBeginningWatercolor(number, 'https://api.fluentxverse.com/');
     const lesson: any = chapter[number - 1];
     expect(lesson.backgroundImage).toBe(art.introduce);
@@ -20,7 +20,10 @@ test('new chapter generation uses the six watercolor scene assets for the first 
       urls.add(url);
     }
   }
-  expect(urls.size).toBe(6);
+  expect(urls.size).toBe(24);
+  expect(newBeginningWatercolor(4, 'https://api.fluentxverse.com').apply).toEndWith('lesson4-apply-new-beginning-watercolor-v2.webp');
+  expect(newBeginningWatercolor(6, 'https://api.fluentxverse.com').challenge1).toEndWith('lesson6-challenge1-new-beginning-watercolor-v3.webp');
+  for (const url of Object.values(newBeginningWatercolor(8, 'https://api.fluentxverse.com'))) expect(url).toEndWith('-watercolor-v2.webp');
 });
 test('the eight user story episodes map to Lessons 1-4 and 6-9 with stable IDs and agreed skills', () => {
   expect(lessons.map(l => l.lessonName)).toEqual(['A New Beginning', 'The Sunday Cafe', 'A Shared Hobby', 'A Walk Through Kyoto', 'An Interesting Idea', 'An Unexpected Problem', 'The Exhibition', 'A Place to Call Home']);
@@ -102,7 +105,9 @@ test('reading lessons have distinct Apply and Mission evidence without old notic
     expect(lesson.missionData.tutorSteps[2].instruction).toContain('tutor speaks first');
   }
   expect(lessons[2].missionData.readingPassage.blocks[0].content).toContain('10 a.m.');
+  expect(lessons[2].missionData.readingPassage.blocks[1]).toEqual({ type: 'images', images: [lessons[2].missionData.image] });
   expect(lessons[6].missionData.readingPassage.blocks[0].content).toContain('3:30 p.m.');
+  expect(lessons[6].missionData.readingPassage.blocks[1]).toEqual({ type: 'images', images: [lessons[6].missionData.image] });
 });
 test('migration builder preserves identities, fixed rubric, publication status, and compatible artwork', () => {
   const previous = { ...lessons[0], status: 'published', updatedAt: 'revision', backgroundImage: 'existing-cover.webp', introductionData: { ...lessons[0].introductionData, introImage: 'existing-intro.webp' }, feedbackData: { ...lessons[0].feedbackData, categories: [{ title: 'unchanged' }] } };
@@ -113,12 +118,37 @@ test('migration builder preserves identities, fixed rubric, publication status, 
   expect(result.feedbackData.categories).toEqual(previous.feedbackData.categories);
   expect(result.backgroundImage).toBe(previous.backgroundImage);
   expect(result.introductionData.introImage).toBe('existing-intro.webp');
-  for (const number of [3, 4, 6, 7, 8, 9] as const) {
-    const lesson = buildNewBeginningLesson(number, previous, 'https://api.fluentxverse.com', lessons[3]);
-    expect(lesson.backgroundImage).toBe('');
-    expect(lesson.introductionData.introImage).toBe('');
-    expect(lesson.applyData.situationImage).toBe('');
-    expect(lesson.missionData.image).toBe('');
-    expect(lesson.learnData.steps[0].vocabularyItems.every((v: any) => v.image === '')).toBe(true);
-  }
+  const third = lessons[2];
+  const preservedThird = buildNewBeginningLesson(3, third, 'https://api.fluentxverse.com', lessons[3]);
+  expect(preservedThird.introductionData.introImage).toBe(third.introductionData.introImage);
+  expect(preservedThird.applyData.situationImage).toBe(third.applyData.situationImage);
+  expect(preservedThird.missionData.image).toBe(third.missionData.image);
+  const fourth = lessons[3];
+  const preservedFourth = buildNewBeginningLesson(4, fourth, 'https://api.fluentxverse.com', third);
+  expect(preservedFourth.introductionData.introImage).toBe(fourth.introductionData.introImage);
+  expect(preservedFourth.applyData.situationImage).toBe(fourth.applyData.situationImage);
+  expect(preservedFourth.missionData.image).toBe(fourth.missionData.image);
+  const sixth = lessons[4];
+  const preservedSixth = buildNewBeginningLesson(6, sixth, 'https://api.fluentxverse.com', fourth);
+  expect(preservedSixth.introductionData.introImage).toBe(sixth.introductionData.introImage);
+  expect(preservedSixth.applyData.situationImage).toBe(sixth.applyData.situationImage);
+  expect(preservedSixth.missionData.image).toBe(sixth.missionData.image);
+  const seventh = lessons[5];
+  const preservedSeventh = buildNewBeginningLesson(7, seventh, 'https://api.fluentxverse.com', sixth);
+  expect(preservedSeventh.introductionData.introImage).toBe(seventh.introductionData.introImage);
+  expect(preservedSeventh.applyData.situationImage).toBe(seventh.applyData.situationImage);
+  expect(preservedSeventh.missionData.image).toBe(seventh.missionData.image);
+  const eighth = lessons[6];
+  const preservedEighth = buildNewBeginningLesson(8, eighth, 'https://api.fluentxverse.com', seventh);
+  expect(preservedEighth.introductionData.introImage).toBe(eighth.introductionData.introImage);
+  expect(preservedEighth.applyData.situationImage).toBe(eighth.applyData.situationImage);
+  expect(preservedEighth.missionData.image).toBe(eighth.missionData.image);
+  expect(preservedEighth.missionData.readingPassage.blocks[1]).toEqual(eighth.missionData.readingPassage.blocks[1]);
+  const ninth = lessons[7];
+  const preservedNinth = buildNewBeginningLesson(9, ninth, 'https://api.fluentxverse.com', eighth);
+  expect(preservedNinth.backgroundImage).toBe(ninth.backgroundImage);
+  expect(preservedNinth.introductionData.introImage).toBe(ninth.introductionData.introImage);
+  expect(preservedNinth.applyData.situationImage).toBe(ninth.applyData.situationImage);
+  expect(preservedNinth.missionData.image).toBe(ninth.missionData.image);
+  expect(preservedNinth.learnData.steps[0].vocabularyItems.map((v: any) => v.image)).toEqual(ninth.learnData.steps[0].vocabularyItems.map((v: any) => v.image));
 });

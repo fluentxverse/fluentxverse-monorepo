@@ -35,6 +35,20 @@ Apply these rules to every new or regenerated lesson in this course edition.
 
 ## Tutor Guide Standard
 
+- From Level 6 onward, use **STEP B: PRONUNCIATION** with a short connected-speech
+  tip and a Phrase/Example table. Teach linking sounds across word boundaries,
+  light function words, meaningful stress and pauses between thought groups.
+  Provide at least two relevant phrases, readable guides and full-sentence
+  examples. Bold the exact stressed words or syllables in the examples with
+  `<strong>`; do not bold the whole sentence. Use separate linking and pause
+  marks so that learners can distinguish connection, grouping and stress.
+  Use only Step B Pronunciation. Remove Part III pronunciation entirely;
+  Part II transitions directly to Step B. Do not add commentary about IPA,
+  reading cues or accents to lesson content.
+  This newer direction replaces Step B grammar/reading tips for this edition.
+  Levels 6 onward remain English-only; do not add Japanese support to these editions.
+  Level 8 uses the owner's TOEIC 785–940 authoring range and visible score label.
+
 - Use the current Level 3, Chapter 1, Lesson 3 guide as the editorial reference: concise numbered instructions, spoken scripts, separate tips, and structured questions/answer keys.
 - Keep Intro, Learn, and Grammar Tip scripts in their existing single-string fields; Apply, Exercise, Mission, and Feedback use arrays. Do not change renderer schemas merely to standardize wording.
 - Learn has five vocabulary steps, five discussion steps, and five pronunciation steps. Adapt sounds, examples, and questions to the lesson.

@@ -36,6 +36,7 @@ import {
 } from '../api/ai.api';
 import { authApi, type AdminListItem } from '../api/auth.api';
 import { useAuthContext } from '../context/AuthContext';
+import { conversationalChapters } from '../../../shared/conversationalCurriculum';
 import { toast } from '../Components/Toast/Toast';
 import './ConversationalSkillsEditorPage.css';
 
@@ -45,12 +46,9 @@ import './ConversationalSkillsEditorPage.css';
 
 const COURSE_ID = 'conversational-skills';
 const LEVELS = Array.from({ length: 10 }, (_, i) => i + 1);
-const CHAPTERS = Array.from({ length: 5 }, (_, i) => i + 1);
 const LESSONS = Array.from({ length: 10 }, (_, i) => i + 1);
 
-/** Level 1 has only 1 chapter; all other levels have 5 */
-const getChaptersForLevel = (level: number): number[] =>
-  level === 1 ? [1] : CHAPTERS;
+const getChaptersForLevel = conversationalChapters;
 const SKILLS: { value: Skill; label: string }[] = [
   { value: 'speaking', label: 'Speaking' },
   { value: 'listening', label: 'Listening' },
@@ -61,7 +59,7 @@ const LEVEL_BADGES: Record<number, string> = {
   1: 'STARTER', 2: 'STARTER',
   3: 'BEGINNER', 4: 'BEGINNER',
   5: 'ELEMENTARY', 6: 'ELEMENTARY',
-  7: 'INTERMEDIATE', 8: 'INTERMEDIATE',
+  7: 'INTERMEDIATE', 8: 'TOEIC 785–940',
   9: 'ADVANCED', 10: 'ADVANCED',
 };
 

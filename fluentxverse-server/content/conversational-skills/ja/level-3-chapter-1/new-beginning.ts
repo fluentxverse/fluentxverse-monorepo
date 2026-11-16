@@ -25,8 +25,11 @@ export interface StoryLessonConfig {
 }
 const bullets = (texts: string[]) => texts.map(text => ({ text }));
 const questions = (items: Pair[]) => items.map(([question, answer]) => ({ question, answer }));
-export const newBeginningWatercolor = (number: 1 | 2, apiBase: string) => {
-  const url = (section: string) => `${apiBase.replace(/\/$/, '')}/lesson/files/lessons/conversational-skills/ja/l3-c1/new-beginning-watercolor-v1/lesson${number}-${section}-new-beginning-watercolor-v1.webp`;
+export const newBeginningWatercolor = (number: StoryLessonNumber, apiBase: string) => {
+  const url = (section: string) => {
+    const version = number === 6 && section === 'challenge1' ? 'v3' : number === 8 || (number === 4 && section === 'apply') ? 'v2' : 'v1';
+    return `${apiBase.replace(/\/$/, '')}/lesson/files/lessons/conversational-skills/ja/l3-c1/new-beginning-watercolor-v1/lesson${number}-${section}-new-beginning-watercolor-${version}.webp`;
+  };
   return { introduce: url('introduce'), apply: url('apply'), challenge1: url('challenge1') };
 };
 export const newBeginningIds: Record<StoryLessonNumber, string> = {
@@ -193,8 +196,8 @@ export function buildNewBeginningLesson(number: StoryLessonNumber, previous: any
   const e = config?.episode || newBeginningEpisodes[number], reading = e.skill === 'reading', listening = e.skill === 'listening';
   const base = buildArcLesson(reading ? 8 : 6, previous, apiBase, reference);
   const learn = base.learnData.steps[0];
-  const compatibleArt = !config && number <= 2;
-  const artwork = compatibleArt ? newBeginningWatercolor(number as 1 | 2, apiBase) : null;
+  const compatibleArt = !config;
+  const artwork = compatibleArt ? newBeginningWatercolor(number, apiBase) : null;
   const existingLearn = previous?.learnData?.steps?.[0];
   const applySteps: any[] = [
     { instruction: listening ? 'Set up the listening and read once for the main idea.' : reading ? 'Set up the reading and ask the student to read the complete text.' : 'Set up the dialogue and read it with the student. The tutor speaks first.',
@@ -261,6 +264,7 @@ export function buildNewBeginningLesson(number: StoryLessonNumber, previous: any
   delete next.missionData.readingPassage;
   delete next.missionData.listeningScript;
   if (reading) next.missionData.readingPassage = { title: e.mission.title, blocks: [{ type: 'paragraph', content: e.mission.text }], showAuthor: false, headerAlignment: 'left', closingQuestion: '' };
+  if (reading && compatibleArt && next.missionData.image) next.missionData.readingPassage.blocks.push({ type: 'images', images: [next.missionData.image] });
   for (const key of ['readingPassage', 'listeningScript']) delete next.missionData2[key];
   // Existing fixed feedback definitions and score descriptors are never rewritten by story edits.
   if (previous?.feedbackData) {
