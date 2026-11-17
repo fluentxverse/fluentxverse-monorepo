@@ -18981,8 +18981,8 @@ function Footer({ navigateTo }) {
                       children: [
                         /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("li", {
                           children: /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("a", {
-                            href: "mailto:hello@fluentxverse.com",
-                            children: "hello@fluentxverse.com"
+                            href: "mailto:support@fluentxverse.com",
+                            children: "support@fluentxverse.com"
                           }, undefined, false, undefined, this)
                         }, undefined, false, undefined, this),
                         /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("li", {
