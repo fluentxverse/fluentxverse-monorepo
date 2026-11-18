@@ -22,8 +22,7 @@ export function AboutPage() {
           <div class="story-copy">
             <p class="large-copy">FluentXVerse is building an ecosystem of onchain learning applications. Our first platform, FluentXVerse ESL, connects Filipino tutors with English learners through dedicated student and tutor apps.</p>
             <p>ESL gives that vision a practical starting point: live lessons, learning materials, scheduling, and feedback, alongside development of onchain lesson tickets and verifiable tutor and lesson credentials.</p>
-            <p>We're building a learning platform where tutors are fairly compensated for their time and expertise, high-quality teaching and materials are central to the experience, and learners can clearly track their progress. We want tutors to build sustainable livelihoods while helping students see what they've learned, where they're improving, and what to work on next.</p>
-            <p>Our scope extends beyond English. We plan to develop learning applications for other subjects, skills, and learning formats, bringing useful learning experiences and onchain infrastructure together under FluentXVerse.</p>
+            <p>We're building a learning platform where tutors are fairly compensated for their time and expertise, high-quality teaching and materials are central to the experience, and learners can clearly track their progress.</p>
             <a class="story-signature" href={founder.linkedin} target="_blank" rel="noopener noreferrer" aria-label={`${founder.name}, ${founder.role}, on LinkedIn`}><img src={founder.image} width="56" height="56" alt={founder.name} loading="lazy" /><span>{founder.name}<span class="founder-role">{founder.role}</span></span><ArrowUpRight size={18} /></a>
           </div>
         </div>
