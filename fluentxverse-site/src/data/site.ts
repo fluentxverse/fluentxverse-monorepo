@@ -63,7 +63,7 @@ export const teamMembers: {
   {
     name: 'Agnes Atwel-Velasco',
     role: 'Head of Instructional Design',
-    bio: 'Agnes leads instructional design at FluentXVerse, shaping the curriculum, lesson materials, and learning experiences behind our apps. Her work focuses on clear learning goals, practical activities, and resources that support tutors and help learners build skills with confidence.',
+    bio: 'Agnes leads instructional design at FluentXVerse, shaping the curriculum, lesson materials, and learning experiences behind our apps.',
     image: '/assets/img/team/agnes-headshot-v2.webp',
     imagePosition: 'center top',
     linkedin: 'https://www.linkedin.com/in/agnes-atwel-161a60340/',
