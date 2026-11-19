@@ -41,12 +41,17 @@ test('website includes its terminology helper and linked authoring history witho
   assert.deepEqual(site.contracts, ['shared/learningTerminology.ts', 'docs/conversational-skills-authoring-changelog.md']);
 });
 
-test('repository READMEs use no emojis and describe limitations', () => {
+test('repository READMEs retain the intended scope for each app', () => {
   for (const app of applications) {
     const text = readFileSync(join(root, 'docs/app-repositories', `${app.name}.md`), 'utf8');
     assert.equal(/\p{Extended_Pictographic}/u.test(text), false, app.name);
     assert.match(text, /^# FluentXVerse/m);
-    assert.match(text, /## (Local Development|Android Development)/);
+    if (['fluentxverse-student', 'fluentxverse-tutor'].includes(app.name)) {
+      assert.match(text, /## Responsibilities/);
+      assert.doesNotMatch(text, /## (Architecture|Local Development|Deployment|Repository Provenance|Security and Licensing)/);
+    } else {
+      assert.match(text, /## (Local Development|Android Development)/);
+    }
   }
 });
 
@@ -86,6 +91,9 @@ test('student source checks compile without borrowing production identity-provid
   try {
     cli(['--app', 'fluentxverse-student', '--destination', destination]);
     const workflow = readFileSync(join(destination, 'fluentxverse-student/.github/workflows/checks.yml'), 'utf8');
+    const readme = readFileSync(join(destination, 'fluentxverse-student/README.md'), 'utf8');
+    assert.equal(readme, readFileSync(join(root, 'docs/app-repositories/fluentxverse-student.md'), 'utf8'));
+    assert.doesNotMatch(readme, /Repository Provenance|Security and Licensing|Local Development|## Architecture/);
     assert.match(workflow, /- run: npm run build\n        env:\n          VITE_PRIVY_APP_ID: source-check-only-not-a-real-app-id/);
     assert.doesNotMatch(workflow, /PRIVY_APP_SECRET|secrets\./);
   } finally {
