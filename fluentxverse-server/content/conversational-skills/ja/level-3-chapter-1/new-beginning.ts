@@ -1,3 +1,4 @@
+import { requireDefined } from '../../../../../shared/requireDefined';
 import { buildArcLesson } from './exhibition-arc';
 import { directRoleplayCopy } from '../direct-roleplay-copy';
 
@@ -256,7 +257,7 @@ export function buildNewBeginningLesson(number: StoryLessonNumber, previous: any
       { id: 'claire', name: 'Claire', role: 'supporting', description: 'A warm, welcoming Kamo House resident who helps run the cafe and suggests the exhibition.' },
       { id: 'leo', name: 'Leo', role: 'supporting', description: 'Moved from Bristol to Kyoto for a bakery job. Helps at the cafe every Sunday and prepares the exhibition snacks.' },
       { id: 'nao', name: 'Nao', role: 'supporting', description: 'A Kamo House resident from Fukuoka studying ceramics in Kyoto. Shares Emma\'s love of photography.' },
-    ], previousSummary: number === 1 ? 'Emma is arriving in Kyoto to begin a new life.' : newBeginningEpisodes[storyLessonNumbers[storyLessonNumbers.indexOf(number) - 1]].closing,
+    ], previousSummary: number === 1 ? 'Emma is arriving in Kyoto to begin a new life.' : newBeginningEpisodes[requireDefined(storyLessonNumbers[storyLessonNumbers.indexOf(number) - 1], "storyLessonNumbers[storyLessonNumbers.indexOf(number) - 1]")].closing,
       currentEpisodeSummary: e.intro[0], currentPlotPoints: [e.intro[0], e.closing], nextEpisodeHook: e.closing,
       storyNotes: 'User-authored eight-part story, mapped to Lessons 1-4 and 6-9. Lesson 5 remains the checkpoint, not a separate story episode. The exhibition stays at the cafe on Sunday 2-4 p.m. Follow only the events in this story revision. No new artwork generated. Incompatible old scene images are cleared; originals remain in the migration backup.' },
   };

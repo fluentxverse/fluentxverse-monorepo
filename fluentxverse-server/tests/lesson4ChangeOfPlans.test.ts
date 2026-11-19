@@ -1,3 +1,4 @@
+import { requireDefined } from '../../shared/requireDefined';
 import { expect, test } from 'bun:test';
 import { buildLesson4 } from '../content/conversational-skills/ja/level-3-chapter-1/lesson-4-speaking';
 import { buildLesson3 } from '../content/conversational-skills/ja/level-3-chapter-1/lesson-3-reading';
@@ -18,12 +19,12 @@ test('Apply is an alternating two-person dialogue continuing Lesson 3, not a spe
   expect(lesson.applyData.situationText).toContain('rented their bikes at ten');
   expect(lesson.applyData.situationText).toContain('by noon');
   expect(JSON.stringify(lesson.applyData.dialogueLines)).toContain('by noon');
-  expect(lesson.applyData.tutorSteps[1].questions).toHaveLength(3);
+  expect(requireDefined(lesson.applyData.tutorSteps[1], "lesson.applyData.tutorSteps[1]").questions).toHaveLength(3);
   expect(lesson.storyData.previousSummary).toContain('Lesson 3');
 });
 
 test('language and exercises prepare the same decision-making task', () => {
-  expect(lesson.learnData.steps[0].vocabularyItems).toHaveLength(6);
+  expect(requireDefined(lesson.learnData.steps[0], "lesson.learnData.steps[0]").vocabularyItems).toHaveLength(6);
   expect(lesson.exerciseData.chooseItems).toHaveLength(6);
   expect(lesson.exerciseData.answers.map(answer => answer.text)).toEqual(['return', 'finish', 'know', 'takes', 'to meet', 'because']);
   expect(lesson.exerciseData.multipleChoiceItems).toHaveLength(4);
@@ -31,15 +32,15 @@ test('language and exercises prepare the same decision-making task', () => {
   expect(lesson.missionData.situation).toContain('fifteen minutes away');
   expect(lesson.missionData.instruction).toContain('two possible plans');
   expect(lesson.missionData.grammarTipTitle).toBe('Useful language');
-  expect(lesson.missionData.tutorSteps[1].instruction).toContain('tutor speaks first');
-  expect(lesson.missionData.tutorSteps[1].scripts[0].text).toContain("I'll be Claire. Please be Emma.");
-  expect(lesson.missionData.tutorSteps[1].scripts.slice(1).every(script => /^\d+\./.test(script.text))).toBe(true);
+  expect(requireDefined(lesson.missionData.tutorSteps[1], "lesson.missionData.tutorSteps[1]").instruction).toContain('tutor speaks first');
+  expect(requireDefined(requireDefined(lesson.missionData.tutorSteps[1], "lesson.missionData.tutorSteps[1]").scripts[0], "lesson.missionData.tutorSteps[1].scripts[0]").text).toContain("I'll be Claire. Please be Emma.");
+  expect(requireDefined(lesson.missionData.tutorSteps[1], "lesson.missionData.tutorSteps[1]").scripts.slice(1).every(script => /^\d+\./.test(script.text))).toBe(true);
   expect(lesson.missionData2.topics).toHaveLength(3);
   expect(JSON.stringify(lesson)).not.toMatch(/90-second|45-second|one continuous message|without tutor interruptions/);
 });
 
 test('guides follow the standard and preserve fixed feedback and existing trivia', () => {
-  const step = lesson.learnData.steps[0];
+  const step = requireDefined(lesson.learnData.steps[0], "lesson.learnData.steps[0]");
   expect(lesson.introductionData.lessonGoalSteps).toHaveLength(4);
   expect(step.tutorSteps).toHaveLength(5);
   expect(step.discussionPart.tutorSteps).toHaveLength(5);

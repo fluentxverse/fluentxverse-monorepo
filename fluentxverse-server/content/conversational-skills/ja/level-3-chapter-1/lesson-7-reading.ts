@@ -39,7 +39,7 @@ export function buildLesson7(previous: any, apiBase: string, reference?: any) {
     ['Emma scheduled the post before the venue changed.', 'before', 'エマは会場が変わる前に投稿を予約しました。'],
     ['She corrected the poster after Nao saw it.', 'after', 'ナオが見た後で、エマはポスターを訂正しました。'],
   ];
-  const stepA = [
+  const stepA: [string, string][] = [
     ['The post was scheduled at 9:50. The venue update came at 10:10. The post was scheduled (before / after) the update.', 'before'],
     ['The old post appeared at 10:15. Emma corrected it at 10:25. She corrected it (before / after) it appeared.', 'after'],
     ['The notice updated at 11:00 replaces the 10:15 poster. The (latest / oldest) notice gives the current details.', 'latest'],

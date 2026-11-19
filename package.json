@@ -11,6 +11,7 @@
     "fluentxverse-site"
   ],
   "scripts": {
+    "typecheck": "npm --prefix fluentxverse-server run typecheck && npm --prefix fluentxverse-dashboard run typecheck && npm --prefix fluentxverse-tutor-solid-prototype run typecheck && npm --prefix fluentxverse-student-solid-prototype run typecheck && npm --prefix fluentxverse-site run typecheck",
     "check:apps": "node scripts/release-apps.mjs",
     "check:app-budgets": "node scripts/check-app-budgets.mjs",
     "deploy:apps": "node scripts/release-apps.mjs --deploy=all",

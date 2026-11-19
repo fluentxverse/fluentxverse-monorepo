@@ -1,3 +1,4 @@
+import { requireDefined } from '../../shared/requireDefined';
 import { expect, test } from 'bun:test';
 import { buildNewPathsChapter, buildNewPathsLesson, newPathsEpisodes, newPathsId } from '../content/conversational-skills/ja/level-4-chapter-2/build';
 import { buildAfterTruthChapter } from '../content/conversational-skills/ja/level-4-chapter-1/build';
@@ -23,7 +24,7 @@ test('story continues the breakup and builds a warmer new arc without restoring 
   expect(JSON.stringify(lessons)).not.toMatch(/\bkiss(?:ed|es|ing)?\b|キス|口づけ|invented adult character|You may play|No personal or romantic/i);
   expect(lessons[0].storyData.previousSummary).toContain('Leo ended his relationship with Emma');
   expect(lessons[0].storyData.currentEpisodeSummary).toContain('A few weeks');
-  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(newPathsEpisodes[storyLessonNumbers[i - 1]].closing);
+  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(newPathsEpisodes[requireDefined(storyLessonNumbers[i - 1], "storyLessonNumbers[i - 1]")].closing);
   expect(lessons[2].storyData.currentEpisodeSummary).toContain('professional');
   expect(lessons[3].missionData.situation).toContain('next Saturday');
   expect(lessons[4].storyData.currentEpisodeSummary).toContain('salt instead of sugar');
@@ -85,7 +86,7 @@ test('six Step A and four Step B items have valid keys and preserve actual-mista
     expect(l.exerciseData.stepBTutorSteps[1].answerKey).toHaveLength(4);
     expect(l.exerciseData.tutorSteps[0].tips[0].text).toContain('actual incorrect responses');
     expect(l.exerciseData.stepBTutorSteps[0].tips[0].text).toContain('record actual mistakes');
-    for (const [sentence, answer] of newPathsEpisodes[l.lessonNumber as 1].choose) expect(sentence.match(/\(([^)]+)\)/)?.[1].split(' / ')).toContain(answer);
+    for (const [sentence, answer] of newPathsEpisodes[l.lessonNumber as 1].choose) expect(requireDefined(sentence.match(/\(([^)]+)\)/)?.[1], "sentence.match(/\\(([^)]+)\\)/)?.[1]").split(' / ')).toContain(answer);
     for (const item of newPathsEpisodes[l.lessonNumber as 1].choices) expect(item[item[3] === 'A' ? 1 : 2]).not.toBe(item[item[3] === 'A' ? 2 : 1]);
   }
 });

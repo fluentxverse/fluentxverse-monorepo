@@ -1,3 +1,4 @@
+import { requireDefined } from '../../shared/requireDefined';
 import { expect, test } from 'bun:test';
 import { buildWhereWeBelongChapter, buildWhereWeBelongLesson, whereWeBelongEpisodes, whereWeBelongId } from '../content/conversational-skills/ja/level-4-chapter-5/build';
 import { buildDreamsInMotionChapter } from '../content/conversational-skills/ja/level-4-chapter-4/build';
@@ -81,7 +82,7 @@ test('each exercise has six Step A and four Step B items, complete keys and obse
     expect(l.exerciseData.stepBTutorSteps[1].answerKey).toHaveLength(4);
     expect(l.exerciseData.tutorSteps[0].tips[0].text).toContain('actual incorrect responses');
     expect(l.exerciseData.stepBTutorSteps[0].tips[0].text).toContain('record actual mistakes');
-    for (const [sentence, answer] of whereWeBelongEpisodes[l.lessonNumber as 1].choose) expect(sentence.match(/\(([^)]+)\)/)?.[1].split(' / ')).toContain(answer);
+    for (const [sentence, answer] of whereWeBelongEpisodes[l.lessonNumber as 1].choose) expect(requireDefined(sentence.match(/\(([^)]+)\)/)?.[1], "sentence.match(/\\(([^)]+)\\)/)?.[1]").split(' / ')).toContain(answer);
     for (const item of whereWeBelongEpisodes[l.lessonNumber as 1].choices) expect(item[item[3] === 'A' ? 1 : 2]).not.toBe(item[item[3] === 'A' ? 2 : 1]);
   }
 });

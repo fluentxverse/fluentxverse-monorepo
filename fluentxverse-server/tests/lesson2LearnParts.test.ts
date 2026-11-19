@@ -1,3 +1,4 @@
+import { requireDefined } from '../../shared/requireDefined';
 import { expect, test } from 'bun:test';
 import { buildLesson2LearnParts } from '../content/conversational-skills/ja/level-3-chapter-1/lesson-2-learn-parts';
 import { buildLesson2 } from '../content/conversational-skills/ja/level-3-chapter-1/lesson-2-listening';
@@ -5,12 +6,12 @@ import { lesson2Trivia, updateLesson2Trivia } from '../content/conversational-sk
 
 test('Lesson 2 includes discussion and pronunciation without replacing vocabulary', () => {
   const lesson = buildLesson2({ exerciseData: {} }, 'https://api.fluentxverse.com');
-  const step = lesson.learnData.steps[0];
+  const step = requireDefined(lesson.learnData.steps[0], "lesson.learnData.steps[0]");
   expect(step.vocabularyItems).toHaveLength(6);
   expect(step.discussionPart.images).toHaveLength(3);
-  expect(step.discussionPart.images[0].image).toBe(step.vocabularyItems[0].image);
-  expect(step.discussionPart.images[1].image).toBe(step.vocabularyItems[3].image);
-  expect(step.discussionPart.images[2].image).toBe(step.vocabularyItems[4].image);
+  expect(requireDefined(step.discussionPart.images[0], "step.discussionPart.images[0]").image).toBe(requireDefined(step.vocabularyItems[0], "step.vocabularyItems[0]").image);
+  expect(requireDefined(step.discussionPart.images[1], "step.discussionPart.images[1]").image).toBe(requireDefined(step.vocabularyItems[3], "step.vocabularyItems[3]").image);
+  expect(requireDefined(step.discussionPart.images[2], "step.discussionPart.images[2]").image).toBe(requireDefined(step.vocabularyItems[4], "step.vocabularyItems[4]").image);
   expect(step.discussionPart.instructionTranslation).toBeTruthy();
   expect(step.pronunciationPart.instructionTranslation).toBeTruthy();
   expect(step.pronunciationPart.leftColumn.words.map(word => word.word)).toEqual(['light', 'long', 'glass']);

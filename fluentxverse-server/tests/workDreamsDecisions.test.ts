@@ -1,3 +1,4 @@
+import { requireDefined } from '../../shared/requireDefined';
 import { expect, test } from 'bun:test';
 import { buildCareerChapter, buildCareerLesson, chapter4Episodes, chapter4Id } from '../content/conversational-skills/ja/level-3-chapter-4/build';
 import { buildEverydayChapter } from '../content/conversational-skills/ja/level-3-chapter-3/build';
@@ -54,7 +55,7 @@ test('exercise choices and keys are complete and assessment-ready', () => {
     expect(l.exerciseData.multipleChoiceItems).toHaveLength(4);
     expect(l.exerciseData.stepBTutorSteps[1].answerKey).toHaveLength(4);
     expect(l.exerciseData.tutorSteps[0].tips[0].text).toContain('incorrect');
-    for (const [sentence, answer] of chapter4Episodes[l.lessonNumber as 1].choose) expect(sentence.match(/\(([^)]+)\)/)?.[1].split(' / ')).toContain(answer);
+    for (const [sentence, answer] of chapter4Episodes[l.lessonNumber as 1].choose) expect(requireDefined(sentence.match(/\(([^)]+)\)/)?.[1], "sentence.match(/\\(([^)]+)\\)/)?.[1]").split(' / ')).toContain(answer);
     for (const c of chapter4Episodes[l.lessonNumber as 1].choices) expect(c[c[3] === 'A' ? 1 : 2]).not.toBe(c[c[3] === 'A' ? 2 : 1]);
   }
 });
@@ -104,7 +105,7 @@ test('all four characters retain their career goals and the sequence connects in
   expect(lessons[5].storyData.currentEpisodeSummary).toContain('regular menu');
   expect(lessons[6].storyData.currentEpisodeSummary).toContain('higher, fixed salary');
   expect(lessons[0].storyData.nextEpisodeHook).not.toContain('accepted');
-  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(chapter4Episodes[storyLessonNumbers[i - 1]].closing);
+  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(chapter4Episodes[requireDefined(storyLessonNumbers[i - 1], "storyLessonNumbers[i - 1]")].closing);
 });
 test('the final roleplay has a tutor-first character switch and deliberately ends before approval', () => {
   const l = lessons[7];

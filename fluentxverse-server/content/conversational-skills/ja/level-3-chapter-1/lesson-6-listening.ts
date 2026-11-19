@@ -1,3 +1,4 @@
+import { requireDefined } from '../../../../../shared/requireDefined';
 import { buildLesson4 } from './lesson-4-speaking';
 import { buildStepBTutorGuide } from './standardize-tutor-guides';
 
@@ -18,7 +19,7 @@ const triviaSource = 'https://www.faa.gov/air_traffic/publications/atpubs/aim_ht
 
 export function buildLesson6(previous: any, apiBase: string, reference?: any) {
   const base = buildLesson4(previous, apiBase, reference);
-  const learn = base.learnData.steps[0];
+  const learn = requireDefined(base.learnData.steps[0], "base.learnData.steps[0]");
   const vocabulary = [
     ["There's been a change of plans.", 'a change of plans', '予定が変わりました。'],
     ["We're meeting at the Gojo Art Room instead.", 'instead', '代わりに五条アートルームで会います。'],
@@ -39,7 +40,7 @@ export function buildLesson6(previous: any, apiBase: string, reference?: any) {
     'The place and time have changed, but the exhibition is still on Sunday, not Saturday.',
     'Leo, please do not share the old poster. Call the teacher first and check that she knows the new place and time.',
   ];
-  const stepA = [
+  const stepA: [string, string][] = [
     ["There's been a change (of / for) plans.", 'of'],
     ["We're meeting at the gallery (instead / still) of the cafe.", 'instead'],
     ['The new starting time (is / are) three.', 'is'],

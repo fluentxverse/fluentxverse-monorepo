@@ -1,3 +1,4 @@
+import { requireDefined } from '../../shared/requireDefined';
 import { expect, test } from 'bun:test';
 import { buildAfterTruthChapter, buildAfterTruthLesson, afterTruthEpisodes, afterTruthId } from '../content/conversational-skills/ja/level-4-chapter-1/build';
 import { buildTwoCitiesChapter } from '../content/conversational-skills/ja/level-3-chapter-5/build';
@@ -25,7 +26,7 @@ test('continuity retains the hidden dinner instead of reintroducing the removed 
   expect(lessons[1].storyData.currentEpisodeSummary).toContain('false work message');
   expect(lessons[3].missionData.situation).toContain('Ren had expressed feelings before Friday');
   expect(lessons[6].applyData.readingText).toContain('I hid Friday\'s dinner');
-  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(afterTruthEpisodes[storyLessonNumbers[i - 1]].closing);
+  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(afterTruthEpisodes[requireDefined(storyLessonNumbers[i - 1], "storyLessonNumbers[i - 1]")].closing);
 });
 test('direct roles reflect the actual scene and the standardized guides remain intact', () => {
   expect(lessons.map(l => l.missionData.situation.match(/^You are (\w+)/)?.[1])).toEqual(['Leo', 'Emma', 'Claire', 'Emma', 'Emma', 'Leo', 'Claire', 'Emma']);
@@ -77,7 +78,7 @@ test('exercise keys align with complete six-item and four-item branches', () => 
     expect(l.exerciseData.stepBTutorSteps[1].answerKey).toHaveLength(4);
     expect(l.exerciseData.tutorSteps[0].tips[0].text).toContain('actual incorrect responses');
     expect(l.exerciseData.stepBTutorSteps[0].tips[0].text).toContain('record actual mistakes');
-    for (const [sentence, answer] of afterTruthEpisodes[l.lessonNumber as 1].choose) expect(sentence.match(/\(([^)]+)\)/)?.[1].split(' / ')).toContain(answer);
+    for (const [sentence, answer] of afterTruthEpisodes[l.lessonNumber as 1].choose) expect(requireDefined(sentence.match(/\(([^)]+)\)/)?.[1], "sentence.match(/\\(([^)]+)\\)/)?.[1]").split(' / ')).toContain(answer);
     for (const item of afterTruthEpisodes[l.lessonNumber as 1].choices) expect(item[item[3] === 'A' ? 1 : 2]).not.toBe(item[item[3] === 'A' ? 2 : 1]);
   }
 });

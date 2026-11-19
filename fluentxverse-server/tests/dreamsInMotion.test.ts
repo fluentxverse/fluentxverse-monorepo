@@ -1,3 +1,4 @@
+import { requireDefined } from '../../shared/requireDefined';
 import { expect, test } from 'bun:test';
 import { buildDreamsInMotionChapter, buildDreamsInMotionLesson, dreamsInMotionEpisodes, dreamsInMotionId } from '../content/conversational-skills/ja/level-4-chapter-4/build';
 import { buildLittleCloserChapter } from '../content/conversational-skills/ja/level-4-chapter-3/build';
@@ -24,7 +25,7 @@ test('continuity develops the monthly market and all five characters without res
   expect(lessons[0].storyData.previousSummary).toContain('Claire committed to monthly events');
   expect(lessons[0].storyData.previousSummary).toContain('Fukuoka visit remained an unbooked idea');
   expect(lessons[0].storyData.currentEpisodeSummary).toContain('monthly event to grow');
-  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(dreamsInMotionEpisodes[storyLessonNumbers[i - 1]].closing);
+  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(dreamsInMotionEpisodes[requireDefined(storyLessonNumbers[i - 1], "storyLessonNumbers[i - 1]")].closing);
   for (const l of lessons) expect(l.storyData.characters.map((c: any) => c.name).sort()).toEqual(['Claire', 'Emma', 'Leo', 'Nao', 'Ren']);
   expect(lessons[1].storyData.currentEpisodeSummary).toContain('Kamo Collective');
   expect(lessons[7].storyData.nextEpisodeHook).not.toContain('reference outline');
@@ -88,7 +89,7 @@ test('six Step A and four Step B items have complete keys and retain actual-erro
     expect(l.exerciseData.stepBTutorSteps[1].answerKey).toHaveLength(4);
     expect(l.exerciseData.tutorSteps[0].tips[0].text).toContain('actual incorrect responses');
     expect(l.exerciseData.stepBTutorSteps[0].tips[0].text).toContain('record actual mistakes');
-    for (const [sentence, answer] of dreamsInMotionEpisodes[l.lessonNumber as 1].choose) expect(sentence.match(/\(([^)]+)\)/)?.[1].split(' / ')).toContain(answer);
+    for (const [sentence, answer] of dreamsInMotionEpisodes[l.lessonNumber as 1].choose) expect(requireDefined(sentence.match(/\(([^)]+)\)/)?.[1], "sentence.match(/\\(([^)]+)\\)/)?.[1]").split(' / ')).toContain(answer);
     for (const item of dreamsInMotionEpisodes[l.lessonNumber as 1].choices) expect(item[item[3] === 'A' ? 1 : 2]).not.toBe(item[item[3] === 'A' ? 2 : 1]);
   }
 });

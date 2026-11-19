@@ -1,3 +1,4 @@
+import { requireDefined } from '../../../../../shared/requireDefined';
 import { buildNewBeginningLesson, storyLessonNumbers, type Episode, type StoryLessonNumber } from '../level-3-chapter-1/new-beginning';
 
 export const chapter3Episodes: Record<StoryLessonNumber, Episode> = {
@@ -153,7 +154,7 @@ export function buildEverydayLesson(number: StoryLessonNumber, previous: any = {
   const lesson = buildNewBeginningLesson(number, previous, 'https://api.fluentxverse.com', reference, {
     episode: chapter3Episodes[number], id: chapter3Id(number), chapterName: 'Everyday Life & Unexpected Moments',
     setting: 'Kamo House and its cafe in Kyoto, Leo\'s bakery, Emma\'s design work, and Nao\'s gallery exhibition. All story characters are adults.',
-    previousSummary: index === 0 ? 'Chapter 2 ended with Emma accepting Leo\'s invitation to spend time together after their Kyoto outings.' : chapter3Episodes[storyLessonNumbers[index - 1]].closing,
+    previousSummary: index === 0 ? 'Chapter 2 ended with Emma accepting Leo\'s invitation to spend time together after their Kyoto outings.' : chapter3Episodes[requireDefined(storyLessonNumbers[index - 1], "storyLessonNumbers[index - 1]")].closing,
     storyNotes: 'User-supplied eight-episode Chapter 3 plan, mapped to Lessons 1-4 and 6-9; 5 and 10 remain personalized checkpoints. Warm slice-of-life drama: work schedules, cafe staffing, shared dinner, a mistaken assumption, Nao\'s career opportunity, clarification and celebration. Aya is Leo\'s bakery coworker, not his girlfriend. Emma acknowledges her own assumption; Leo explains without accepting blame for having lunch with a coworker. Nao receives an invitation during the same workweek; preparation Thursday, label check Friday, exhibition Saturday ending5, packing until6 and celebration6:30. Use direct role assignments and natural tutor-first dialogue. No new images or Chapter 1/2 scene assets.',
   });
   lesson.storyData.characters = [

@@ -1,3 +1,4 @@
+import { requireDefined } from '../../shared/requireDefined';
 import { expect, test } from 'bun:test';
 import { buildKyotoChapter, buildKyotoLesson, chapter2Episodes, chapter2Id, chapter2Watercolor } from '../content/conversational-skills/ja/level-3-chapter-2/build';
 import { buildChapter } from '../content/conversational-skills/ja/level-3-chapter-1/build';
@@ -35,7 +36,7 @@ test('story continuity includes the train mistake, shared umbrella, blue cup, an
   expect(lessons[6].storyData.nextEpisodeHook).toContain('gives Emma the blue cup');
   expect(lessons[7].storyData.currentEpisodeSummary).toContain('says yes');
   expect(lessons[7].storyData.nextEpisodeHook).toContain('Lesson 10');
-  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(chapter2Episodes[storyLessonNumbers[i - 1]].closing);
+  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(chapter2Episodes[requireDefined(storyLessonNumbers[i - 1], "storyLessonNumbers[i - 1]")].closing);
   expect(lessons[3].storyData.nextEpisodeHook).toContain('Lesson 5 checkpoint');
 });
 test('every lesson has the standard guide structure, complete Japanese support, and assessment-ready exercises', () => {
@@ -65,7 +66,7 @@ test('every lesson has the standard guide structure, complete Japanese support, 
     expect(l.missionData2.topics).toHaveLength(3);
     for (const text of [l.goalTextJp, l.introductionData.introTexts[1].text, l.applyData.situationTranslation, l.missionData.situationTranslation, l.missionData.instructionTranslation, l.applyData.triviaTranslation, ...learn.vocabularyItems.map((v: any) => v.translation)]) expect(text).toMatch(/[ぁ-んァ-ン]/u);
     for (const [sentence, answer] of chapter2Episodes[l.lessonNumber as 1].choose) {
-      const choice = sentence.match(/\(([^)]+)\)/)?.[1].split(' / ');
+      const choice = requireDefined(sentence.match(/\(([^)]+)\)/)?.[1], "sentence.match(/\\(([^)]+)\\)/)?.[1]").split(' / ');
       expect(choice).toBeDefined();
       expect(choice).toContain(answer);
     }

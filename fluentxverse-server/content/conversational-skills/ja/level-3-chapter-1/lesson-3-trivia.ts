@@ -5,7 +5,7 @@ export const lesson3Trivia = {
   source: 'https://hogeveluwe.nl/en/plan-your-trip/experience-the-park/cycling',
 };
 
-export function updateLesson3Trivia(current: Record<string, any>) {
+export function updateLesson3Trivia<T extends Record<string, any>>(current: T) {
   const questionSteps = current.triviaTutorSteps?.filter((step: any) => step.questions?.length);
   if (!current.triviaEnabled || questionSteps?.length !== 1 || questionSteps[0].questions.length !== 1) {
     throw new Error('Expected enabled trivia with one discussion question. Review current content first.');

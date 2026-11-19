@@ -1,3 +1,4 @@
+import { requireDefined } from '../../../../../shared/requireDefined';
 import { buildNewBeginningLesson, storyLessonNumbers, type Episode, type StoryLessonNumber } from '../level-3-chapter-1/new-beginning';
 
 export const chapter5Episodes: Record<StoryLessonNumber, Episode> = {
@@ -162,10 +163,10 @@ export function buildTwoCitiesLesson(number: StoryLessonNumber, previous: any = 
   const lesson = buildNewBeginningLesson(number, previous, 'https://api.fluentxverse.com', reference, {
     episode: chapter5Episodes[number], id: chapter5Id(number), chapterName: 'Two Cities, One Secret',
     setting: 'Kamo House and Kyoto, with a fictional design agency and nearby lunch places in Osaka.',
-    previousSummary: index === 0 ? 'The Osaka agency is considering Emma\'s request for two office days and three days working from Kyoto. She and Leo are waiting for the final answer.' : chapter5Episodes[storyLessonNumbers[index - 1]].closing,
+    previousSummary: index === 0 ? 'The Osaka agency is considering Emma\'s request for two office days and three days working from Kyoto. She and Leo are waiting for the final answer.' : chapter5Episodes[requireDefined(storyLessonNumbers[index - 1], "storyLessonNumbers[index - 1]")].closing,
     storyNotes: 'Adapted from the supplied eight-episode Chapter 5 outline. Slots1-4/6-9;5/10 remain dynamic checkpoints. Same speaking/listening/reading/speaking then speaking/speaking/reading/speaking pattern. Agency approves hybrid Monday morning before Chapter4 deadline; Emma accepts and starts following month with Monday/Friday office and three Kyoto workdays. Lesson6 extra Thursday office/gathering is separate from Lesson7 Friday private dinner. Replace original physical-intimacy incident entirely with a hidden private dinner and false work message; do not add physical intimacy. Lesson7 boundary call is to Ren, not a disclosure to Leo. Lesson8 Saturday advice, Sunday6 cafe plan, Monday10 office handover. Lesson9 Ren message reveals dinner, Emma admits truth, Leo asks for time. Relationship outcome remains unresolved. Short supported B1 language, Japanese, direct roles, tutor-first dialogue and fixed guides/rubric; no mandatory monologue, optional-character disclaimers or new images. Evaluate observed language and comprehension, not a required emotional performance or forgiveness.',
   });
-  const pronunciation = pronunciationSets[index % pronunciationSets.length];
+  const pronunciation = requireDefined(pronunciationSets[index % pronunciationSets.length], "pronunciationSets[index % pronunciationSets.length]");
   lesson.learnData.steps[0].pronunciationPart = {
     instruction: 'III. Listen and repeat. Practise the difference between the sounds.',
     instructionTranslation: '聞いて繰り返しましょう。二つの音の違いを練習しましょう。',

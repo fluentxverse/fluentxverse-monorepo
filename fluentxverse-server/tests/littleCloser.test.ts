@@ -1,3 +1,4 @@
+import { requireDefined } from '../../shared/requireDefined';
 import { expect, test } from 'bun:test';
 import { buildLittleCloserChapter, buildLittleCloserLesson, littleCloserEpisodes, littleCloserId } from '../content/conversational-skills/ja/level-4-chapter-3/build';
 import { buildNewPathsChapter } from '../content/conversational-skills/ja/level-4-chapter-2/build';
@@ -25,7 +26,7 @@ test('continuity preserves the breakup while making Emma and Ren\'s new decision
   expect(lessons[0].missionData.situation).toContain('arrived at 5:45');
   expect(lessons[1].storyData.currentEpisodeSummary).toContain('mutually decide');
   expect(lessons[1].storyData.currentEpisodeSummary).toContain('kept their work contact professional');
-  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(littleCloserEpisodes[storyLessonNumbers[i - 1]].closing);
+  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(littleCloserEpisodes[requireDefined(storyLessonNumbers[i - 1], "storyLessonNumbers[i - 1]")].closing);
   expect(lessons[3].storyData.currentEpisodeSummary).toContain('salt');
   expect(lessons[4].storyData.currentEpisodeSummary).toContain('not use the relationship to forget Emma');
   expect(lessons[7].storyData.nextEpisodeHook).toContain('without reuniting');
@@ -84,7 +85,7 @@ test('six Step A and four Step B exercise items retain aligned keys and actual-m
     expect(l.exerciseData.stepBTutorSteps[1].answerKey).toHaveLength(4);
     expect(l.exerciseData.tutorSteps[0].tips[0].text).toContain('actual incorrect responses');
     expect(l.exerciseData.stepBTutorSteps[0].tips[0].text).toContain('record actual mistakes');
-    for (const [sentence, answer] of littleCloserEpisodes[l.lessonNumber as 1].choose) expect(sentence.match(/\(([^)]+)\)/)?.[1].split(' / ')).toContain(answer);
+    for (const [sentence, answer] of littleCloserEpisodes[l.lessonNumber as 1].choose) expect(requireDefined(sentence.match(/\(([^)]+)\)/)?.[1], "sentence.match(/\\(([^)]+)\\)/)?.[1]").split(' / ')).toContain(answer);
     for (const item of littleCloserEpisodes[l.lessonNumber as 1].choices) expect(item[item[3] === 'A' ? 1 : 2]).not.toBe(item[item[3] === 'A' ? 2 : 1]);
   }
 });

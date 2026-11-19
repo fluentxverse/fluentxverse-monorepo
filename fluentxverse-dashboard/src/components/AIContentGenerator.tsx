@@ -309,6 +309,10 @@ export function AIContentGenerator({
   const currentSectionConfig = SECTIONS.find(s => s.id === activeSection)!;
 
   const handleGenerateIntroduction = async () => {
+    if (skill === 'review') {
+      setError('Review checkpoints are generated from lesson evidence, not the content generator.');
+      return;
+    }
     if (!topic || !skillLevel) {
       setError('Please fill in topic and skill level first');
       return;

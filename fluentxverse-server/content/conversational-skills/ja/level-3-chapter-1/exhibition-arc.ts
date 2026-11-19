@@ -1,3 +1,4 @@
+import { requireDefined } from '../../../../../shared/requireDefined';
 import { buildLesson6 } from './lesson-6-listening';
 import { buildLesson7, lesson7Notices } from './lesson-7-reading';
 import { buildStepBTutorGuide } from './standardize-tutor-guides';
@@ -96,7 +97,7 @@ const episodes: Record<EpisodeNumber, Episode> = {
 export function buildArcLesson(number: EpisodeNumber, previous: any, apiBase: string, reference?: any) {
   const spec = episodes[number], skill = exhibitionArcSkills[number], reading = skill === 'reading';
   const base = number === 7 || number === 8 ? buildLesson7(previous, apiBase, reference) : buildLesson6(previous, apiBase, reference);
-  const learn = base.learnData.steps[0];
+  const learn = requireDefined(base.learnData.steps[0], "base.learnData.steps[0]");
   const questionItems = (items: Pair[]) => items.map(([question, answer]) => ({ question, answer }));
   const missionSteps: any[] = [{ instruction: 'Read the situation and instructions, then check understanding.', scripts: bullets(['Please read the situation and instructions. Is it clear?']), tips: bullets(['Keep the task information visible. Accept short, clear sentences.']) }];
   if (reading) missionSteps.push({ instruction: 'Ask the student to read the complete notices before the roleplay.', scripts: bullets(['Please read both notices aloud. Compare the place, time, entrance, and workshop conditions.']), tips: bullets(['Correct at most two or three important pronunciation errors after reading. Keep the notices visible.']) });

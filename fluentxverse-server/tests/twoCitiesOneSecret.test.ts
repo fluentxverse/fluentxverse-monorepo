@@ -1,3 +1,4 @@
+import { requireDefined } from '../../shared/requireDefined';
 import { expect, test } from 'bun:test';
 import { buildTwoCitiesChapter, buildTwoCitiesLesson, chapter5Episodes, chapter5Id } from '../content/conversational-skills/ja/level-3-chapter-5/build';
 import { buildCareerChapter } from '../content/conversational-skills/ja/level-3-chapter-4/build';
@@ -40,7 +41,7 @@ test('approved hybrid terms continue Chapter 4 without changing its unresolved e
   expect(lessons[0].storyData.currentEpisodeSummary).toContain('before the reply deadline');
   expect(lessons[0].missionData.situation).toContain('Mondays and Fridays');
   expect(lessons[0].missionData.tutorSteps[1].tips[1].text).toContain('Hybrid work is approved now');
-  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(chapter5Episodes[storyLessonNumbers[i - 1]].closing);
+  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(chapter5Episodes[requireDefined(storyLessonNumbers[i - 1], "storyLessonNumbers[i - 1]")].closing);
   expect(lessons[4].storyData.currentEpisodeSummary).toContain('extra Thursday');
   expect(lessons[5].storyData.currentEpisodeSummary).toStartWith('On Friday');
   expect(lessons[6].missionData.readingPassage.blocks[0].content).toContain('Sunday at 6 p.m.');
@@ -82,7 +83,7 @@ test('exercises have six and four keyed items and retain marking and note instru
     expect(l.exerciseData.stepBTutorSteps[1].answerKey).toHaveLength(4);
     expect(l.exerciseData.tutorSteps[0].tips[0].text).toContain('actual incorrect responses');
     expect(l.exerciseData.stepBTutorSteps[0].tips[0].text).toContain('record actual mistakes');
-    for (const [sentence, answer] of chapter5Episodes[l.lessonNumber as 1].choose) expect(sentence.match(/\(([^)]+)\)/)?.[1].split(' / ')).toContain(answer);
+    for (const [sentence, answer] of chapter5Episodes[l.lessonNumber as 1].choose) expect(requireDefined(sentence.match(/\(([^)]+)\)/)?.[1], "sentence.match(/\\(([^)]+)\\)/)?.[1]").split(' / ')).toContain(answer);
     for (const item of chapter5Episodes[l.lessonNumber as 1].choices) expect(item[item[3] === 'A' ? 1 : 2]).not.toBe(item[item[3] === 'A' ? 2 : 1]);
     expect(new Set(l.exerciseData.chooseItems.map((i: any) => i.sentence)).size).toBe(6);
   }

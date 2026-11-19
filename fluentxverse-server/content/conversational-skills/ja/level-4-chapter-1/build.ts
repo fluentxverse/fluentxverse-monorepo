@@ -1,3 +1,4 @@
+import { requireDefined } from '../../../../../shared/requireDefined';
 import { buildNewBeginningLesson, storyLessonNumbers, type Episode, type StoryLessonNumber } from '../level-3-chapter-1/new-beginning';
 
 export const afterTruthEpisodes: Record<StoryLessonNumber, Episode> = {
@@ -154,7 +155,7 @@ export function buildAfterTruthLesson(number: StoryLessonNumber, previous: any =
   const lesson = buildNewBeginningLesson(number, previous, 'https://api.fluentxverse.com', reference, {
     episode: afterTruthEpisodes[number], id: afterTruthId(number), chapterName: 'After the Truth',
     setting: 'Kamo House cafe and the Kamo River in Kyoto; a fictional Osaka design agency. The final email comes from Leo\'s former manager in Bristol.',
-    previousSummary: index === 0 ? 'Leo discovered the hidden Friday dinner and Emma\'s false work message. He left the cafe needing time; their relationship outcome was unresolved.' : afterTruthEpisodes[storyLessonNumbers[index - 1]].closing,
+    previousSummary: index === 0 ? 'Leo discovered the hidden Friday dinner and Emma\'s false work message. He left the cafe needing time; their relationship outcome was unresolved.' : afterTruthEpisodes[requireDefined(storyLessonNumbers[index - 1], "storyLessonNumbers[index - 1]")].closing,
     storyNotes: 'Adapted from the supplied After the Truth outline, retaining the Level 3 Chapter 5 replacement event: hidden private dinner and false work message, never physical intimacy. Slots1-4/6-9;5/10 remain dynamic personalized checkpoints. Same speaking/listening/reading/speaking then speaking/speaking/reading/speaking pattern. Use supported B1 language with a few scaffolded B2 forms, not long speeches. Monday morning support and office handover; Tuesday opinions; Thursday river explanation still unresolved; Friday project work; later day-off photo walk; boundary decision and letter; Saturday4 cafe goodbye after Leo has read it. Leo does end the relationship in Lesson9. Only afterward does the Bristol opportunity arrive; no acceptance or move is invented. Claire checks permission before passing a letter. Nao is supportive, not a new romance. The story continues in Level 4 Chapters 2-5; do not invent future outlines. Japanese support, direct roles including Leo/Claire when appropriate, fixed guide structure/rubric and observed mistakes only. No new images.',
   });
   lesson.storyData.characters = [

@@ -1,3 +1,4 @@
+import { requireDefined } from '../../shared/requireDefined';
 import { expect, test } from 'bun:test';
 import { buildEverydayChapter, buildEverydayLesson, chapter3Episodes, chapter3Id } from '../content/conversational-skills/ja/level-3-chapter-3/build';
 import { buildChapter } from '../content/conversational-skills/ja/level-3-chapter-1/build';
@@ -64,7 +65,7 @@ test('standard guides, bilingual support and exercise keys are complete in all e
     expect(l.exerciseData.stepBTutorSteps[1].answerKey).toHaveLength(4);
     expect(l.exerciseData.tutorSteps[0].tips[0].text).toContain('incorrect');
     for (const text of [l.goalTextJp, l.introductionData.introTexts[1].text, l.applyData.situationTranslation, l.missionData.situationTranslation, l.missionData.instructionTranslation, ...learn.vocabularyItems.map((v: any) => v.translation)]) expect(text).toMatch(/[ぁ-んァ-ン]/u);
-    for (const [sentence, answer] of chapter3Episodes[l.lessonNumber as 1].choose) expect(sentence.match(/\(([^)]+)\)/)?.[1].split(' / ')).toContain(answer);
+    for (const [sentence, answer] of chapter3Episodes[l.lessonNumber as 1].choose) expect(requireDefined(sentence.match(/\(([^)]+)\)/)?.[1], "sentence.match(/\\(([^)]+)\\)/)?.[1]").split(' / ')).toContain(answer);
   }
 });
 test('speaking remains short, tutor-first dialogue and listening evidence remains private', () => {
@@ -109,7 +110,7 @@ test('reading challenges supply fresh evidence and the schedule stays internally
   expect(messages).toContain('pack until six');
   expect(messages).toContain('Kamo House at 6:30');
   expect(lessons[7].missionData.situation).toContain('next Sunday after 5 p.m.');
-  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(chapter3Episodes[storyLessonNumbers[i - 1]].closing);
+  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(chapter3Episodes[requireDefined(storyLessonNumbers[i - 1], "storyLessonNumbers[i - 1]")].closing);
 });
 test('checkpoint slots stay dynamic and existing identity and fixed feedback remain unchanged', () => {
   const slots = addAvailableCheckpoints(lessons.map(l => ({ ...l, status: 'published' }))).filter(l => [5, 10].includes(l.lessonNumber));

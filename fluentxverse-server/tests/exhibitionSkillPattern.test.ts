@@ -11,8 +11,9 @@ const lessons = ([6, 7, 8, 9] as const).map(number => ({ course: 'conversational
 test('corrected pattern changes active skills and activities without changing IDs', () => {
   expect(lessons.map(lesson => lesson.skill)).toEqual(['speaking', 'speaking', 'reading', 'speaking']);
   for (const lesson of lessons) {
-    expect(lesson.skill).toBe(exhibitionArcSkills[lesson.lessonNumber]);
-    expect(lesson.id).toBe(exhibitionArcIds[lesson.lessonNumber]);
+    const number = lesson.lessonNumber as keyof typeof exhibitionArcSkills;
+    expect(lesson.skill).toBe(exhibitionArcSkills[number]);
+    expect(lesson.id).toBe(exhibitionArcIds[number]);
     expect(lesson.applyData.activityType).toBe(lesson.skill);
     expect(lesson.missionData.missionType).toBe(lesson.skill);
     expect(conversationalLessonErrors(lesson)).toEqual([]);

@@ -1,3 +1,4 @@
+import { requireDefined } from '../../../../../shared/requireDefined';
 import { buildNewBeginningLesson, storyLessonNumbers, type Episode, type StoryLessonNumber } from '../level-3-chapter-1/new-beginning';
 
 export const chapter4Episodes: Record<StoryLessonNumber, Episode> = {
@@ -153,7 +154,7 @@ export function buildCareerLesson(number: StoryLessonNumber, previous: any = {},
   const lesson = buildNewBeginningLesson(number, previous, 'https://api.fluentxverse.com', reference, {
     episode: chapter4Episodes[number], id: chapter4Id(number), chapterName: 'Work, Dreams & Decisions',
     setting: 'Kamo House cafe and Leo\'s bakery in Kyoto, Nao\'s ceramics orders, and a fictional Osaka design agency.',
-    previousSummary: index === 0 ? 'After Chapter 3, Nao has completed her gallery exhibition, Claire is developing the cafe community, and Emma and Leo are communicating more openly.' : chapter4Episodes[storyLessonNumbers[index - 1]].closing,
+    previousSummary: index === 0 ? 'After Chapter 3, Nao has completed her gallery exhibition, Claire is developing the cafe community, and Emma and Leo are communicating more openly.' : chapter4Episodes[requireDefined(storyLessonNumbers[index - 1], "storyLessonNumbers[index - 1]")].closing,
     storyNotes: 'Based on the supplied Chapter 4 fragment. Opening episodes A Message from Osaka and Leo\'s New Challenge are newly authored to introduce the interview and pastry brief before the supplied workshop/customer/interview/success/choice/decision episodes. Eight episodes map to Lessons 1-4 and 6-9. Use short A2-B1 language, direct character roles, natural tutor-first dialogue, Japanese support and the fixed guide/rubric. Each main character has a professional goal. Interview nextTuesday10; manager tasting nextWednesday3, friends\' preview Sunday4 with feedbackMonday evening. Workshop costs and ceramic order prices are fictional teaching figures, not market prices. Hybrid2office/3Kyoto is Emma\'s requested arrangement only; current offer remains5office. End with recruiter considering request, no approval, acceptance or move. Checkpoints5/10 remain dynamic. No new images.',
   });
   lesson.storyData.characters = [

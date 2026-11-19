@@ -1,3 +1,4 @@
+import { requireDefined } from '../../../../../shared/requireDefined';
 import { buildNewBeginningLesson, storyLessonNumbers, type Episode, type StoryLessonNumber } from '../level-3-chapter-1/new-beginning';
 
 export const chapter2Episodes: Record<StoryLessonNumber, Episode> = {
@@ -158,7 +159,7 @@ export function buildKyotoLesson(number: StoryLessonNumber, previous: any = {}, 
   const lesson = buildNewBeginningLesson(number, previous, 'https://api.fluentxverse.com', reference, {
     episode: chapter2Episodes[number], id: chapter2Id(number), chapterName: 'Exploring Kyoto',
     setting: 'Kyoto, Japan: Kamo House cafe, train journeys, Gion, Nishiki Market, Arashiyama, Kiyomizu-dera, a ceramics shop, and the Kamo River. All four recurring characters are adults.',
-    previousSummary: index === 0 ? 'After Chapter 1, Emma has settled into Kamo House and found friendship through the cafe exhibition.' : chapter2Episodes[storyLessonNumbers[index - 1]].closing,
+    previousSummary: index === 0 ? 'After Chapter 1, Emma has settled into Kamo House and found friendship through the cafe exhibition.' : chapter2Episodes[requireDefined(storyLessonNumbers[index - 1], "storyLessonNumbers[index - 1]")].closing,
     storyNotes: 'Based on the user-supplied Exploring Kyoto story. Eight episodes map to Lessons 1-4 and 6-9; 5 and 10 remain personalized checkpoints. Light romance develops only between fictional adult Emma and Leo; learner roles remain optional and consent-respecting. Kyoto locations supply story context, not live travel advice. Routes, shops, prices, product rules, times and station details are fictional teaching examples, explicitly labeled where used. Use approved Chapter 2 artwork only; no inherited Chapter 1 scene assets or subplot. Keep language A2-B1, short dialogues and tutor-first roleplays. Never require personal romantic disclosures.',
   });
   if (number === 1 || number === 2 || number === 3 || number === 4 || number === 6 || number === 7 || number === 8 || number === 9) {

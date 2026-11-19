@@ -145,7 +145,7 @@ export function mountDispatchArticle(host: HTMLElement, options: DispatchRendere
       heading.append(element('span', 'ddp-vocab-word', word.word));
       if (word.pronunciation) heading.append(element('span', 'ddp-vocab-pronunciation', word.pronunciation));
       if (word.partOfSpeech) heading.append(element('span', 'ddp-vocab-pos', `(${word.partOfSpeech})`));
-      for (const [label, value] of [['Meaning:', word.definition], [tutor ? 'Usage:' : 'Example:', word.exampleSentence], ['Note:', word.additionalInfo]]) {
+      for (const [label, value] of [['Meaning:', word.definition], [tutor ? 'Usage:' : 'Example:', word.exampleSentence], ['Note:', word.additionalInfo]] as const) {
         if (!value) continue;
         const paragraph = element('p'); paragraph.append(element('strong', '', label), document.createTextNode(' ' + value)); body.append(paragraph);
       }

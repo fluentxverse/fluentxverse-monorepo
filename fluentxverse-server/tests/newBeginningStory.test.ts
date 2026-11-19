@@ -1,3 +1,4 @@
+import { requireDefined } from '../../shared/requireDefined';
 import { expect, test } from 'bun:test';
 import { buildChapter } from '../content/conversational-skills/ja/level-3-chapter-1/build';
 import { buildNewBeginningLesson, newBeginningEpisodes, newBeginningIds, newBeginningWatercolor, storyLessonNumbers } from '../content/conversational-skills/ja/level-3-chapter-1/new-beginning';
@@ -48,7 +49,7 @@ test('new story events and chronological transitions follow the user narrative',
   expect(newBeginningEpisodes[7].intro[0]).toContain('oven breaks');
   expect(newBeginningEpisodes[8].closing).toContain('proud');
   expect(newBeginningEpisodes[9].intro[0]).toContain('Kamo River');
-  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(newBeginningEpisodes[storyLessonNumbers[i - 1]].closing);
+  for (let i = 1; i < lessons.length; i++) expect(lessons[i].storyData.previousSummary).toBe(newBeginningEpisodes[requireDefined(storyLessonNumbers[i - 1], "storyLessonNumbers[i - 1]")].closing);
 });
 test('all eight retain standardized guides, Japanese support, fixed feedback and exercise markings', () => {
   for (const lesson of lessons) {

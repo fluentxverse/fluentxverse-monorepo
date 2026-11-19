@@ -4,6 +4,7 @@ import { buildLesson2 } from '../content/conversational-skills/ja/level-3-chapte
 import { buildLesson3 } from '../content/conversational-skills/ja/level-3-chapter-1/lesson-3-reading';
 import { buildLesson4 } from '../content/conversational-skills/ja/level-3-chapter-1/lesson-4-speaking';
 import { conversationalLessonErrors } from '../src/utils/conversationalLessonValidation';
+import { newBeginningWatercolor, type StoryLessonNumber } from '../content/conversational-skills/ja/level-3-chapter-1/new-beginning';
 
 const chapter = buildChapter('http://localhost:8765');
 describe('Japanese Level 3 Chapter 1', () => {
@@ -13,7 +14,7 @@ describe('Japanese Level 3 Chapter 1', () => {
       expect(conversationalLessonErrors(lesson)).toEqual([]);
       expect(lesson.applyData.activityType).toBe(lesson.skill);
       expect(lesson.missionData.missionType).toBe(lesson.skill);
-      expect(lesson.introductionData.introTexts.find(t => t.language === 'ja')?.text).toMatch(/[ぁ-んァ-ン]/u);
+      expect(lesson.introductionData.introTexts.find((t: { language: string; text: string }) => t.language === 'ja')?.text).toMatch(/[ぁ-んァ-ン]/u);
       expect(JSON.stringify(lesson)).not.toMatch(/[\uac00-\ud7af\u1100-\u11ff\u3130-\u318f]/u);
     }
     expect(new Set(chapter.map(l => l.skill)).size).toBe(3);
@@ -36,7 +37,7 @@ describe('Japanese Level 3 Chapter 1', () => {
       expect(lesson.applyData.situationTranslation).toMatch(/[ぁ-んァ-ン]/u);
     }
     for (const lesson of chapter.filter(lesson => lesson.skill === 'speaking' && [5, 10].includes(lesson.lessonNumber))) {
-      const roleplayStep = lesson.missionData.tutorSteps.find(step => step.instruction.includes('roleplay'));
+      const roleplayStep = lesson.missionData.tutorSteps.find((step: { instruction: string }) => step.instruction.includes('roleplay'));
       expect(roleplayStep?.instruction).toContain('tutor always speaks first');
       expect(roleplayStep?.scripts?.[0]?.text).toMatch(/^1\.\s*(Hi|Hello|Where|What|Who|Do|Are|Is|Can)/);
     }
@@ -178,12 +179,12 @@ describe('Japanese Level 3 Chapter 1', () => {
       expect(lesson.feedbackData.rubricTitle).toBe('LESSON OBJECTIVE ACHIEVEMENT');
       expect(lesson.applyData.triviaTutorSteps[1].instruction).toContain('student to read');
       expect(lesson.storyData.setting).toContain('Kyoto');
-      expect(lesson.backgroundImage).toBe('');
-      expect(lesson.introductionData.introImage).toBe('');
-      expect(lesson.applyData.situationImage).toBe('');
+      const artwork = newBeginningWatercolor(lesson.lessonNumber as StoryLessonNumber, 'http://localhost:8765');
+      expect(lesson.backgroundImage).toBe(artwork.introduce);
+      expect(lesson.introductionData.introImage).toBe(artwork.introduce);
+      expect(lesson.applyData.situationImage).toBe(artwork.apply);
       expect(lesson.applyData.triviaImage).toBe('');
-      expect(lesson.missionData.image).toBe('');
-      expect(JSON.stringify(lesson)).not.toMatch(/https?:\/\/[^" ]+\.(?:webp|png|jpe?g)/i);
+      expect(lesson.missionData.image).toBe(artwork.challenge1);
       expect(JSON.stringify(lesson)).not.toMatch(/[\uac00-\ud7af\u1100-\u11ff\u3130-\u318f]/u);
     }
     expect(arc[0]?.storyData.nextEpisodeHook).toContain('problem at the bakery');
