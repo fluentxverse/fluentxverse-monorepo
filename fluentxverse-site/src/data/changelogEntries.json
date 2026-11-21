@@ -2,6 +2,18 @@
   "schemaVersion": 1,
   "entries": [
     {
+      "id": "FXV-20261121-001",
+      "date": "2026-11-21",
+      "apps": ["dashboard"],
+      "type": "added",
+      "title": "Fluent Kids previews in Lesson Material Maker",
+      "summary": "Fluent Kids replaces the Young Learners card in the dashboard and organizes its materials by level, unit, and lesson.",
+      "details": [
+        "The preview supports separate student and tutor views and activities for ages 6–8 and 9–12.",
+        "Switch between English with Japanese translations and English-only practice. The preview supports interactive answer checks and picture reveals."
+      ]
+    },
+    {
       "id": "FXV-20261111-001",
       "date": "2026-11-11",
       "apps": ["student", "tutor", "dashboard"],

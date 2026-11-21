@@ -1,4 +1,5 @@
 import { learningCategoryLabel } from '../../../shared/learningTerminology';
+import { FLUENT_KIDS_NAME, PARK_CLASSROOM_MATERIAL, PARK_LESSON_HREF, PARK_LESSON_ID } from '../../../shared/fluentKids/curriculum';
 import ClassroomChatPanels, { ClassroomChatTools } from '../../../shared/ui/ClassroomChatPanels';
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component } from "solid-js";
 import { Portal } from "solid-js/web";
@@ -1231,7 +1232,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
     const courses = [
         { id: 'conversational-skills', name: 'Conversational Skills', icon: '💬', description: 'Conversation lessons for practical speaking practice.' },
         { id: 'business-english', name: 'Business English', icon: '💼', description: 'Workplace English lessons and professional scenarios.' },
-        { id: 'young-learners', name: 'Young Learners', icon: '🎨', description: 'Visual lessons designed for younger students.' },
+        { id: 'young-learners', name: FLUENT_KIDS_NAME, icon: '🎨', description: 'Illustrated speaking lessons for ages 6–12.' },
         { id: 'daily-dispatch', name: 'Daily Dispatch', icon: '📰', description: 'News-based reading and discussion material.' },
     ];
     const isLessonMaterialCourse = (courseId?: string | null) => courseId === 'conversational-skills' || courseId === 'business-english';
@@ -1317,7 +1318,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
             return `/materials/conversational-skills/${lessonId}`;
         }
         if (courseId === 'young-learners') {
-            return `/materials/young-learners/lesson/${lessonId}`;
+            return lessonId === PARK_LESSON_ID ? PARK_LESSON_HREF : `/materials/young-learners/lesson/${encodeURIComponent(lessonId)}`;
         }
         if (courseId === 'business-english') {
             return `/materials/business-english/${lessonId}`;
@@ -1363,7 +1364,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
             : studentLessonRequest()?.courseId === 'business-english'
                 ? 'Business English'
                 : studentLessonRequest()?.courseId === 'young-learners'
-                    ? 'Young Learners'
+                    ? FLUENT_KIDS_NAME
                     : 'Lesson Material');
     const materialTabIconClass = createMemo(() => viewingDispatchArticle() ? 'fas fa-newspaper'
         : viewingConversationalLesson() ? 'fas fa-comments'
@@ -1923,6 +1924,10 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
         if (courseId === 'daily-dispatch') {
             return;
         }
+        const fluentKidsLessons = courseId === 'young-learners'
+            ? [transformLessonMaterialToLesson(PARK_CLASSROOM_MATERIAL)]
+            : [];
+        if (fluentKidsLessons.length) setAvailableLessons(fluentKidsLessons);
         if (courseId === 'business-english') {
             const cachedLessons = materialCourseCacheRef.current[courseId] || readCachedBusinessEnglishLessonList<Lesson>(courseId);
             if (cachedLessons?.length) {
@@ -1963,7 +1968,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
                 if (loadId !== materialLoadIdRef.current)
                     return;
                 if (result.success && result.lessons) {
-                    setAvailableLessons(result.lessons);
+                    setAvailableLessons([...fluentKidsLessons, ...result.lessons]);
                 }
             }
         }
@@ -3309,7 +3314,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
                     setShowLessonRequest(false);
                 }}/>)}
                 
-                {showSelectedCourseDetails() && selectedCourse() !== 'daily-dispatch' && (<CurriculumMaterialPicker loading={loadingMaterials()} currentId={studentLessonRequest()?.courseId === selectedCourse() ? studentLessonRequest().lessonId : undefined} materials={availableLessons().map(item => ({
+                {showSelectedCourseDetails() && selectedCourse() !== 'daily-dispatch' && (<CurriculumMaterialPicker groupLabel={selectedCourse() === 'young-learners' ? 'Unit' : 'Chapter'} loading={loadingMaterials()} currentId={studentLessonRequest()?.courseId === selectedCourse() ? studentLessonRequest().lessonId : undefined} materials={availableLessons().map(item => ({
                     id: item.id, title: item.title, level: getLevelNumber(item),
                     chapter: getChapterNumber(item), lesson: getLessonNumber(item),
                     goal: item.lessonData?.header?.goalText || ''

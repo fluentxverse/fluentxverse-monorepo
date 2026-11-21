@@ -15,10 +15,12 @@ interface Props {
     materials: CurriculumMaterial[];
     loading: boolean;
     currentId?: string;
+    groupLabel?: 'Chapter' | 'Unit';
     onOpen: (material: CurriculumMaterial) => void;
     actionLabel?: string;
 }
 export default function CurriculumMaterialPicker(_props0: Props) {
+    const groupLabel = () => _props0.groupLabel ?? 'Chapter';
     const [level, setLevel] = createSignal('');
     const [chapter, setChapter] = createSignal('');
     const [lesson, setLesson] = createSignal('');
@@ -35,7 +37,7 @@ export default function CurriculumMaterialPicker(_props0: Props) {
     const pages = createMemo(() => Math.max(1, Math.ceil(matches().length / pageSize)));
     const activePage = createMemo(() => Math.min(page(), pages() - 1));
     const renderMaterial = (item: CurriculumMaterial) => <div class="dp-article">
-    <span class="dp-material-position">L{item.level} / Ch{item.chapter}<br />Lesson {item.lesson}</span>
+    <span class="dp-material-position">L{item.level} / {groupLabel() === 'Unit' ? 'Unit ' : 'Ch'}{item.chapter}<br />Lesson {item.lesson}</span>
     <div class="dp-article-copy"><strong title={item.goal ? `${item.title}\n${item.goal}` : item.title}>{item.title}</strong></div>
     <button type="button" class="dp-open" aria-label={`${(_props0["actionLabel"] === undefined ? 'Open lesson' : _props0["actionLabel"]) === 'Open lesson' ? 'Open material' : _props0["actionLabel"] === undefined ? 'Open lesson' : _props0["actionLabel"]}: ${item.title}`} onClick={() => _props0["onOpen"](item)}><BookOpen size={16}/><span>{_props0["actionLabel"] === undefined ? 'Open lesson' : _props0["actionLabel"]}</span></button>
   </div>;
@@ -48,7 +50,7 @@ export default function CurriculumMaterialPicker(_props0: Props) {
       <header class="dp-heading"><h3><img src="/assets/img/home-icons/training-v1.webp" alt=""/>Curriculum library</h3><span>{_props0["loading"] ? 'Loading' : `${matches().length} lessons`}</span></header>
       <div class="dp-filters">
         <label>Level<select aria-label="Level" value={level()} onChange={event => { setLevel(event.currentTarget.value); setChapter(''); setLesson(''); setPage(0); }}><option value="">All levels</option>{levels().map(value => <option value={value}>Level {value}</option>)}</select></label>
-        <label>Chapter<select aria-label="Chapter" value={chapter()} onChange={event => { setChapter(event.currentTarget.value); setLesson(''); setPage(0); }}><option value="">All chapters</option>{chapters().map(value => <option value={value}>Chapter {value}</option>)}</select></label>
+        <label>{groupLabel()}<select aria-label={groupLabel()} value={chapter()} onChange={event => { setChapter(event.currentTarget.value); setLesson(''); setPage(0); }}><option value="">All {groupLabel().toLowerCase()}s</option>{chapters().map(value => <option value={value}>{groupLabel()} {value}</option>)}</select></label>
         <label>Lesson<select aria-label="Lesson" value={lesson()} onChange={event => { setLesson(event.currentTarget.value); setPage(0); }}><option value="">All lessons</option>{lessons().map(value => <option value={value}>Lesson {value}</option>)}</select></label>
       </div>
       <div class="dp-results" aria-live="polite">

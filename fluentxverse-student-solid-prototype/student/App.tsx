@@ -37,6 +37,12 @@ const Conversation = page(() => import('./pages/ConversationalSkillsPage'));
 const ConversationLesson = page(() => import('./pages/ConversationalSkillsLessonPage'));
 const Young = page(() => import('./pages/YoungLearnersPage'));
 const YoungLesson = page(() => import('./pages/YoungLearnersLessonPage'));
+const FluentKids = page(() => import('../../shared/fluentKids/SolidPages').then(module => ({
+  default: () => <module.FluentKidsLibrary legacyHref="/young-learners" />,
+})));
+const FluentKidsLesson = page(() => import('../../shared/fluentKids/SolidPages').then(module => ({
+  default: () => <module.FluentKidsLesson id={useParams().id} audience="student" />,
+})));
 const LessonView = page(() => import('./pages/LessonViewPage'));
 const Tickets = page(() => import('./pages/TicketsPage'));
 const Purchases = page(() => import('./pages/PurchaseHistoryPage'));
@@ -101,6 +107,8 @@ export default function App() {
     <Route path="/materials/conversational-skills/:id" component={ConversationLesson} />
     <Route path="/young-learners" component={protect(Young)} />
     <Route path="/young-learners/lesson/:id" component={YoungLesson} />
+    <Route path="/materials/fluent-kids" component={protect(FluentKids)} />
+    <Route path="/materials/fluent-kids/lesson/:id" component={protect(FluentKidsLesson)} />
     <Route path="/lesson/view" component={LessonView} />
     <Route path="/conversation-mat/:level/:chapter/:goalSlug" component={LessonView} />
     <Route path="/tickets" component={TICKETING_VISIBLE ? protect(Tickets) : () => <Navigate href="/browse-tutors" />} />

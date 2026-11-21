@@ -1,6 +1,7 @@
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
+import { PARK_CLASSROOM_MATERIAL, PARK_LESSON_HREF, PARK_LESSON_ID } from '../../../shared/fluentKids/curriculum';
 import { useLocation } from "../routing";
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
@@ -65,7 +66,7 @@ const StudentProfilePage = () => {
     const courses = [
         { id: 'conversational-skills', name: 'Conversational Skills', icon: 'community', category: 'Conversation' },
         { id: 'business-english', name: 'Business English', icon: 'business', category: 'Business' },
-        { id: 'young-learners', name: 'Young Learners', icon: 'story', category: 'Kids' },
+        { id: 'young-learners', name: 'Fluent Kids', icon: 'story', category: 'Kids' },
     ];
     const getLevelNumber = (lesson: Lesson): number => {
         const levelBadge = lesson.lessonData?.header?.levelBadge || '';
@@ -191,7 +192,10 @@ const StudentProfilePage = () => {
             });
             setTimeout(() => setNotification(null), 3000);
         }
-        window.open(selectedCourse() === 'conversational-skills' ? `/materials/conversational-skills/${encodeURIComponent(lesson.id)}` : `/lesson/view?id=${encodeURIComponent(lesson.id)}`, '_blank');
+        const href = lesson.id === PARK_LESSON_ID ? PARK_LESSON_HREF
+            : selectedCourse() === 'conversational-skills' ? `/materials/conversational-skills/${encodeURIComponent(lesson.id)}`
+            : `/lesson/view?id=${encodeURIComponent(lesson.id)}`;
+        window.open(href, '_blank');
     };
     const loadCourseLessons = async () => {
         if (!selectedCourse())
@@ -201,8 +205,10 @@ const StudentProfilePage = () => {
             setLessonsError('');
             setLessons([]);
             // Use lesson-materials endpoint for conversational-skills
-            if (selectedCourse() === 'conversational-skills' || selectedCourse() === 'business-english') {
-                const result = await lessonApi.getPublishedLessonMaterials(selectedCourse());
+            if (['conversational-skills', 'business-english', 'young-learners'].includes(selectedCourse())) {
+                const result = selectedCourse() === 'young-learners'
+                    ? { success: true, lessons: [PARK_CLASSROOM_MATERIAL], error: undefined }
+                    : await lessonApi.getPublishedLessonMaterials(selectedCourse());
                 if (result.success) {
                     // Transform lesson-materials format to match expected Lesson format
                     const transformedLessons = result.lessons.map((l: any) => ({
@@ -1110,7 +1116,8 @@ const StudentProfilePage = () => {
                         <button class="last-viewed-view-btn" aria-label="Preview last viewed lesson" onClick={(e) => {
                             e.stopPropagation();
                             if (lastViewedLesson()?.lessonId) {
-                                window.open(`/lesson/view?id=${lastViewedLesson().lessonId}`, '_blank');
+                                const id = lastViewedLesson().lessonId;
+                                window.open(id === PARK_LESSON_ID ? PARK_LESSON_HREF : `/lesson/view?id=${encodeURIComponent(id)}`, '_blank');
                             }
                         }} title="Preview last viewed lesson">
                           <Eye size={18}/>
@@ -1170,7 +1177,7 @@ const StudentProfilePage = () => {
                                         return (<div class={`chapter-accordion ${isChapterExpanded ? 'expanded' : ''}`}>
                                       <button class="chapter-accordion-header" aria-expanded={isChapterExpanded} onClick={() => toggleChapter(chapterAccordionKey)}>
                                         <div class="chapter-accordion-info">
-                                          <span class="chapter-title">Chapter {chapter}</span>
+                                          <span class="chapter-title">{selectedCourse() === 'young-learners' ? 'Unit' : 'Chapter'} {chapter}</span>
                                           <span class="chapter-lesson-count">{chapterLessons.length} lessons</span>
                                         </div>
                                         {isChapterExpanded ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}

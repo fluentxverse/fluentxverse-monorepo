@@ -59,6 +59,7 @@ const ServerHealthPage = lazy(() => import('./pages/ServerHealthPage'));
 const ContainerStatsPage = lazy(() => import('./pages/ContainerStatsPage'));
 const OperationalAlertsPage = lazy(() => import('./pages/OperationalAlertsPage'));
 const WorkplaceCommunicationPage = lazy(() => import('./pages/WorkplaceCommunicationPage'));
+const FluentKidsPage = lazy(() => import('./pages/FluentKidsPage'));
 
 // Loading spinner component
 const LoadingScreen = () => (
@@ -293,6 +294,8 @@ const AppContent = () => {
         <Route path="/daily-dispatch" component={DailyDispatchEditorPage} />
         <Route path="/daily-dispatch-preview/:id" component={DailyDispatchPreviewPage} />
         <Route path="/young-learners-editor" component={YoungLearnersEditorPage} />
+        <Route path="/fluent-kids-editor" component={FluentKidsPage} />
+        <Route path="/fluent-kids-editor/lesson/:id" component={FluentKidsPage} />
         <Route path="/discussion-questions-editor" component={DiscussionQuestionsEditorPage} />
         <Route path="/business-english-editor" component={BusinessEnglishEditorPage} />
         <Route path="/workplace-communication" component={WorkplaceCommunicationPage} />

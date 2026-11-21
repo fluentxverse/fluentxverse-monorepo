@@ -5,6 +5,8 @@ import { ArrowRight, CalendarDays, Search, X } from "lucide-solid";
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import './MaterialsPage.css';
+import { FLUENT_KIDS_NAME, fluentKidsLessonCount } from '../../../shared/fluentKids/curriculum';
+import parkArtwork from '../../../shared/fluentKids/art/park-story.webp';
 interface Course {
     id: string;
     title: string;
@@ -15,6 +17,15 @@ interface Course {
     lessons: number;
 }
 const courses: Course[] = [
+    {
+        id: 'fluent-kids',
+        title: FLUENT_KIDS_NAME,
+        description: 'Illustrated stories and speaking practice for ages 6–12.',
+        image: parkArtwork,
+        imageAlt: 'Mia and Ben exploring a sunny park',
+        category: 'Kids',
+        lessons: fluentKidsLessonCount
+    },
     {
         id: 'business-english',
         title: 'Business English',
@@ -97,7 +108,7 @@ const courses: Course[] = [
         lessons: 0
     }
 ];
-const availableCourses = courses.filter(course => ['business-english', 'conversational-skills', 'daily-dispatch'].includes(course.id));
+const availableCourses = courses.filter(course => ['business-english', 'conversational-skills', 'daily-dispatch', 'fluent-kids'].includes(course.id));
 export default function MaterialsPage() {
     const [searchQuery, setSearchQuery] = createSignal('');
     const [collection, setCollection] = createSignal<'all' | 'curriculum' | 'news'>('all');

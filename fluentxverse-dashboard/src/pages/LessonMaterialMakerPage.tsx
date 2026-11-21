@@ -13,6 +13,7 @@ import type {
 } from '../types/lesson.types';
 import { createConversationalTemplate } from './templates/conversational.template';
 import { toast } from '../Components/Toast/Toast';
+import { FLUENT_KIDS_EDITOR_PATH, FLUENT_KIDS_NAME, fluentKidsLessonCount } from '../../../shared/fluentKids/curriculum';
 import './LessonMaterialMakerPage.css';
 
 // ============================================================================
@@ -48,12 +49,12 @@ const COURSE_TEMPLATES: TemplateInfo[] = [
   },
   {
     id: 'young-learners',
-    name: 'Young Learners',
-    course: 'Young Learners',
+    name: FLUENT_KIDS_NAME,
+    course: FLUENT_KIDS_NAME,
     category: 'Kids',
     icon: '🧒',
-    description: 'Fun activities for young English learners',
-    sections: 10,
+    description: 'Illustrated stories and speaking practice for ages 6–12',
+    sections: 7,
     lastUpdated: '2026-01-12',
     status: 'draft',
   },
@@ -124,7 +125,7 @@ export default function LessonMaterialMakerPage() {
       return;
     }
     if (template.id === 'young-learners') {
-      location.route('/young-learners-editor');
+      location.route(FLUENT_KIDS_EDITOR_PATH);
       return;
     }
     if (template.id === 'discussion-questions') {
@@ -291,6 +292,14 @@ function TemplateSelector({
             <div
               key={t.id}
               className="lmm-template-card"
+              role="button"
+              tabIndex={0}
+              onKeyDown={event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  event.currentTarget.click();
+                }
+              }}
               onClick={() => {
                 if (t.id === 'conversational-skills') {
                   window.location.href = '/conversational-skills-editor';
@@ -301,7 +310,7 @@ function TemplateSelector({
                 } else if (t.id === 'workplace-communication') {
                   window.location.href = '/workplace-communication';
                 } else if (t.id === 'young-learners') {
-                  window.location.href = '/young-learners-editor';
+                  window.location.href = FLUENT_KIDS_EDITOR_PATH;
                 } else if (t.id === 'discussion-questions') {
                   window.location.href = '/discussion-questions-editor';
                 } else {
@@ -316,7 +325,7 @@ function TemplateSelector({
                 <div className="lmm-template-meta">
                   <span className="lmm-template-sections">
                     <i className="ri-stack-line" />
-                    {t.sections} sections
+                    {t.id === 'young-learners' ? `${fluentKidsLessonCount} lessons planned` : `${t.sections} sections`}
                   </span>
                   <span className="lmm-template-category">{t.category}</span>
                 </div>
