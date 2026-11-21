@@ -305,10 +305,14 @@
 #kids-full-lesson [hidden] { display: none !important; }
 #kids-full-lesson .kf-mast .kf-brand { color: inherit; text-decoration: none; font-size: 18px; font-weight: 800; }
 .fk-lesson-page { max-width: 1080px; padding: clamp(8px, 2vw, 24px); margin: 0 auto; }
+#kids-full-lesson {
+  --kf-translation: #64748b;
+  --kf-translation-on-tint: #5b6a80;
+}
 #kids-full-lesson .kf-ja[lang="ja"] {
   display: block;
   margin-top: .22em;
-  color: #4b6560;
+  color: var(--kf-translation);
   font: 500 .86em/1.65 "Hiragino Sans", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", sans-serif;
   letter-spacing: normal;
   text-transform: none;
@@ -320,8 +324,11 @@
 #kids-full-lesson .kf-mast [data-japanese-toggle] { border: 1px solid var(--kf-line); }
 #kids-full-lesson .kf-nav-copy { display: block; }
 #kids-full-lesson :is(.kf-kicker,.kf-time,.kf-view) .kf-ja { font-size: 11px; }
-#kids-full-lesson .kf-choice[aria-pressed="true"] .kf-ja { color: #fff; }
-#kids-full-lesson .kf-teacher .kf-ja { color: #66522e; }
+#kids-full-lesson :is(.kf-prompt,.kf-question,.kf-example-head,.kf-talk-strip,.kf-language,.kf-story-roles,.kf-feedback-goal,.kf-trivia,.kf-role:first-child,.kf-view [aria-pressed="true"]) .kf-ja {
+  color: var(--kf-translation-on-tint);
+}
+#kids-full-lesson .kf-choice[aria-pressed="true"] .kf-ja { color: #e2f1e8; }
+#kids-full-lesson .kf-teacher .kf-ja { color: #6b6257; }
 @media print {
   #kids-full-lesson .kf-ja[lang="ja"] { font-size: .78em; }
   #kids-full-lesson h1 > .kf-ja[lang="ja"] { font-size: .43em; }
