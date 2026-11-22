@@ -14,6 +14,7 @@ import canItSwim from './can-it-swim.html?raw';
 import guessMyAnimal from './guess-my-animal.html?raw';
 import animalKeeper from './animal-keeper.html?raw';
 import lunchbox from './lunchbox.html?raw';
+import iLikeApples from './i-like-apples.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -68,6 +69,11 @@ import lunchBanana from './art/lunch-banana.webp';
 import lunchRiceBall from './art/lunch-rice-ball.webp';
 import lunchCarrotSticks from './art/lunch-carrot-sticks.webp';
 import lunchWater from './art/lunch-water.webp';
+import picnicSnackList from './art/picnic-snack-list.webp';
+import snackApples from './art/snack-apples.webp';
+import snackBananas from './art/snack-bananas.webp';
+import snackSandwiches from './art/snack-sandwiches.webp';
+import snackRiceBalls from './art/snack-rice-balls.webp';
 import {
   ANIMAL_KEEPER_LESSON_ID,
   BIG_SMALL_AND_FAST_LESSON_ID,
@@ -76,6 +82,7 @@ import {
   COLOR_HUNT_LESSON_ID,
   GUESS_MY_ANIMAL_LESSON_ID,
   HOW_MANY_PENCILS_LESSON_ID,
+  I_LIKE_APPLES_LESSON_ID,
   LUNCHBOX_LESSON_ID,
   MEET_THE_ANIMALS_LESSON_ID,
   PACK_FOR_CLASS_LESSON_ID,
@@ -106,6 +113,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [GUESS_MY_ANIMAL_LESSON_ID]: guessMyAnimal,
   [ANIMAL_KEEPER_LESSON_ID]: animalKeeper,
   [LUNCHBOX_LESSON_ID]: lunchbox,
+  [I_LIKE_APPLES_LESSON_ID]: iLikeApples,
 };
 
 const artwork: Record<string, string> = {
@@ -156,6 +164,11 @@ const artwork: Record<string, string> = {
   'lunch-rice-ball': lunchRiceBall,
   'lunch-carrot-sticks': lunchCarrotSticks,
   'lunch-water': lunchWater,
+  'picnic-snack-list': picnicSnackList,
+  'snack-apples': snackApples,
+  'snack-bananas': snackBananas,
+  'snack-sandwiches': snackSandwiches,
+  'snack-rice-balls': snackRiceBalls,
 };
 
 interface LessonOptions {
