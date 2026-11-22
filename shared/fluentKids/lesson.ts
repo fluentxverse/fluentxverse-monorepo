@@ -22,6 +22,7 @@ import whatsTheWeatherLike from './whats-the-weather-like.html?raw';
 import whatAreYouWearing from './what-are-you-wearing.html?raw';
 import whatShouldIWear from './what-should-i-wear.html?raw';
 import packForARainyDay from './pack-for-a-rainy-day.html?raw';
+import weatherHelper from './weather-helper.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -106,6 +107,7 @@ import rainyDayPacking from './art/rainy-day-packing.webp';
 import packUmbrella from './art/pack-umbrella.webp';
 import packTowel from './art/pack-towel.webp';
 import packSpareSocks from './art/pack-spare-socks.webp';
+import weatherHelperPorch from './art/weather-helper-porch.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -127,6 +129,7 @@ import {
   READY_FOR_SCHOOL_LESSON_ID,
   SCHOOL_BAG_LESSON_ID,
   SNACK_STAND_LESSON_ID,
+  WEATHER_HELPER_LESSON_ID,
   WHATS_THE_WEATHER_LIKE_LESSON_ID,
   WHAT_ARE_YOU_WEARING_LESSON_ID,
   WHAT_SHOULD_I_WEAR_LESSON_ID,
@@ -160,6 +163,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [WHAT_ARE_YOU_WEARING_LESSON_ID]: whatAreYouWearing,
   [WHAT_SHOULD_I_WEAR_LESSON_ID]: whatShouldIWear,
   [PACK_FOR_A_RAINY_DAY_LESSON_ID]: packForARainyDay,
+  [WEATHER_HELPER_LESSON_ID]: weatherHelper,
 };
 
 const artwork: Record<string, string> = {
@@ -240,6 +244,7 @@ const artwork: Record<string, string> = {
   'pack-umbrella': packUmbrella,
   'pack-towel': packTowel,
   'pack-spare-socks': packSpareSocks,
+  'weather-helper-porch': weatherHelperPorch,
 };
 
 interface LessonOptions {
