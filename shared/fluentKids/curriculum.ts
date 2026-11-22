@@ -10,6 +10,7 @@ export const WHERES_THE_BALL_LESSON_ID = 'fluent-kids-l1-u1-l3';
 export const PARK_DETECTIVES_LESSON_ID = 'fluent-kids-l1-u1-l4';
 export const PARK_GUIDE_LESSON_ID = 'fluent-kids-l1-u1-l5';
 export const SCHOOL_BAG_LESSON_ID = 'fluent-kids-l1-u2-l1';
+export const HOW_MANY_PENCILS_LESSON_ID = 'fluent-kids-l1-u2-l2';
 
 const availableLessons = [
   { id: PARK_LESSON_ID, goalTextEn: 'I can name things I see and ask, “What do you see?”' },
@@ -18,6 +19,7 @@ const availableLessons = [
   { id: PARK_DETECTIVES_LESSON_ID, goalTextEn: 'I can ask for two clues and use them to find something.' },
   { id: PARK_GUIDE_LESSON_ID, goalTextEn: 'I can give a short park tour and ask and answer questions about what I see.' },
   { id: SCHOOL_BAG_LESSON_ID, goalTextEn: 'I can ask what’s in someone’s school bag and say what I have.' },
+  { id: HOW_MANY_PENCILS_LESSON_ID, goalTextEn: 'I can ask how many school supplies someone has and answer with a number.' },
 ] as const;
 
 export type FluentKidsLessonId = typeof availableLessons[number]['id'];

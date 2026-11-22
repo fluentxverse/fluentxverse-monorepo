@@ -419,3 +419,41 @@
   #kids-full-lesson .kf-guide-steps { grid-template-columns: minmax(0, 1fr); }
   #kids-full-lesson .kf-guide-places .kf-word-copy strong { font-size: 13px; }
 }
+
+#kids-full-lesson .kf-count-space { margin: 14px 0; }
+#kids-full-lesson .kf-count-reveal { width: min(100%, 260px); }
+#kids-full-lesson .kf-number-cards { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+#kids-full-lesson .kf-number-cards .kf-word-copy { padding-block: 9px 4px; min-height: auto; }
+#kids-full-lesson .kf-count-number { margin-right: 3px; color: var(--kf-green); }
+#kids-full-lesson .kf-count-pictures {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px;
+  min-height: 48px;
+  background: #fbf2de;
+  border-radius: 9px;
+}
+#kids-full-lesson .kf-count-pictures > span { flex: 0 0 clamp(29px, 5vw, 58px); min-width: 0; }
+#kids-full-lesson .kf-count-pictures img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border-radius: 4px;
+  margin: 0;
+}
+#kids-full-lesson .kf-number-cards .kf-count-pictures { border-radius: 0; }
+#kids-full-lesson .kf-number-cards .kf-count-pictures > span { flex-basis: 27px; }
+#kids-full-lesson .kf-count-phrase { padding: 8px 12px 10px; }
+#kids-full-lesson .kf-look-card .kf-count-pictures { margin-bottom: 10px; }
+#kids-full-lesson .kf-count-tray .kf-count-pictures { justify-content: flex-start; margin-top: 4px; }
+@media (max-width: 750px) {
+  #kids-full-lesson .kf-number-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 460px) {
+  #kids-full-lesson .kf-number-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -4,6 +4,7 @@ import wheresTheBall from './wheres-the-ball.html?raw';
 import parkDetectives from './park-detectives.html?raw';
 import parkGuide from './park-guide.html?raw';
 import schoolBag from './school-bag.html?raw';
+import howManyPencils from './how-many-pencils.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -29,8 +30,10 @@ import schoolPencil from './art/school-pencil.webp';
 import schoolEraser from './art/school-eraser.webp';
 import schoolRuler from './art/school-ruler.webp';
 import schoolPencilCase from './art/school-pencil-case.webp';
+import countingPencilsStory from './art/counting-pencils-story.webp';
 import {
   COLOR_HUNT_LESSON_ID,
+  HOW_MANY_PENCILS_LESSON_ID,
   PARK_DETECTIVES_LESSON_ID,
   PARK_GUIDE_LESSON_ID,
   PARK_LESSON_ID,
@@ -47,6 +50,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [PARK_DETECTIVES_LESSON_ID]: parkDetectives,
   [PARK_GUIDE_LESSON_ID]: parkGuide,
   [SCHOOL_BAG_LESSON_ID]: schoolBag,
+  [HOW_MANY_PENCILS_LESSON_ID]: howManyPencils,
 };
 
 const artwork: Record<string, string> = {
@@ -68,6 +72,7 @@ const artwork: Record<string, string> = {
   'school-eraser': schoolEraser,
   'school-ruler': schoolRuler,
   'school-pencil-case': schoolPencilCase,
+  'counting-pencils-story': countingPencilsStory,
 };
 
 interface LessonOptions {
