@@ -10,6 +10,7 @@ import packForClass from './pack-for-class.html?raw';
 import readyForSchool from './ready-for-school.html?raw';
 import meetTheAnimals from './meet-the-animals.html?raw';
 import bigSmallAndFast from './big-small-and-fast.html?raw';
+import canItSwim from './can-it-swim.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -50,9 +51,15 @@ import animalPathStory from './art/animal-path-story.webp';
 import animalSizePair from './art/animal-size-pair.webp';
 import animalRabbitHopping from './art/animal-rabbit-hopping.webp';
 import animalTurtleWalking from './art/animal-turtle-walking.webp';
+import animalActionStory from './art/animal-action-story.webp';
+import animalDuckSwimming from './art/animal-duck-swimming.webp';
+import animalBirdFlying from './art/animal-bird-flying.webp';
+import animalRabbitHop from './art/animal-rabbit-hop.webp';
+import animalTurtleStep from './art/animal-turtle-step.webp';
 import {
   BIG_SMALL_AND_FAST_LESSON_ID,
   CAN_I_BORROW_IT_LESSON_ID,
+  CAN_IT_SWIM_LESSON_ID,
   COLOR_HUNT_LESSON_ID,
   HOW_MANY_PENCILS_LESSON_ID,
   MEET_THE_ANIMALS_LESSON_ID,
@@ -80,6 +87,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [READY_FOR_SCHOOL_LESSON_ID]: readyForSchool,
   [MEET_THE_ANIMALS_LESSON_ID]: meetTheAnimals,
   [BIG_SMALL_AND_FAST_LESSON_ID]: bigSmallAndFast,
+  [CAN_IT_SWIM_LESSON_ID]: canItSwim,
 };
 
 const artwork: Record<string, string> = {
@@ -116,6 +124,11 @@ const artwork: Record<string, string> = {
   'animal-size-pair': animalSizePair,
   'animal-rabbit-hopping': animalRabbitHopping,
   'animal-turtle-walking': animalTurtleWalking,
+  'animal-action-story': animalActionStory,
+  'animal-duck-swimming': animalDuckSwimming,
+  'animal-bird-flying': animalBirdFlying,
+  'animal-rabbit-hop': animalRabbitHop,
+  'animal-turtle-step': animalTurtleStep,
 };
 
 interface LessonOptions {
