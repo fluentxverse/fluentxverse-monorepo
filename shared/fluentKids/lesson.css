@@ -461,3 +461,38 @@
 #kids-full-lesson .kf-borrow-space { margin: 14px 0; }
 #kids-full-lesson .kf-borrow-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 #kids-full-lesson .kf-borrow-items img { height: clamp(80px, 18vw, 155px); }
+
+#kids-full-lesson .kf-pack-space { margin: 14px 0; }
+#kids-full-lesson .kf-pack-grid { margin-top: 14px; }
+#kids-full-lesson .kf-pack-supplies > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#kids-full-lesson .kf-pack-supplies img,
+#kids-full-lesson .kf-pack-checks img {
+  display: block;
+  width: 44px;
+  border-radius: 6px;
+}
+#kids-full-lesson .kf-pack-checks { display: grid; gap: 7px; }
+#kids-full-lesson .kf-pack-checks label {
+  display: grid;
+  grid-template-columns: 20px 54px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  min-height: 48px;
+  border: 1px solid var(--kf-line);
+  border-radius: 9px;
+  cursor: pointer;
+}
+#kids-full-lesson .kf-pack-checks label:has(input:checked) { background: var(--kf-soft); }
+#kids-full-lesson .kf-pack-checks input {
+  margin: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--kf-green);
+}
+#kids-full-lesson .kf-pack-pair { display: flex; gap: 2px; }
+#kids-full-lesson .kf-pack-pair img { width: 26px; }
