@@ -5,19 +5,16 @@ export const FLUENT_KIDS_NAME = 'Fluent Kids';
 export const FLUENT_KIDS_PATH = '/materials/fluent-kids';
 export const FLUENT_KIDS_EDITOR_PATH = '/fluent-kids-editor';
 export const PARK_LESSON_ID = 'fluent-kids-l1-u1-l1';
-export const PARK_LESSON_GOAL = 'I can name things I see and ask, “What do you see?”';
-export const PARK_LESSON_HREF = `${FLUENT_KIDS_PATH}/lesson/${PARK_LESSON_ID}`;
-export const PARK_CLASSROOM_MATERIAL = {
-  id: PARK_LESSON_ID,
-  course: 'young-learners',
-  level: 1,
-  // The shared classroom picker uses chapter for its grouping field.
-  chapter: 1,
-  chapterLabel: 'Chapter 1: At the Park',
-  lessonNumber: 1,
-  lessonTitle: 'Lesson 1: A Day in the Park',
-  goalTextEn: PARK_LESSON_GOAL,
-};
+export const COLOR_HUNT_LESSON_ID = 'fluent-kids-l1-u1-l2';
+export const WHERES_THE_BALL_LESSON_ID = 'fluent-kids-l1-u1-l3';
+
+const availableLessons = [
+  { id: PARK_LESSON_ID, goalTextEn: 'I can name things I see and ask, “What do you see?”' },
+  { id: COLOR_HUNT_LESSON_ID, goalTextEn: 'I can ask what color something is and describe it in English.' },
+  { id: WHERES_THE_BALL_LESSON_ID, goalTextEn: 'I can ask where something is and say where it is.' },
+] as const;
+
+export type FluentKidsLessonId = typeof availableLessons[number]['id'];
 
 const levels: readonly { name: string; goal: string; units: readonly Unit[] }[] = [
   {
@@ -73,7 +70,7 @@ export const fluentKidsLevels = levels.map((level, levelIndex) => ({
     number: unitIndex + 1,
     lessons: lessons.map((title, lessonIndex) => {
       const id = `fluent-kids-l${levelIndex + 1}-u${unitIndex + 1}-l${lessonIndex + 1}`;
-      return { id, title, number: lessonIndex + 1, checkpoint: lessonIndex === 4, available: id === PARK_LESSON_ID };
+      return { id, title, number: lessonIndex + 1, checkpoint: lessonIndex === 4, available: availableLessons.some(lesson => lesson.id === id) };
     }),
   })),
 }));
@@ -82,3 +79,35 @@ export const fluentKidsLessonCount = fluentKidsLevels.reduce(
   (count, level) => count + level.units.reduce((total, unit) => total + unit.lessons.length, 0),
   0,
 );
+
+const publishedLessons = fluentKidsLevels.flatMap(level => level.units.flatMap(unit => unit.lessons.flatMap(lesson => {
+  const available = availableLessons.find(entry => entry.id === lesson.id);
+  return available ? [{
+    ...available,
+    title: lesson.title,
+    level: level.number,
+    unit: unit.number,
+    unitTitle: unit.name,
+    number: lesson.number,
+  }] : [];
+})));
+
+export function getFluentKidsLesson(id?: string) {
+  return publishedLessons.find(lesson => lesson.id === id);
+}
+
+export function getFluentKidsLessonHref(id: string) {
+  return getFluentKidsLesson(id) ? `${FLUENT_KIDS_PATH}/lesson/${id}` : undefined;
+}
+
+export const fluentKidsClassroomMaterials = publishedLessons.map(lesson => ({
+  id: lesson.id,
+  course: 'young-learners',
+  level: lesson.level,
+  // The shared classroom picker uses chapter for its grouping field.
+  chapter: lesson.unit,
+  chapterLabel: `Chapter ${lesson.unit}: ${lesson.unitTitle}`,
+  lessonNumber: lesson.number,
+  lessonTitle: `Lesson ${lesson.number}: ${lesson.title}`,
+  goalTextEn: lesson.goalTextEn,
+}));

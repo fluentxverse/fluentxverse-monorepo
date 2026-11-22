@@ -1,4 +1,6 @@
-import template from './park.html?raw';
+import park from './park.html?raw';
+import colorHunt from './color-hunt.html?raw';
+import wheresTheBall from './wheres-the-ball.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -7,10 +9,25 @@ import bench from './art/bench.webp';
 import kite from './art/kite.webp';
 import parkStory from './art/park-story.webp';
 import parkMission from './art/park-mission.webp';
+import findTheBall from './art/find-the-ball.webp';
+import ballOnBench from './art/ball-on-bench.webp';
+import ballUnderBench from './art/ball-under-bench.webp';
+import ballNextToBench from './art/ball-next-to-bench.webp';
+import { COLOR_HUNT_LESSON_ID, PARK_LESSON_ID, WHERES_THE_BALL_LESSON_ID, type FluentKidsLessonId } from './curriculum';
 import './lesson.css';
+
+const templates: Record<FluentKidsLessonId, string> = {
+  [PARK_LESSON_ID]: park,
+  [COLOR_HUNT_LESSON_ID]: colorHunt,
+  [WHERES_THE_BALL_LESSON_ID]: wheresTheBall,
+};
 
 const artwork: Record<string, string> = {
   bird, tree, ball, flower, bench, kite, 'park-story': parkStory, 'park-mission': parkMission,
+  'find-the-ball': findTheBall,
+  'ball-on-bench': ballOnBench,
+  'ball-under-bench': ballUnderBench,
+  'ball-next-to-bench': ballNextToBench,
 };
 
 interface LessonOptions {
@@ -23,9 +40,9 @@ function updateBilingualText(element: Element, english: string, japanese: string
   element.querySelector('[data-ja]')!.textContent = japanese;
 }
 
-export function mountParkLesson(container: HTMLElement, options: LessonOptions) {
+export function mountFluentKidsLesson(container: HTMLElement, id: FluentKidsLessonId, options: LessonOptions) {
   // This template is reviewed course content bundled with the app.
-  container.innerHTML = template;
+  container.innerHTML = templates[id];
   const lesson = container.firstElementChild as HTMLElement;
   lesson.querySelector<HTMLAnchorElement>('[data-course-link]')!.href = options.courseHref;
   for (const picture of lesson.querySelectorAll<HTMLImageElement>('img[data-art]')) {

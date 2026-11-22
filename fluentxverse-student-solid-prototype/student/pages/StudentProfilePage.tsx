@@ -1,7 +1,7 @@
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
-import { PARK_CLASSROOM_MATERIAL, PARK_LESSON_HREF, PARK_LESSON_ID } from '../../../shared/fluentKids/curriculum';
+import { fluentKidsClassroomMaterials, getFluentKidsLessonHref } from '../../../shared/fluentKids/curriculum';
 import { useLocation } from "../routing";
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
@@ -192,9 +192,11 @@ const StudentProfilePage = () => {
             });
             setTimeout(() => setNotification(null), 3000);
         }
-        const href = lesson.id === PARK_LESSON_ID ? PARK_LESSON_HREF
-            : selectedCourse() === 'conversational-skills' ? `/materials/conversational-skills/${encodeURIComponent(lesson.id)}`
-            : `/lesson/view?id=${encodeURIComponent(lesson.id)}`;
+        const href = getFluentKidsLessonHref(lesson.id) ?? (
+            selectedCourse() === 'conversational-skills'
+                ? `/materials/conversational-skills/${encodeURIComponent(lesson.id)}`
+                : `/lesson/view?id=${encodeURIComponent(lesson.id)}`
+        );
         window.open(href, '_blank');
     };
     const loadCourseLessons = async () => {
@@ -207,7 +209,7 @@ const StudentProfilePage = () => {
             // Use lesson-materials endpoint for conversational-skills
             if (['conversational-skills', 'business-english', 'young-learners'].includes(selectedCourse())) {
                 const result = selectedCourse() === 'young-learners'
-                    ? { success: true, lessons: [PARK_CLASSROOM_MATERIAL], error: undefined }
+                    ? { success: true, lessons: fluentKidsClassroomMaterials, error: undefined }
                     : await lessonApi.getPublishedLessonMaterials(selectedCourse());
                 if (result.success) {
                     // Transform lesson-materials format to match expected Lesson format
@@ -1117,7 +1119,7 @@ const StudentProfilePage = () => {
                             e.stopPropagation();
                             if (lastViewedLesson()?.lessonId) {
                                 const id = lastViewedLesson().lessonId;
-                                window.open(id === PARK_LESSON_ID ? PARK_LESSON_HREF : `/lesson/view?id=${encodeURIComponent(id)}`, '_blank');
+                                window.open(getFluentKidsLessonHref(id) ?? `/lesson/view?id=${encodeURIComponent(id)}`, '_blank');
                             }
                         }} title="Preview last viewed lesson">
                           <Eye size={18}/>

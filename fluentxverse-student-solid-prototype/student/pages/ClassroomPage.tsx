@@ -1,5 +1,5 @@
 import { learningCategoryLabel } from '../../../shared/learningTerminology';
-import { FLUENT_KIDS_NAME, PARK_CLASSROOM_MATERIAL, PARK_LESSON_HREF, PARK_LESSON_ID } from '../../../shared/fluentKids/curriculum';
+import { FLUENT_KIDS_NAME, fluentKidsClassroomMaterials, getFluentKidsLessonHref } from '../../../shared/fluentKids/curriculum';
 import ClassroomChatPanels, { ClassroomChatTools } from '../../../shared/ui/ClassroomChatPanels';
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component } from "solid-js";
 import { Portal } from "solid-js/web";
@@ -618,7 +618,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
             return `/materials/conversational-skills/${lessonId}`;
         }
         if (courseId === 'young-learners') {
-            return lessonId === PARK_LESSON_ID ? PARK_LESSON_HREF : `/young-learners/lesson/${encodeURIComponent(lessonId)}`;
+            return getFluentKidsLessonHref(lessonId) ?? `/young-learners/lesson/${encodeURIComponent(lessonId)}`;
         }
         if (courseId === 'business-english') {
             const result = await lessonApi.getLessonMaterialView(lessonId);
@@ -663,7 +663,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
         if (!courseId || courseId === 'daily-dispatch')
             return;
         if (courseId === 'young-learners') {
-            setAvailableLessons([transformLessonMaterialToLesson(PARK_CLASSROOM_MATERIAL)]);
+            setAvailableLessons(fluentKidsClassroomMaterials.map(transformLessonMaterialToLesson));
             return;
         }
         setLoadingMaterials(true);
