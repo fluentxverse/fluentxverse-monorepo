@@ -13,6 +13,7 @@ export const SCHOOL_BAG_LESSON_ID = 'fluent-kids-l1-u2-l1';
 export const HOW_MANY_PENCILS_LESSON_ID = 'fluent-kids-l1-u2-l2';
 export const CAN_I_BORROW_IT_LESSON_ID = 'fluent-kids-l1-u2-l3';
 export const PACK_FOR_CLASS_LESSON_ID = 'fluent-kids-l1-u2-l4';
+export const READY_FOR_SCHOOL_LESSON_ID = 'fluent-kids-l1-u2-l5';
 
 const availableLessons = [
   { id: PARK_LESSON_ID, goalTextEn: 'I can name things I see and ask, “What do you see?”' },
@@ -24,6 +25,7 @@ const availableLessons = [
   { id: HOW_MANY_PENCILS_LESSON_ID, goalTextEn: 'I can ask how many school supplies someone has and answer with a number.' },
   { id: CAN_I_BORROW_IT_LESSON_ID, goalTextEn: 'I can ask to borrow a school supply and respond politely.' },
   { id: PACK_FOR_CLASS_LESSON_ID, goalTextEn: 'I can check a class list and say what I have and what I still need.' },
+  { id: READY_FOR_SCHOOL_LESSON_ID, goalTextEn: 'I can get my school bag ready by checking a list, counting supplies, and asking for what I need.' },
 ] as const;
 
 export type FluentKidsLessonId = typeof availableLessons[number]['id'];

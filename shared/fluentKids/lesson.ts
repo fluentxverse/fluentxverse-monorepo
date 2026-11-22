@@ -7,6 +7,7 @@ import schoolBag from './school-bag.html?raw';
 import howManyPencils from './how-many-pencils.html?raw';
 import canIBorrowIt from './can-i-borrow-it.html?raw';
 import packForClass from './pack-for-class.html?raw';
+import readyForSchool from './ready-for-school.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -35,6 +36,7 @@ import schoolPencilCase from './art/school-pencil-case.webp';
 import countingPencilsStory from './art/counting-pencils-story.webp';
 import borrowPencilStory from './art/borrow-pencil-story.webp';
 import packingForClassStory from './art/packing-for-class-story.webp';
+import readyForSchoolStory from './art/ready-for-school-story.webp';
 import {
   CAN_I_BORROW_IT_LESSON_ID,
   COLOR_HUNT_LESSON_ID,
@@ -43,6 +45,7 @@ import {
   PARK_DETECTIVES_LESSON_ID,
   PARK_GUIDE_LESSON_ID,
   PARK_LESSON_ID,
+  READY_FOR_SCHOOL_LESSON_ID,
   SCHOOL_BAG_LESSON_ID,
   WHERES_THE_BALL_LESSON_ID,
   type FluentKidsLessonId,
@@ -59,6 +62,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [HOW_MANY_PENCILS_LESSON_ID]: howManyPencils,
   [CAN_I_BORROW_IT_LESSON_ID]: canIBorrowIt,
   [PACK_FOR_CLASS_LESSON_ID]: packForClass,
+  [READY_FOR_SCHOOL_LESSON_ID]: readyForSchool,
 };
 
 const artwork: Record<string, string> = {
@@ -83,6 +87,7 @@ const artwork: Record<string, string> = {
   'counting-pencils-story': countingPencilsStory,
   'borrow-pencil-story': borrowPencilStory,
   'packing-for-class-story': packingForClassStory,
+  'ready-for-school-story': readyForSchoolStory,
 };
 
 interface LessonOptions {
