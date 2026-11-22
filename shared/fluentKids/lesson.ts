@@ -21,6 +21,7 @@ import snackStand from './snack-stand.html?raw';
 import whatsTheWeatherLike from './whats-the-weather-like.html?raw';
 import whatAreYouWearing from './what-are-you-wearing.html?raw';
 import whatShouldIWear from './what-should-i-wear.html?raw';
+import packForARainyDay from './pack-for-a-rainy-day.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -101,6 +102,10 @@ import clothesSneakers from './art/clothes-sneakers.webp';
 import clothesJeans from './art/clothes-jeans.webp';
 import schoolEntryClothes from './art/school-entry-clothes.webp';
 import clothesRaincoat from './art/clothes-raincoat.webp';
+import rainyDayPacking from './art/rainy-day-packing.webp';
+import packUmbrella from './art/pack-umbrella.webp';
+import packTowel from './art/pack-towel.webp';
+import packSpareSocks from './art/pack-spare-socks.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -114,6 +119,7 @@ import {
   I_LIKE_APPLES_LESSON_ID,
   LUNCHBOX_LESSON_ID,
   MEET_THE_ANIMALS_LESSON_ID,
+  PACK_FOR_A_RAINY_DAY_LESSON_ID,
   PACK_FOR_CLASS_LESSON_ID,
   PARK_DETECTIVES_LESSON_ID,
   PARK_GUIDE_LESSON_ID,
@@ -153,6 +159,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [WHATS_THE_WEATHER_LIKE_LESSON_ID]: whatsTheWeatherLike,
   [WHAT_ARE_YOU_WEARING_LESSON_ID]: whatAreYouWearing,
   [WHAT_SHOULD_I_WEAR_LESSON_ID]: whatShouldIWear,
+  [PACK_FOR_A_RAINY_DAY_LESSON_ID]: packForARainyDay,
 };
 
 const artwork: Record<string, string> = {
@@ -229,6 +236,10 @@ const artwork: Record<string, string> = {
   'clothes-jeans': clothesJeans,
   'school-entry-clothes': schoolEntryClothes,
   'clothes-raincoat': clothesRaincoat,
+  'rainy-day-packing': rainyDayPacking,
+  'pack-umbrella': packUmbrella,
+  'pack-towel': packTowel,
+  'pack-spare-socks': packSpareSocks,
 };
 
 interface LessonOptions {
