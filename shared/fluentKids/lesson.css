@@ -413,5 +413,6 @@
 #kids-full-lesson .kf-guide-space { margin: 14px 0; }
 #kids-full-lesson .kf-guide-scene { margin: 0 0 20px; }
 @media (max-width: 650px) {
+  #kids-full-lesson .kf-guide-steps { grid-template-columns: minmax(0, 1fr); }
   #kids-full-lesson .kf-guide-places .kf-word-copy strong { font-size: 13px; }
 }
