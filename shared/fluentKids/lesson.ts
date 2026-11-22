@@ -12,6 +12,7 @@ import meetTheAnimals from './meet-the-animals.html?raw';
 import bigSmallAndFast from './big-small-and-fast.html?raw';
 import canItSwim from './can-it-swim.html?raw';
 import guessMyAnimal from './guess-my-animal.html?raw';
+import animalKeeper from './animal-keeper.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -58,7 +59,9 @@ import animalBirdFlying from './art/animal-bird-flying.webp';
 import animalRabbitHop from './art/animal-rabbit-hop.webp';
 import animalTurtleStep from './art/animal-turtle-step.webp';
 import animalClueStory from './art/animal-clue-story.webp';
+import animalKeeperBoard from './art/animal-keeper-board.webp';
 import {
+  ANIMAL_KEEPER_LESSON_ID,
   BIG_SMALL_AND_FAST_LESSON_ID,
   CAN_I_BORROW_IT_LESSON_ID,
   CAN_IT_SWIM_LESSON_ID,
@@ -92,6 +95,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [BIG_SMALL_AND_FAST_LESSON_ID]: bigSmallAndFast,
   [CAN_IT_SWIM_LESSON_ID]: canItSwim,
   [GUESS_MY_ANIMAL_LESSON_ID]: guessMyAnimal,
+  [ANIMAL_KEEPER_LESSON_ID]: animalKeeper,
 };
 
 const artwork: Record<string, string> = {
@@ -134,6 +138,7 @@ const artwork: Record<string, string> = {
   'animal-rabbit-hop': animalRabbitHop,
   'animal-turtle-step': animalTurtleStep,
   'animal-clue-story': animalClueStory,
+  'animal-keeper-board': animalKeeperBoard,
 };
 
 interface LessonOptions {

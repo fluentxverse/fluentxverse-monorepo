@@ -487,6 +487,7 @@
   border-radius: 9px;
   cursor: pointer;
 }
+#kids-full-lesson .kf-pack-checks label > span:nth-child(2):last-child { grid-column: 2 / -1; }
 #kids-full-lesson .kf-pack-checks label:has(input:checked) { background: var(--kf-soft); }
 #kids-full-lesson .kf-pack-checks input {
   margin: 0;

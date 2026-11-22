@@ -18,6 +18,7 @@ export const MEET_THE_ANIMALS_LESSON_ID = 'fluent-kids-l1-u3-l1';
 export const BIG_SMALL_AND_FAST_LESSON_ID = 'fluent-kids-l1-u3-l2';
 export const CAN_IT_SWIM_LESSON_ID = 'fluent-kids-l1-u3-l3';
 export const GUESS_MY_ANIMAL_LESSON_ID = 'fluent-kids-l1-u3-l4';
+export const ANIMAL_KEEPER_LESSON_ID = 'fluent-kids-l1-u3-l5';
 
 const availableLessons = [
   { id: PARK_LESSON_ID, goalTextEn: 'I can name things I see and ask, “What do you see?”' },
@@ -34,6 +35,7 @@ const availableLessons = [
   { id: BIG_SMALL_AND_FAST_LESSON_ID, goalTextEn: 'I can ask and answer questions about an animal’s size and speed.' },
   { id: CAN_IT_SWIM_LESSON_ID, goalTextEn: 'I can ask what an animal can do and answer with “Yes, it can” or “No, it can’t.”' },
   { id: GUESS_MY_ANIMAL_LESSON_ID, goalTextEn: 'I can give two clues, ask for another clue, and guess a mystery animal.' },
+  { id: ANIMAL_KEEPER_LESSON_ID, goalTextEn: 'I can describe an animal, ask and answer what it can do, and use two clues to guess.' },
 ] as const;
 
 export type FluentKidsLessonId = typeof availableLessons[number]['id'];
