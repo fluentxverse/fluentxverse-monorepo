@@ -20,6 +20,7 @@ import aSnackForMyFriend from './a-snack-for-my-friend.html?raw';
 import snackStand from './snack-stand.html?raw';
 import whatsTheWeatherLike from './whats-the-weather-like.html?raw';
 import whatAreYouWearing from './what-are-you-wearing.html?raw';
+import whatShouldIWear from './what-should-i-wear.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -98,6 +99,8 @@ import clothesTShirt from './art/clothes-t-shirt.webp';
 import clothesBoots from './art/clothes-boots.webp';
 import clothesSneakers from './art/clothes-sneakers.webp';
 import clothesJeans from './art/clothes-jeans.webp';
+import schoolEntryClothes from './art/school-entry-clothes.webp';
+import clothesRaincoat from './art/clothes-raincoat.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -120,6 +123,7 @@ import {
   SNACK_STAND_LESSON_ID,
   WHATS_THE_WEATHER_LIKE_LESSON_ID,
   WHAT_ARE_YOU_WEARING_LESSON_ID,
+  WHAT_SHOULD_I_WEAR_LESSON_ID,
   WHERES_THE_BALL_LESSON_ID,
   type FluentKidsLessonId,
 } from './curriculum';
@@ -148,6 +152,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [SNACK_STAND_LESSON_ID]: snackStand,
   [WHATS_THE_WEATHER_LIKE_LESSON_ID]: whatsTheWeatherLike,
   [WHAT_ARE_YOU_WEARING_LESSON_ID]: whatAreYouWearing,
+  [WHAT_SHOULD_I_WEAR_LESSON_ID]: whatShouldIWear,
 };
 
 const artwork: Record<string, string> = {
@@ -222,6 +227,8 @@ const artwork: Record<string, string> = {
   'clothes-boots': clothesBoots,
   'clothes-sneakers': clothesSneakers,
   'clothes-jeans': clothesJeans,
+  'school-entry-clothes': schoolEntryClothes,
+  'clothes-raincoat': clothesRaincoat,
 };
 
 interface LessonOptions {
