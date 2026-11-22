@@ -16,6 +16,7 @@ import animalKeeper from './animal-keeper.html?raw';
 import lunchbox from './lunchbox.html?raw';
 import iLikeApples from './i-like-apples.html?raw';
 import canIHaveSomeWater from './can-i-have-some-water.html?raw';
+import aSnackForMyFriend from './a-snack-for-my-friend.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -80,7 +81,9 @@ import drinkWater from './art/drink-water.webp';
 import drinkAppleJuice from './art/drink-apple-juice.webp';
 import drinkMilk from './art/drink-milk.webp';
 import drinkCup from './art/drink-cup.webp';
+import picnicSnackOffer from './art/picnic-snack-offer.webp';
 import {
+  A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
   BIG_SMALL_AND_FAST_LESSON_ID,
   CAN_I_BORROW_IT_LESSON_ID,
@@ -122,6 +125,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [LUNCHBOX_LESSON_ID]: lunchbox,
   [I_LIKE_APPLES_LESSON_ID]: iLikeApples,
   [CAN_I_HAVE_SOME_WATER_LESSON_ID]: canIHaveSomeWater,
+  [A_SNACK_FOR_MY_FRIEND_LESSON_ID]: aSnackForMyFriend,
 };
 
 const artwork: Record<string, string> = {
@@ -182,6 +186,7 @@ const artwork: Record<string, string> = {
   'drink-apple-juice': drinkAppleJuice,
   'drink-milk': drinkMilk,
   'drink-cup': drinkCup,
+  'picnic-snack-offer': picnicSnackOffer,
 };
 
 interface LessonOptions {
