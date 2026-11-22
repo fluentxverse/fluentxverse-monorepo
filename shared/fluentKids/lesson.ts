@@ -8,6 +8,7 @@ import howManyPencils from './how-many-pencils.html?raw';
 import canIBorrowIt from './can-i-borrow-it.html?raw';
 import packForClass from './pack-for-class.html?raw';
 import readyForSchool from './ready-for-school.html?raw';
+import meetTheAnimals from './meet-the-animals.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -37,10 +38,18 @@ import countingPencilsStory from './art/counting-pencils-story.webp';
 import borrowPencilStory from './art/borrow-pencil-story.webp';
 import packingForClassStory from './art/packing-for-class-story.webp';
 import readyForSchoolStory from './art/ready-for-school-story.webp';
+import animalPondStory from './art/animal-pond-story.webp';
+import animalDog from './art/animal-dog.webp';
+import animalCat from './art/animal-cat.webp';
+import animalRabbit from './art/animal-rabbit.webp';
+import animalDuck from './art/animal-duck.webp';
+import animalFrog from './art/animal-frog.webp';
+import animalFish from './art/animal-fish.webp';
 import {
   CAN_I_BORROW_IT_LESSON_ID,
   COLOR_HUNT_LESSON_ID,
   HOW_MANY_PENCILS_LESSON_ID,
+  MEET_THE_ANIMALS_LESSON_ID,
   PACK_FOR_CLASS_LESSON_ID,
   PARK_DETECTIVES_LESSON_ID,
   PARK_GUIDE_LESSON_ID,
@@ -63,6 +72,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [CAN_I_BORROW_IT_LESSON_ID]: canIBorrowIt,
   [PACK_FOR_CLASS_LESSON_ID]: packForClass,
   [READY_FOR_SCHOOL_LESSON_ID]: readyForSchool,
+  [MEET_THE_ANIMALS_LESSON_ID]: meetTheAnimals,
 };
 
 const artwork: Record<string, string> = {
@@ -88,6 +98,13 @@ const artwork: Record<string, string> = {
   'borrow-pencil-story': borrowPencilStory,
   'packing-for-class-story': packingForClassStory,
   'ready-for-school-story': readyForSchoolStory,
+  'animal-pond-story': animalPondStory,
+  'animal-dog': animalDog,
+  'animal-cat': animalCat,
+  'animal-rabbit': animalRabbit,
+  'animal-duck': animalDuck,
+  'animal-frog': animalFrog,
+  'animal-fish': animalFish,
 };
 
 interface LessonOptions {
