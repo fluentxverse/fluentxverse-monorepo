@@ -11,6 +11,7 @@ import readyForSchool from './ready-for-school.html?raw';
 import meetTheAnimals from './meet-the-animals.html?raw';
 import bigSmallAndFast from './big-small-and-fast.html?raw';
 import canItSwim from './can-it-swim.html?raw';
+import guessMyAnimal from './guess-my-animal.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -56,11 +57,13 @@ import animalDuckSwimming from './art/animal-duck-swimming.webp';
 import animalBirdFlying from './art/animal-bird-flying.webp';
 import animalRabbitHop from './art/animal-rabbit-hop.webp';
 import animalTurtleStep from './art/animal-turtle-step.webp';
+import animalClueStory from './art/animal-clue-story.webp';
 import {
   BIG_SMALL_AND_FAST_LESSON_ID,
   CAN_I_BORROW_IT_LESSON_ID,
   CAN_IT_SWIM_LESSON_ID,
   COLOR_HUNT_LESSON_ID,
+  GUESS_MY_ANIMAL_LESSON_ID,
   HOW_MANY_PENCILS_LESSON_ID,
   MEET_THE_ANIMALS_LESSON_ID,
   PACK_FOR_CLASS_LESSON_ID,
@@ -88,6 +91,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [MEET_THE_ANIMALS_LESSON_ID]: meetTheAnimals,
   [BIG_SMALL_AND_FAST_LESSON_ID]: bigSmallAndFast,
   [CAN_IT_SWIM_LESSON_ID]: canItSwim,
+  [GUESS_MY_ANIMAL_LESSON_ID]: guessMyAnimal,
 };
 
 const artwork: Record<string, string> = {
@@ -129,6 +133,7 @@ const artwork: Record<string, string> = {
   'animal-bird-flying': animalBirdFlying,
   'animal-rabbit-hop': animalRabbitHop,
   'animal-turtle-step': animalTurtleStep,
+  'animal-clue-story': animalClueStory,
 };
 
 interface LessonOptions {
