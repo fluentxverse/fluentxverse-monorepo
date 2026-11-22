@@ -19,6 +19,7 @@ import canIHaveSomeWater from './can-i-have-some-water.html?raw';
 import aSnackForMyFriend from './a-snack-for-my-friend.html?raw';
 import snackStand from './snack-stand.html?raw';
 import whatsTheWeatherLike from './whats-the-weather-like.html?raw';
+import whatAreYouWearing from './what-are-you-wearing.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -90,6 +91,13 @@ import weatherSunny from './art/weather-sunny.webp';
 import weatherCloudy from './art/weather-cloudy.webp';
 import weatherRainy from './art/weather-rainy.webp';
 import weatherWindy from './art/weather-windy.webp';
+import schoolyardOutfits from './art/schoolyard-outfits.webp';
+import clothesCap from './art/clothes-cap.webp';
+import clothesJacket from './art/clothes-jacket.webp';
+import clothesTShirt from './art/clothes-t-shirt.webp';
+import clothesBoots from './art/clothes-boots.webp';
+import clothesSneakers from './art/clothes-sneakers.webp';
+import clothesJeans from './art/clothes-jeans.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -111,6 +119,7 @@ import {
   SCHOOL_BAG_LESSON_ID,
   SNACK_STAND_LESSON_ID,
   WHATS_THE_WEATHER_LIKE_LESSON_ID,
+  WHAT_ARE_YOU_WEARING_LESSON_ID,
   WHERES_THE_BALL_LESSON_ID,
   type FluentKidsLessonId,
 } from './curriculum';
@@ -138,6 +147,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [A_SNACK_FOR_MY_FRIEND_LESSON_ID]: aSnackForMyFriend,
   [SNACK_STAND_LESSON_ID]: snackStand,
   [WHATS_THE_WEATHER_LIKE_LESSON_ID]: whatsTheWeatherLike,
+  [WHAT_ARE_YOU_WEARING_LESSON_ID]: whatAreYouWearing,
 };
 
 const artwork: Record<string, string> = {
@@ -205,6 +215,13 @@ const artwork: Record<string, string> = {
   'weather-cloudy': weatherCloudy,
   'weather-rainy': weatherRainy,
   'weather-windy': weatherWindy,
+  'schoolyard-outfits': schoolyardOutfits,
+  'clothes-cap': clothesCap,
+  'clothes-jacket': clothesJacket,
+  'clothes-t-shirt': clothesTShirt,
+  'clothes-boots': clothesBoots,
+  'clothes-sneakers': clothesSneakers,
+  'clothes-jeans': clothesJeans,
 };
 
 interface LessonOptions {
