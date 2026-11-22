@@ -1,6 +1,7 @@
 import park from './park.html?raw';
 import colorHunt from './color-hunt.html?raw';
 import wheresTheBall from './wheres-the-ball.html?raw';
+import parkDetectives from './park-detectives.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -13,13 +14,18 @@ import findTheBall from './art/find-the-ball.webp';
 import ballOnBench from './art/ball-on-bench.webp';
 import ballUnderBench from './art/ball-under-bench.webp';
 import ballNextToBench from './art/ball-next-to-bench.webp';
-import { COLOR_HUNT_LESSON_ID, PARK_LESSON_ID, WHERES_THE_BALL_LESSON_ID, type FluentKidsLessonId } from './curriculum';
+import parkDetectiveStory from './art/park-detective-story.webp';
+import blueBallOnBench from './art/blue-ball-on-bench.webp';
+import blueBallUnderBench from './art/blue-ball-under-bench.webp';
+import blueBallNextToBench from './art/blue-ball-next-to-bench.webp';
+import { COLOR_HUNT_LESSON_ID, PARK_DETECTIVES_LESSON_ID, PARK_LESSON_ID, WHERES_THE_BALL_LESSON_ID, type FluentKidsLessonId } from './curriculum';
 import './lesson.css';
 
 const templates: Record<FluentKidsLessonId, string> = {
   [PARK_LESSON_ID]: park,
   [COLOR_HUNT_LESSON_ID]: colorHunt,
   [WHERES_THE_BALL_LESSON_ID]: wheresTheBall,
+  [PARK_DETECTIVES_LESSON_ID]: parkDetectives,
 };
 
 const artwork: Record<string, string> = {
@@ -28,6 +34,10 @@ const artwork: Record<string, string> = {
   'ball-on-bench': ballOnBench,
   'ball-under-bench': ballUnderBench,
   'ball-next-to-bench': ballNextToBench,
+  'park-detective-story': parkDetectiveStory,
+  'blue-ball-on-bench': blueBallOnBench,
+  'blue-ball-under-bench': blueBallUnderBench,
+  'blue-ball-next-to-bench': blueBallNextToBench,
 };
 
 interface LessonOptions {

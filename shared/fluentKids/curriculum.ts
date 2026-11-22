@@ -7,11 +7,13 @@ export const FLUENT_KIDS_EDITOR_PATH = '/fluent-kids-editor';
 export const PARK_LESSON_ID = 'fluent-kids-l1-u1-l1';
 export const COLOR_HUNT_LESSON_ID = 'fluent-kids-l1-u1-l2';
 export const WHERES_THE_BALL_LESSON_ID = 'fluent-kids-l1-u1-l3';
+export const PARK_DETECTIVES_LESSON_ID = 'fluent-kids-l1-u1-l4';
 
 const availableLessons = [
   { id: PARK_LESSON_ID, goalTextEn: 'I can name things I see and ask, “What do you see?”' },
   { id: COLOR_HUNT_LESSON_ID, goalTextEn: 'I can ask what color something is and describe it in English.' },
   { id: WHERES_THE_BALL_LESSON_ID, goalTextEn: 'I can ask where something is and say where it is.' },
+  { id: PARK_DETECTIVES_LESSON_ID, goalTextEn: 'I can ask for two clues and use them to find something.' },
 ] as const;
 
 export type FluentKidsLessonId = typeof availableLessons[number]['id'];
