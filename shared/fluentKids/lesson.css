@@ -457,3 +457,7 @@
 @media (max-width: 460px) {
   #kids-full-lesson .kf-number-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+#kids-full-lesson .kf-borrow-space { margin: 14px 0; }
+#kids-full-lesson .kf-borrow-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#kids-full-lesson .kf-borrow-items img { height: clamp(80px, 18vw, 155px); }
