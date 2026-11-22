@@ -2,6 +2,17 @@
   "schemaVersion": 1,
   "entries": [
     {
+      "id": "FXV-20261122-001",
+      "date": "2026-11-22",
+      "apps": ["dashboard"],
+      "type": "improved",
+      "title": "Open available Fluent Kids lessons from the roadmap",
+      "summary": "Each available Fluent Kids lesson opens directly from its row in the dashboard roadmap.",
+      "details": [
+        "Each preview has its own link. Lessons without a preview still show Planned."
+      ]
+    },
+    {
       "id": "FXV-20261121-001",
       "date": "2026-11-21",
       "apps": ["dashboard"],
