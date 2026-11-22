@@ -13,6 +13,7 @@ import bigSmallAndFast from './big-small-and-fast.html?raw';
 import canItSwim from './can-it-swim.html?raw';
 import guessMyAnimal from './guess-my-animal.html?raw';
 import animalKeeper from './animal-keeper.html?raw';
+import lunchbox from './lunchbox.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -60,6 +61,13 @@ import animalRabbitHop from './art/animal-rabbit-hop.webp';
 import animalTurtleStep from './art/animal-turtle-step.webp';
 import animalClueStory from './art/animal-clue-story.webp';
 import animalKeeperBoard from './art/animal-keeper-board.webp';
+import lunchboxStory from './art/lunchbox-story.webp';
+import lunchSandwich from './art/lunch-sandwich.webp';
+import lunchApple from './art/lunch-apple.webp';
+import lunchBanana from './art/lunch-banana.webp';
+import lunchRiceBall from './art/lunch-rice-ball.webp';
+import lunchCarrotSticks from './art/lunch-carrot-sticks.webp';
+import lunchWater from './art/lunch-water.webp';
 import {
   ANIMAL_KEEPER_LESSON_ID,
   BIG_SMALL_AND_FAST_LESSON_ID,
@@ -68,6 +76,7 @@ import {
   COLOR_HUNT_LESSON_ID,
   GUESS_MY_ANIMAL_LESSON_ID,
   HOW_MANY_PENCILS_LESSON_ID,
+  LUNCHBOX_LESSON_ID,
   MEET_THE_ANIMALS_LESSON_ID,
   PACK_FOR_CLASS_LESSON_ID,
   PARK_DETECTIVES_LESSON_ID,
@@ -96,6 +105,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [CAN_IT_SWIM_LESSON_ID]: canItSwim,
   [GUESS_MY_ANIMAL_LESSON_ID]: guessMyAnimal,
   [ANIMAL_KEEPER_LESSON_ID]: animalKeeper,
+  [LUNCHBOX_LESSON_ID]: lunchbox,
 };
 
 const artwork: Record<string, string> = {
@@ -139,6 +149,13 @@ const artwork: Record<string, string> = {
   'animal-turtle-step': animalTurtleStep,
   'animal-clue-story': animalClueStory,
   'animal-keeper-board': animalKeeperBoard,
+  'lunchbox-story': lunchboxStory,
+  'lunch-sandwich': lunchSandwich,
+  'lunch-apple': lunchApple,
+  'lunch-banana': lunchBanana,
+  'lunch-rice-ball': lunchRiceBall,
+  'lunch-carrot-sticks': lunchCarrotSticks,
+  'lunch-water': lunchWater,
 };
 
 interface LessonOptions {
