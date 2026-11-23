@@ -500,3 +500,88 @@
 }
 #kids-full-lesson .kf-pack-pair { display: flex; gap: 2px; }
 #kids-full-lesson .kf-pack-pair img { width: 26px; }
+
+#kids-full-lesson .kf-direction-symbol {
+  display: grid;
+  min-height: 64px;
+  place-items: center;
+  border-radius: 10px;
+  background: #e5efe5;
+  color: #246b58;
+  font-family: system-ui, sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1;
+}
+#kids-full-lesson .kf-look-card .kf-direction-symbol { margin-bottom: 12px; }
+#kids-full-lesson .kf-example-body .kf-direction-symbol { min-height: 177px; }
+#kids-full-lesson .kf-path-map {
+  margin: 0;
+  padding: clamp(8px, 2vw, 18px);
+  border: 1px solid var(--kf-line);
+  border-radius: 14px;
+  background: #eaf1e2;
+}
+#kids-full-lesson .kf-path-grid {
+  display: grid;
+  isolation: isolate;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, auto);
+  gap: 12px 8px;
+  align-items: center;
+  text-align: center;
+}
+#kids-full-lesson .kf-path-grid::before,
+#kids-full-lesson .kf-path-grid::after {
+  content: '';
+  background: #92ae99;
+  border-radius: 10px;
+}
+#kids-full-lesson .kf-path-grid::before {
+  grid-area: 2 / 1 / 3 / 4;
+  height: 10px;
+}
+#kids-full-lesson .kf-path-grid::after {
+  grid-area: 1 / 2 / 4 / 3;
+  justify-self: center;
+  align-self: stretch;
+  width: 10px;
+}
+#kids-full-lesson .kf-path-stop {
+  z-index: 1;
+  padding: 4px;
+  border: 1px solid #b5cbb7;
+  border-radius: 10px;
+  background: #fbfaf5;
+  font-size: clamp(11px, 1.1vw, 15px);
+  font-weight: 700;
+  line-height: 1.25;
+}
+#kids-full-lesson .kf-path-stop .kf-ja { font-size: clamp(11px, 1vw, 13px); }
+#kids-full-lesson .kf-path-stop img {
+  display: block;
+  width: 100%;
+  max-width: 72px;
+  margin: 0 auto 4px;
+  border-radius: 6px;
+}
+#kids-full-lesson .kf-path-ahead { grid-area: 1 / 2; }
+#kids-full-lesson .kf-path-left { grid-area: 2 / 1; }
+#kids-full-lesson .kf-path-corner { grid-area: 2 / 2; }
+#kids-full-lesson .kf-path-right { grid-area: 2 / 3; }
+#kids-full-lesson .kf-path-start {
+  grid-area: 3 / 2;
+  border: 2px solid #246b58;
+}
+#kids-full-lesson .kf-path-start [aria-hidden] {
+  display: block;
+  color: #246b58;
+  font-size: 1.6em;
+  line-height: 1;
+}
+#kids-full-lesson .kf-path-map figcaption { margin-top: 10px; }
+
+@media print {
+  #kids-full-lesson .kf-example-body .kf-direction-symbol { min-height: 138px; }
+  #kids-full-lesson .kf-path-map { break-inside: avoid; }
+}
