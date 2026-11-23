@@ -672,7 +672,8 @@
   [data-lesson="compare-two-animals"],
   [data-lesson="habitat-match"],
   [data-lesson="id-like-a-sandwich"],
-  [data-lesson="what-would-you-like-to-drink"]
+  [data-lesson="what-would-you-like-to-drink"],
+  [data-lesson="sorry-were-out-of-that"]
 ) .kf-picture-question .kf-feedback {
   flex-basis: auto;
 }
@@ -801,6 +802,39 @@
 
 #kids-full-lesson .kf-cafe-menu {
   font-size: 15px;
+}
+#kids-full-lesson .kf-stock-status {
+  display: inline-block;
+  padding: 4px 9px;
+  margin-top: 6px;
+  border-radius: 8px;
+  background: var(--kf-soft);
+  font-size: 14px;
+  font-weight: 700;
+}
+#kids-full-lesson .kf-stock-status[data-stock="sold-out"] {
+  background: var(--kf-rose);
+}
+@media screen and (max-width: 650px) {
+  #kids-full-lesson .kf-stock-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  #kids-full-lesson .kf-stock-cards .kf-look-card {
+    padding: 7px;
+  }
+  #kids-full-lesson .kf-stock-cards img {
+    height: clamp(66px, 20vw, 110px);
+    margin-bottom: 7px;
+  }
+  #kids-full-lesson .kf-stock-cards .kf-frame {
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
+  #kids-full-lesson .kf-stock-cards .kf-stock-status {
+    padding-inline: 4px;
+    font-size: 13px;
+  }
 }
 #kids-full-lesson .kf-cafe-menu caption {
   font-size: 19px;

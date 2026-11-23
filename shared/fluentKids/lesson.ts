@@ -56,6 +56,7 @@ import habitatMatch from './habitat-match.html?raw';
 import readTheMenu from './read-the-menu.html?raw';
 import idLikeASandwich from './id-like-a-sandwich.html?raw';
 import whatWouldYouLikeToDrink from './what-would-you-like-to-drink.html?raw';
+import sorryWereOutOfThat from './sorry-were-out-of-that.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -245,6 +246,7 @@ import cafeAppleJuice from './art/cafe-apple-juice.webp';
 import cafeWater from './art/cafe-water.webp';
 import miaBenOrderSandwich from './art/mia-ben-order-sandwich.webp';
 import miaBenChooseDrinks from './art/mia-ben-choose-drinks.webp';
+import miaBenSoldOut from './art/mia-ben-sold-out.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -287,6 +289,7 @@ import {
   READY_FOR_SCHOOL_LESSON_ID,
   SCHOOL_BAG_LESSON_ID,
   SNACK_STAND_LESSON_ID,
+  SORRY_WERE_OUT_OF_THAT_LESSON_ID,
   THE_HOME_TOUR_LESSON_ID,
   WEATHER_HELPER_LESSON_ID,
   WELCOME_TO_MY_HOME_LESSON_ID,
@@ -367,6 +370,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [READ_THE_MENU_LESSON_ID]: readTheMenu,
   [ID_LIKE_A_SANDWICH_LESSON_ID]: idLikeASandwich,
   [WHAT_WOULD_YOU_LIKE_TO_DRINK_LESSON_ID]: whatWouldYouLikeToDrink,
+  [SORRY_WERE_OUT_OF_THAT_LESSON_ID]: sorryWereOutOfThat,
 };
 
 const artwork: Record<string, string> = {
@@ -552,6 +556,7 @@ const artwork: Record<string, string> = {
   'cafe-water': cafeWater,
   'mia-ben-order-sandwich': miaBenOrderSandwich,
   'mia-ben-choose-drinks': miaBenChooseDrinks,
+  'mia-ben-sold-out': miaBenSoldOut,
 };
 
 interface LessonOptions {
