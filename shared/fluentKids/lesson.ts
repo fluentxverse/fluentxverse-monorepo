@@ -55,6 +55,7 @@ import compareTwoAnimals from './compare-two-animals.html?raw';
 import habitatMatch from './habitat-match.html?raw';
 import readTheMenu from './read-the-menu.html?raw';
 import idLikeASandwich from './id-like-a-sandwich.html?raw';
+import whatWouldYouLikeToDrink from './what-would-you-like-to-drink.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -243,6 +244,7 @@ import cafeFruitCup from './art/cafe-fruit-cup.webp';
 import cafeAppleJuice from './art/cafe-apple-juice.webp';
 import cafeWater from './art/cafe-water.webp';
 import miaBenOrderSandwich from './art/mia-ben-order-sandwich.webp';
+import miaBenChooseDrinks from './art/mia-ben-choose-drinks.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -294,6 +296,7 @@ import {
   WHAT_ARE_THEY_DOING_LESSON_ID,
   WHAT_DO_THEY_LIKE_LESSON_ID,
   WHAT_DO_THEY_EAT_LESSON_ID,
+  WHAT_WOULD_YOU_LIKE_TO_DRINK_LESSON_ID,
   WHAT_DO_YOU_LIKE_TO_PLAY_LESSON_ID,
   WHAT_SHOULD_I_WEAR_LESSON_ID,
   WHAT_TIME_DO_YOU_GET_UP_LESSON_ID,
@@ -363,6 +366,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [HABITAT_MATCH_LESSON_ID]: habitatMatch,
   [READ_THE_MENU_LESSON_ID]: readTheMenu,
   [ID_LIKE_A_SANDWICH_LESSON_ID]: idLikeASandwich,
+  [WHAT_WOULD_YOU_LIKE_TO_DRINK_LESSON_ID]: whatWouldYouLikeToDrink,
 };
 
 const artwork: Record<string, string> = {
@@ -547,6 +551,7 @@ const artwork: Record<string, string> = {
   'cafe-apple-juice': cafeAppleJuice,
   'cafe-water': cafeWater,
   'mia-ben-order-sandwich': miaBenOrderSandwich,
+  'mia-ben-choose-drinks': miaBenChooseDrinks,
 };
 
 interface LessonOptions {
