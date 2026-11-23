@@ -36,6 +36,7 @@ import meetTheCharacters from './meet-the-characters.html?raw';
 import welcomeToMyHome from './welcome-to-my-home.html?raw';
 import whatsInThisRoom from './whats-in-this-room.html?raw';
 import whereAreMyShoes from './where-are-my-shoes.html?raw';
+import whatAreTheyDoing from './what-are-they-doing.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -175,6 +176,10 @@ import entrywayShoesUnderBench from './art/entryway-shoes-under-bench.webp';
 import entrywayKeyOnTable from './art/entryway-key-on-table.webp';
 import entrywayHatInBasket from './art/entryway-hat-in-basket.webp';
 import entrywayBagNextToDoor from './art/entryway-bag-next-to-door.webp';
+import miaBenPlayAtHome from './art/mia-ben-play-at-home.webp';
+import momCookingLunch from './art/mom-cooking-lunch.webp';
+import dadReadingAtHome from './art/dad-reading-at-home.webp';
+import miaDrawingAtHome from './art/mia-drawing-at-home.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -208,6 +213,7 @@ import {
   WHATS_THE_WEATHER_LIKE_LESSON_ID,
   WHATS_IN_THIS_ROOM_LESSON_ID,
   WHAT_ARE_YOU_WEARING_LESSON_ID,
+  WHAT_ARE_THEY_DOING_LESSON_ID,
   WHAT_DO_THEY_LIKE_LESSON_ID,
   WHAT_DO_YOU_LIKE_TO_PLAY_LESSON_ID,
   WHAT_SHOULD_I_WEAR_LESSON_ID,
@@ -257,6 +263,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [WELCOME_TO_MY_HOME_LESSON_ID]: welcomeToMyHome,
   [WHATS_IN_THIS_ROOM_LESSON_ID]: whatsInThisRoom,
   [WHERE_ARE_MY_SHOES_LESSON_ID]: whereAreMyShoes,
+  [WHAT_ARE_THEY_DOING_LESSON_ID]: whatAreTheyDoing,
 };
 
 const artwork: Record<string, string> = {
@@ -392,6 +399,10 @@ const artwork: Record<string, string> = {
   'entryway-key-on-table': entrywayKeyOnTable,
   'entryway-hat-in-basket': entrywayHatInBasket,
   'entryway-bag-next-to-door': entrywayBagNextToDoor,
+  'mia-ben-play-at-home': miaBenPlayAtHome,
+  'mom-cooking-lunch': momCookingLunch,
+  'dad-reading-at-home': dadReadingAtHome,
+  'mia-drawing-at-home': miaDrawingAtHome,
 };
 
 interface LessonOptions {
