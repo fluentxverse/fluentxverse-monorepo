@@ -670,7 +670,8 @@
   [data-lesson="what-do-they-eat"],
   [data-lesson="read-an-animal-fact-card"],
   [data-lesson="compare-two-animals"],
-  [data-lesson="habitat-match"]
+  [data-lesson="habitat-match"],
+  [data-lesson="id-like-a-sandwich"]
 ) .kf-picture-question .kf-feedback {
   flex-basis: auto;
 }
