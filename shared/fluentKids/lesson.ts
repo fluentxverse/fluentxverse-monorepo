@@ -44,6 +44,7 @@ import followTheMap from './follow-the-map.html?raw';
 import askALocal from './ask-a-local.html?raw';
 import helpAVisitor from './help-a-visitor.html?raw';
 import whatTimeDoYouGetUp from './what-time-do-you-get-up.html?raw';
+import mySchoolDayRoutine from './my-school-day-routine.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -201,6 +202,9 @@ import miaBenAtTownInformation from './art/mia-ben-at-town-information.webp';
 import hanaArrivesInTown from './art/hana-arrives-in-town.webp';
 import benGetsUpForSchool from './art/ben-gets-up-for-school.webp';
 import miaBenSchoolMorningChat from './art/mia-ben-school-morning-chat.webp';
+import miaBenSchoolDayChart from './art/mia-ben-school-day-chart.webp';
+import benDoesHomework from './art/ben-does-homework.webp';
+import benGoesToBed from './art/ben-goes-to-bed.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -223,6 +227,7 @@ import {
   MEET_THE_ANIMALS_LESSON_ID,
   MEET_THE_CHARACTERS_LESSON_ID,
   MY_TURN_YOUR_TURN_LESSON_ID,
+  MY_SCHOOL_DAY_ROUTINE_LESSON_ID,
   PACK_FOR_A_RAINY_DAY_LESSON_ID,
   PACK_FOR_CLASS_LESSON_ID,
   PARK_DETECTIVES_LESSON_ID,
@@ -299,6 +304,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [ASK_A_LOCAL_LESSON_ID]: askALocal,
   [HELP_A_VISITOR_LESSON_ID]: helpAVisitor,
   [WHAT_TIME_DO_YOU_GET_UP_LESSON_ID]: whatTimeDoYouGetUp,
+  [MY_SCHOOL_DAY_ROUTINE_LESSON_ID]: mySchoolDayRoutine,
 };
 
 const artwork: Record<string, string> = {
@@ -452,6 +458,9 @@ const artwork: Record<string, string> = {
   'hana-arrives-in-town': hanaArrivesInTown,
   'ben-gets-up-for-school': benGetsUpForSchool,
   'mia-ben-school-morning-chat': miaBenSchoolMorningChat,
+  'mia-ben-school-day-chart': miaBenSchoolDayChart,
+  'ben-does-homework': benDoesHomework,
+  'ben-goes-to-bed': benGoesToBed,
 };
 
 interface LessonOptions {

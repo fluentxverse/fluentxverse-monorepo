@@ -660,7 +660,7 @@
 }
 #kids-full-lesson .kf-look-card .kf-clock { margin-bottom: 12px; }
 #kids-full-lesson .kf-clock-art { display: grid; flex-shrink: 0; place-items: center; }
-#kids-full-lesson[data-lesson="what-time-do-you-get-up"] .kf-picture-question .kf-feedback {
+#kids-full-lesson:is([data-lesson="what-time-do-you-get-up"], [data-lesson="my-school-day-routine"]) .kf-picture-question .kf-feedback {
   flex-basis: auto;
 }
 #kids-full-lesson .kf-clock-extension {
@@ -670,6 +670,8 @@
   gap: 12px;
 }
 #kids-full-lesson .kf-clock-extension .kf-clock { margin: 0; }
+
+#kids-full-lesson .kf-routine-sequence { list-style: none; padding: 0; }
 
 @media print {
   #kids-full-lesson .kf-picture-question .kf-clock-art { height: 94px; }
