@@ -29,6 +29,7 @@ import myTurnYourTurn from './my-turn-your-turn.html?raw';
 import pickAGameTogether from './pick-a-game-together.html?raw';
 import playgroundPartners from './playground-partners.html?raw';
 import meetMyFamily from './meet-my-family.html?raw';
+import whosInThePicture from './whos-in-the-picture.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -133,6 +134,12 @@ import miasMom from './art/mias-mom.webp';
 import miasDad from './art/mias-dad.webp';
 import miasBrother from './art/mias-brother.webp';
 import miasGrandma from './art/mias-grandma.webp';
+import bensFamilyPicture from './art/bens-family-picture.webp';
+import bensSchoolPicture from './art/bens-school-picture.webp';
+import bensSister from './art/bens-sister.webp';
+import bensGrandpa from './art/bens-grandpa.webp';
+import bensFriend from './art/bens-friend.webp';
+import bensTeacher from './art/bens-teacher.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -165,6 +172,7 @@ import {
   WHAT_DO_YOU_LIKE_TO_PLAY_LESSON_ID,
   WHAT_SHOULD_I_WEAR_LESSON_ID,
   WHERES_THE_BALL_LESSON_ID,
+  WHOS_IN_THE_PICTURE_LESSON_ID,
   type FluentKidsLessonId,
 } from './curriculum';
 import './lesson.css';
@@ -201,6 +209,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [PICK_A_GAME_TOGETHER_LESSON_ID]: pickAGameTogether,
   [PLAYGROUND_PARTNERS_LESSON_ID]: playgroundPartners,
   [MEET_MY_FAMILY_LESSON_ID]: meetMyFamily,
+  [WHOS_IN_THE_PICTURE_LESSON_ID]: whosInThePicture,
 };
 
 const artwork: Record<string, string> = {
@@ -301,6 +310,12 @@ const artwork: Record<string, string> = {
   'mias-dad': miasDad,
   'mias-brother': miasBrother,
   'mias-grandma': miasGrandma,
+  'bens-family-picture': bensFamilyPicture,
+  'bens-school-picture': bensSchoolPicture,
+  'bens-sister': bensSister,
+  'bens-grandpa': bensGrandpa,
+  'bens-friend': bensFriend,
+  'bens-teacher': bensTeacher,
 };
 
 interface LessonOptions {
