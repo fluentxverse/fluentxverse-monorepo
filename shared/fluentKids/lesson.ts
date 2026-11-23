@@ -32,6 +32,7 @@ import meetMyFamily from './meet-my-family.html?raw';
 import whosInThePicture from './whos-in-the-picture.html?raw';
 import howAreTheyFeeling from './how-are-they-feeling.html?raw';
 import whatDoTheyLike from './what-do-they-like.html?raw';
+import meetTheCharacters from './meet-the-characters.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -151,6 +152,8 @@ import benFeelingHappy from './art/ben-feeling-happy.webp';
 import miaBenHobbyPoster from './art/mia-ben-hobby-poster.webp';
 import hanaReadsBook from './art/hana-reads-book.webp';
 import grandpaTendsGarden from './art/grandpa-tends-garden.webp';
+import classCharacterGallery from './art/class-character-gallery.webp';
+import miaSharesHanaPicture from './art/mia-shares-hana-picture.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -167,6 +170,7 @@ import {
   LUNCHBOX_LESSON_ID,
   MEET_MY_FAMILY_LESSON_ID,
   MEET_THE_ANIMALS_LESSON_ID,
+  MEET_THE_CHARACTERS_LESSON_ID,
   MY_TURN_YOUR_TURN_LESSON_ID,
   PACK_FOR_A_RAINY_DAY_LESSON_ID,
   PACK_FOR_CLASS_LESSON_ID,
@@ -225,6 +229,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [WHOS_IN_THE_PICTURE_LESSON_ID]: whosInThePicture,
   [HOW_ARE_THEY_FEELING_LESSON_ID]: howAreTheyFeeling,
   [WHAT_DO_THEY_LIKE_LESSON_ID]: whatDoTheyLike,
+  [MEET_THE_CHARACTERS_LESSON_ID]: meetTheCharacters,
 };
 
 const artwork: Record<string, string> = {
@@ -340,6 +345,8 @@ const artwork: Record<string, string> = {
   'mia-ben-hobby-poster': miaBenHobbyPoster,
   'hana-reads-book': hanaReadsBook,
   'grandpa-tends-garden': grandpaTendsGarden,
+  'class-character-gallery': classCharacterGallery,
+  'mia-shares-hana-picture': miaSharesHanaPicture,
 };
 
 interface LessonOptions {
