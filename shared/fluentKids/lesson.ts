@@ -34,6 +34,7 @@ import howAreTheyFeeling from './how-are-they-feeling.html?raw';
 import whatDoTheyLike from './what-do-they-like.html?raw';
 import meetTheCharacters from './meet-the-characters.html?raw';
 import welcomeToMyHome from './welcome-to-my-home.html?raw';
+import whatsInThisRoom from './whats-in-this-room.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -161,6 +162,12 @@ import homeBedroom from './art/home-bedroom.webp';
 import homeBathroom from './art/home-bathroom.webp';
 import homeLivingRoom from './art/home-living-room.webp';
 import homeKitchen from './art/home-kitchen.webp';
+import miaBenInLivingRoom from './art/mia-ben-in-living-room.webp';
+import livingRoomTwoChairs from './art/living-room-two-chairs.webp';
+import homeSofaCard from './art/home-sofa-card.webp';
+import homeLampCard from './art/home-lamp-card.webp';
+import homeRugCard from './art/home-rug-card.webp';
+import homeCushionsCard from './art/home-cushions-card.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -192,6 +199,7 @@ import {
   WEATHER_HELPER_LESSON_ID,
   WELCOME_TO_MY_HOME_LESSON_ID,
   WHATS_THE_WEATHER_LIKE_LESSON_ID,
+  WHATS_IN_THIS_ROOM_LESSON_ID,
   WHAT_ARE_YOU_WEARING_LESSON_ID,
   WHAT_DO_THEY_LIKE_LESSON_ID,
   WHAT_DO_YOU_LIKE_TO_PLAY_LESSON_ID,
@@ -239,6 +247,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [WHAT_DO_THEY_LIKE_LESSON_ID]: whatDoTheyLike,
   [MEET_THE_CHARACTERS_LESSON_ID]: meetTheCharacters,
   [WELCOME_TO_MY_HOME_LESSON_ID]: welcomeToMyHome,
+  [WHATS_IN_THIS_ROOM_LESSON_ID]: whatsInThisRoom,
 };
 
 const artwork: Record<string, string> = {
@@ -362,6 +371,12 @@ const artwork: Record<string, string> = {
   'home-bathroom': homeBathroom,
   'home-living-room': homeLivingRoom,
   'home-kitchen': homeKitchen,
+  'mia-ben-in-living-room': miaBenInLivingRoom,
+  'living-room-two-chairs': livingRoomTwoChairs,
+  'home-sofa-card': homeSofaCard,
+  'home-lamp-card': homeLampCard,
+  'home-rug-card': homeRugCard,
+  'home-cushions-card': homeCushionsCard,
 };
 
 interface LessonOptions {
