@@ -27,6 +27,7 @@ import whatDoYouLikeToPlay from './what-do-you-like-to-play.html?raw';
 import canYouPlayWithMe from './can-you-play-with-me.html?raw';
 import myTurnYourTurn from './my-turn-your-turn.html?raw';
 import pickAGameTogether from './pick-a-game-together.html?raw';
+import playgroundPartners from './playground-partners.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -123,6 +124,8 @@ import hopscotchMiasTurn from './art/hopscotch-mias-turn.webp';
 import hopscotchBensTurn from './art/hopscotch-bens-turn.webp';
 import playgroundGameChoices from './art/playground-game-choices.webp';
 import playgroundBoardGameTogether from './art/playground-board-game-together.webp';
+import playgroundPartnersChoose from './art/playground-partners-choose.webp';
+import playgroundPartnersTag from './art/playground-partners-tag.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -144,6 +147,7 @@ import {
   PARK_GUIDE_LESSON_ID,
   PARK_LESSON_ID,
   PICK_A_GAME_TOGETHER_LESSON_ID,
+  PLAYGROUND_PARTNERS_LESSON_ID,
   READY_FOR_SCHOOL_LESSON_ID,
   SCHOOL_BAG_LESSON_ID,
   SNACK_STAND_LESSON_ID,
@@ -187,6 +191,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [CAN_YOU_PLAY_WITH_ME_LESSON_ID]: canYouPlayWithMe,
   [MY_TURN_YOUR_TURN_LESSON_ID]: myTurnYourTurn,
   [PICK_A_GAME_TOGETHER_LESSON_ID]: pickAGameTogether,
+  [PLAYGROUND_PARTNERS_LESSON_ID]: playgroundPartners,
 };
 
 const artwork: Record<string, string> = {
@@ -279,6 +284,8 @@ const artwork: Record<string, string> = {
   'hopscotch-bens-turn': hopscotchBensTurn,
   'playground-game-choices': playgroundGameChoices,
   'playground-board-game-together': playgroundBoardGameTogether,
+  'playground-partners-choose': playgroundPartnersChoose,
+  'playground-partners-tag': playgroundPartnersTag,
 };
 
 interface LessonOptions {
