@@ -43,6 +43,7 @@ import goStraightTurnLeft from './go-straight-turn-left.html?raw';
 import followTheMap from './follow-the-map.html?raw';
 import askALocal from './ask-a-local.html?raw';
 import helpAVisitor from './help-a-visitor.html?raw';
+import whatTimeDoYouGetUp from './what-time-do-you-get-up.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -198,6 +199,8 @@ import miaBenReadTownMap from './art/mia-ben-read-town-map.webp';
 import townFountainCard from './art/town-fountain-card.webp';
 import miaBenAtTownInformation from './art/mia-ben-at-town-information.webp';
 import hanaArrivesInTown from './art/hana-arrives-in-town.webp';
+import benGetsUpForSchool from './art/ben-gets-up-for-school.webp';
+import miaBenSchoolMorningChat from './art/mia-ben-school-morning-chat.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -241,6 +244,7 @@ import {
   WHAT_DO_THEY_LIKE_LESSON_ID,
   WHAT_DO_YOU_LIKE_TO_PLAY_LESSON_ID,
   WHAT_SHOULD_I_WEAR_LESSON_ID,
+  WHAT_TIME_DO_YOU_GET_UP_LESSON_ID,
   WHERE_ARE_MY_SHOES_LESSON_ID,
   WHERES_THE_BALL_LESSON_ID,
   WHOS_IN_THE_PICTURE_LESSON_ID,
@@ -294,6 +298,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [FOLLOW_THE_MAP_LESSON_ID]: followTheMap,
   [ASK_A_LOCAL_LESSON_ID]: askALocal,
   [HELP_A_VISITOR_LESSON_ID]: helpAVisitor,
+  [WHAT_TIME_DO_YOU_GET_UP_LESSON_ID]: whatTimeDoYouGetUp,
 };
 
 const artwork: Record<string, string> = {
@@ -445,6 +450,8 @@ const artwork: Record<string, string> = {
   'town-fountain-card': townFountainCard,
   'mia-ben-at-town-information': miaBenAtTownInformation,
   'hana-arrives-in-town': hanaArrivesInTown,
+  'ben-gets-up-for-school': benGetsUpForSchool,
+  'mia-ben-school-morning-chat': miaBenSchoolMorningChat,
 };
 
 interface LessonOptions {

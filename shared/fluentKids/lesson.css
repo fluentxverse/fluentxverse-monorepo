@@ -604,3 +604,78 @@
   #kids-full-lesson .kf-example-body .kf-direction-symbol { min-height: 138px; }
   #kids-full-lesson .kf-path-map { break-inside: avoid; }
 }
+
+#kids-full-lesson .kf-clock {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  width: 120px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border: 2px solid #9eb6a5;
+  border-radius: 50%;
+  background: #edf4ec;
+  color: var(--kf-ink);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+#kids-full-lesson .kf-clock-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(var(--kf-clock-angle)) translateY(-3.5em) rotate(calc(-1 * var(--kf-clock-angle)));
+}
+#kids-full-lesson .kf-clock-hand {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  border-radius: 4px 4px 0 0;
+  transform: translateX(-50%) rotate(var(--kf-hand-angle));
+  transform-origin: center bottom;
+}
+#kids-full-lesson .kf-clock-hour {
+  --kf-hand-angle: var(--kf-hour-angle);
+  width: 6px;
+  height: 23%;
+  background: var(--kf-ink);
+}
+#kids-full-lesson .kf-clock-minute {
+  --kf-hand-angle: var(--kf-minute-angle);
+  width: 4px;
+  height: 33%;
+  background: #246b58;
+}
+#kids-full-lesson .kf-clock::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--kf-ink);
+  transform: translate(-50%, -50%);
+  content: '';
+}
+#kids-full-lesson .kf-look-card .kf-clock { margin-bottom: 12px; }
+#kids-full-lesson .kf-clock-art { display: grid; flex-shrink: 0; place-items: center; }
+#kids-full-lesson[data-lesson="what-time-do-you-get-up"] .kf-picture-question .kf-feedback {
+  flex-basis: auto;
+}
+#kids-full-lesson .kf-clock-extension {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+#kids-full-lesson .kf-clock-extension .kf-clock { margin: 0; }
+
+@media print {
+  #kids-full-lesson .kf-picture-question .kf-clock-art { height: 94px; }
+  #kids-full-lesson .kf-clock {
+    width: 86px;
+    font-size: 9px;
+    print-color-adjust: exact;
+  }
+}

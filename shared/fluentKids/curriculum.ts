@@ -49,6 +49,7 @@ export const GO_STRAIGHT_TURN_LEFT_LESSON_ID = 'fluent-kids-l2-u1-l2';
 export const FOLLOW_THE_MAP_LESSON_ID = 'fluent-kids-l2-u1-l3';
 export const ASK_A_LOCAL_LESSON_ID = 'fluent-kids-l2-u1-l4';
 export const HELP_A_VISITOR_LESSON_ID = 'fluent-kids-l2-u1-l5';
+export const WHAT_TIME_DO_YOU_GET_UP_LESSON_ID = 'fluent-kids-l2-u2-l1';
 
 const availableLessons = [
   { id: PARK_LESSON_ID, goalTextEn: 'I can name things I see and ask, “What do you see?”' },
@@ -96,6 +97,7 @@ const availableLessons = [
   { id: FOLLOW_THE_MAP_LESSON_ID, goalTextEn: 'I can follow directions on a map and say where I end up.' },
   { id: ASK_A_LOCAL_LESSON_ID, goalTextEn: 'I can ask for directions politely and check what I heard.' },
   { id: HELP_A_VISITOR_LESSON_ID, goalTextEn: 'I can suggest a place, give directions on a map, and check that my visitor knows the way.' },
+  { id: WHAT_TIME_DO_YOU_GET_UP_LESSON_ID, goalTextEn: 'I can ask what time someone gets up and say what time I get up.' },
 ] as const;
 
 export type FluentKidsLessonId = typeof availableLessons[number]['id'];
