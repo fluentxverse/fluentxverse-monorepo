@@ -51,6 +51,7 @@ import ourWeekInPictures from './our-week-in-pictures.html?raw';
 import whereDoAnimalsLive from './where-do-animals-live.html?raw';
 import whatDoTheyEat from './what-do-they-eat.html?raw';
 import readAnAnimalFactCard from './read-an-animal-fact-card.html?raw';
+import compareTwoAnimals from './compare-two-animals.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -227,6 +228,7 @@ import animalFoodInsects from './art/animal-food-insects.webp';
 import animalFoodFish from './art/animal-food-fish.webp';
 import animalFoodLeaves from './art/animal-food-leaves.webp';
 import miaBenReadFrogCard from './art/mia-ben-read-frog-card.webp';
+import miaBenCompareAnimals from './art/mia-ben-compare-animals.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -237,6 +239,7 @@ import {
   CAN_IT_SWIM_LESSON_ID,
   CAN_YOU_PLAY_WITH_ME_LESSON_ID,
   COLOR_HUNT_LESSON_ID,
+  COMPARE_TWO_ANIMALS_LESSON_ID,
   FOLLOW_THE_MAP_LESSON_ID,
   GO_STRAIGHT_TURN_LEFT_LESSON_ID,
   GUESS_MY_ANIMAL_LESSON_ID,
@@ -339,6 +342,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [WHERE_DO_ANIMALS_LIVE_LESSON_ID]: whereDoAnimalsLive,
   [WHAT_DO_THEY_EAT_LESSON_ID]: whatDoTheyEat,
   [READ_AN_ANIMAL_FACT_CARD_LESSON_ID]: readAnAnimalFactCard,
+  [COMPARE_TWO_ANIMALS_LESSON_ID]: compareTwoAnimals,
 };
 
 const artwork: Record<string, string> = {
@@ -511,6 +515,7 @@ const artwork: Record<string, string> = {
   'animal-food-fish': animalFoodFish,
   'animal-food-leaves': animalFoodLeaves,
   'mia-ben-read-frog-card': miaBenReadFrogCard,
+  'mia-ben-compare-animals': miaBenCompareAnimals,
 };
 
 interface LessonOptions {

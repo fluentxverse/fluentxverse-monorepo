@@ -668,7 +668,8 @@
   [data-lesson="our-week-in-pictures"],
   [data-lesson="where-do-animals-live"],
   [data-lesson="what-do-they-eat"],
-  [data-lesson="read-an-animal-fact-card"]
+  [data-lesson="read-an-animal-fact-card"],
+  [data-lesson="compare-two-animals"]
 ) .kf-picture-question .kf-feedback {
   flex-basis: auto;
 }
@@ -724,7 +725,7 @@
   outline-offset: 2px;
 }
 
-#kids-full-lesson .kf-week-chart {
+#kids-full-lesson :is(.kf-week-chart, .kf-animal-compare) {
   width: 100%;
   table-layout: fixed;
   border-collapse: separate;
@@ -732,7 +733,7 @@
   font-size: clamp(10px, 1.4vw, 14px);
   line-height: 1.3;
 }
-#kids-full-lesson .kf-week-chart caption {
+#kids-full-lesson :is(.kf-week-chart, .kf-animal-compare) caption {
   padding-bottom: 8px;
   text-align: left;
   color: var(--kf-ink);
@@ -761,13 +762,33 @@
   color: var(--kf-green);
   font-weight: 800;
 }
+#kids-full-lesson .kf-animal-compare {
+  font-size: clamp(11px, 1.5vw, 15px);
+}
+#kids-full-lesson .kf-animal-compare th,
+#kids-full-lesson .kf-animal-compare td {
+  padding: 7px 5px;
+  border-radius: 5px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+#kids-full-lesson .kf-animal-compare th { background: var(--kf-soft); }
+#kids-full-lesson .kf-animal-compare td { background: #f4f2e9; }
+#kids-full-lesson .kf-animal-compare th:first-child { width: 26%; }
+#kids-full-lesson .kf-animal-compare th img {
+  display: block;
+  width: min(100%, 90px);
+  aspect-ratio: 1;
+  border-radius: 6px;
+  margin-bottom: 5px;
+}
 
 @media screen and (min-width: 651px) {
   #kids-full-lesson .kf-frequency-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media print {
-  #kids-full-lesson .kf-week-chart { break-inside: avoid; }
+  #kids-full-lesson :is(.kf-week-chart, .kf-animal-compare) { break-inside: avoid; }
   #kids-full-lesson .kf-picture-question .kf-clock-art { height: 94px; }
   #kids-full-lesson .kf-clock {
     width: 86px;
