@@ -28,6 +28,7 @@ import canYouPlayWithMe from './can-you-play-with-me.html?raw';
 import myTurnYourTurn from './my-turn-your-turn.html?raw';
 import pickAGameTogether from './pick-a-game-together.html?raw';
 import playgroundPartners from './playground-partners.html?raw';
+import meetMyFamily from './meet-my-family.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -126,6 +127,12 @@ import playgroundGameChoices from './art/playground-game-choices.webp';
 import playgroundBoardGameTogether from './art/playground-board-game-together.webp';
 import playgroundPartnersChoose from './art/playground-partners-choose.webp';
 import playgroundPartnersTag from './art/playground-partners-tag.webp';
+import miasFamilyPortrait from './art/mias-family-portrait.webp';
+import miaShowsFamilyPicture from './art/mia-shows-family-picture.webp';
+import miasMom from './art/mias-mom.webp';
+import miasDad from './art/mias-dad.webp';
+import miasBrother from './art/mias-brother.webp';
+import miasGrandma from './art/mias-grandma.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -139,6 +146,7 @@ import {
   HOW_MANY_PENCILS_LESSON_ID,
   I_LIKE_APPLES_LESSON_ID,
   LUNCHBOX_LESSON_ID,
+  MEET_MY_FAMILY_LESSON_ID,
   MEET_THE_ANIMALS_LESSON_ID,
   MY_TURN_YOUR_TURN_LESSON_ID,
   PACK_FOR_A_RAINY_DAY_LESSON_ID,
@@ -192,6 +200,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [MY_TURN_YOUR_TURN_LESSON_ID]: myTurnYourTurn,
   [PICK_A_GAME_TOGETHER_LESSON_ID]: pickAGameTogether,
   [PLAYGROUND_PARTNERS_LESSON_ID]: playgroundPartners,
+  [MEET_MY_FAMILY_LESSON_ID]: meetMyFamily,
 };
 
 const artwork: Record<string, string> = {
@@ -286,6 +295,12 @@ const artwork: Record<string, string> = {
   'playground-board-game-together': playgroundBoardGameTogether,
   'playground-partners-choose': playgroundPartnersChoose,
   'playground-partners-tag': playgroundPartnersTag,
+  'mias-family-portrait': miasFamilyPortrait,
+  'mia-shows-family-picture': miaShowsFamilyPicture,
+  'mias-mom': miasMom,
+  'mias-dad': miasDad,
+  'mias-brother': miasBrother,
+  'mias-grandma': miasGrandma,
 };
 
 interface LessonOptions {
