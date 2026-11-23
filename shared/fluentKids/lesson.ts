@@ -25,6 +25,7 @@ import packForARainyDay from './pack-for-a-rainy-day.html?raw';
 import weatherHelper from './weather-helper.html?raw';
 import whatDoYouLikeToPlay from './what-do-you-like-to-play.html?raw';
 import canYouPlayWithMe from './can-you-play-with-me.html?raw';
+import myTurnYourTurn from './my-turn-your-turn.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -117,6 +118,8 @@ import playHopscotch from './art/play-hopscotch.webp';
 import playBoardGames from './art/play-board-games.webp';
 import playgroundInvitation from './art/playground-invitation.webp';
 import playgroundSoccerPass from './art/playground-soccer-pass.webp';
+import hopscotchMiasTurn from './art/hopscotch-mias-turn.webp';
+import hopscotchBensTurn from './art/hopscotch-bens-turn.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -131,6 +134,7 @@ import {
   I_LIKE_APPLES_LESSON_ID,
   LUNCHBOX_LESSON_ID,
   MEET_THE_ANIMALS_LESSON_ID,
+  MY_TURN_YOUR_TURN_LESSON_ID,
   PACK_FOR_A_RAINY_DAY_LESSON_ID,
   PACK_FOR_CLASS_LESSON_ID,
   PARK_DETECTIVES_LESSON_ID,
@@ -177,6 +181,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [WEATHER_HELPER_LESSON_ID]: weatherHelper,
   [WHAT_DO_YOU_LIKE_TO_PLAY_LESSON_ID]: whatDoYouLikeToPlay,
   [CAN_YOU_PLAY_WITH_ME_LESSON_ID]: canYouPlayWithMe,
+  [MY_TURN_YOUR_TURN_LESSON_ID]: myTurnYourTurn,
 };
 
 const artwork: Record<string, string> = {
@@ -265,6 +270,8 @@ const artwork: Record<string, string> = {
   'play-board-games': playBoardGames,
   'playground-invitation': playgroundInvitation,
   'playground-soccer-pass': playgroundSoccerPass,
+  'hopscotch-mias-turn': hopscotchMiasTurn,
+  'hopscotch-bens-turn': hopscotchBensTurn,
 };
 
 interface LessonOptions {
