@@ -47,6 +47,7 @@ import whatTimeDoYouGetUp from './what-time-do-you-get-up.html?raw';
 import mySchoolDayRoutine from './my-school-day-routine.html?raw';
 import howOftenDoYouPlay from './how-often-do-you-play.html?raw';
 import interviewAFriend from './interview-a-friend.html?raw';
+import ourWeekInPictures from './our-week-in-pictures.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -211,6 +212,7 @@ import miaBenWeeklyActivities from './art/mia-ben-weekly-activities.webp';
 import benDrawsAPicture from './art/ben-draws-a-picture.webp';
 import benReadsABook from './art/ben-reads-a-book.webp';
 import miaInterviewsHana from './art/mia-interviews-hana.webp';
+import ourWeekPresentation from './art/our-week-presentation.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -236,6 +238,7 @@ import {
   MEET_THE_CHARACTERS_LESSON_ID,
   MY_TURN_YOUR_TURN_LESSON_ID,
   MY_SCHOOL_DAY_ROUTINE_LESSON_ID,
+  OUR_WEEK_IN_PICTURES_LESSON_ID,
   PACK_FOR_A_RAINY_DAY_LESSON_ID,
   PACK_FOR_CLASS_LESSON_ID,
   PARK_DETECTIVES_LESSON_ID,
@@ -315,6 +318,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [MY_SCHOOL_DAY_ROUTINE_LESSON_ID]: mySchoolDayRoutine,
   [HOW_OFTEN_DO_YOU_PLAY_LESSON_ID]: howOftenDoYouPlay,
   [INTERVIEW_A_FRIEND_LESSON_ID]: interviewAFriend,
+  [OUR_WEEK_IN_PICTURES_LESSON_ID]: ourWeekInPictures,
 };
 
 const artwork: Record<string, string> = {
@@ -475,6 +479,7 @@ const artwork: Record<string, string> = {
   'ben-draws-a-picture': benDrawsAPicture,
   'ben-reads-a-book': benReadsABook,
   'mia-interviews-hana': miaInterviewsHana,
+  'our-week-presentation': ourWeekPresentation,
 };
 
 interface LessonOptions {
