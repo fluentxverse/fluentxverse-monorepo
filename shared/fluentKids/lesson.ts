@@ -30,6 +30,7 @@ import pickAGameTogether from './pick-a-game-together.html?raw';
 import playgroundPartners from './playground-partners.html?raw';
 import meetMyFamily from './meet-my-family.html?raw';
 import whosInThePicture from './whos-in-the-picture.html?raw';
+import howAreTheyFeeling from './how-are-they-feeling.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -140,6 +141,12 @@ import bensSister from './art/bens-sister.webp';
 import bensGrandpa from './art/bens-grandpa.webp';
 import bensFriend from './art/bens-friend.webp';
 import bensTeacher from './art/bens-teacher.webp';
+import miaLooksForDrawing from './art/mia-looks-for-drawing.webp';
+import miaFindsDrawing from './art/mia-finds-drawing.webp';
+import miaFeelingWorried from './art/mia-feeling-worried.webp';
+import miaFeelingExcited from './art/mia-feeling-excited.webp';
+import leoFeelingSad from './art/leo-feeling-sad.webp';
+import benFeelingHappy from './art/ben-feeling-happy.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -150,6 +157,7 @@ import {
   CAN_YOU_PLAY_WITH_ME_LESSON_ID,
   COLOR_HUNT_LESSON_ID,
   GUESS_MY_ANIMAL_LESSON_ID,
+  HOW_ARE_THEY_FEELING_LESSON_ID,
   HOW_MANY_PENCILS_LESSON_ID,
   I_LIKE_APPLES_LESSON_ID,
   LUNCHBOX_LESSON_ID,
@@ -210,6 +218,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [PLAYGROUND_PARTNERS_LESSON_ID]: playgroundPartners,
   [MEET_MY_FAMILY_LESSON_ID]: meetMyFamily,
   [WHOS_IN_THE_PICTURE_LESSON_ID]: whosInThePicture,
+  [HOW_ARE_THEY_FEELING_LESSON_ID]: howAreTheyFeeling,
 };
 
 const artwork: Record<string, string> = {
@@ -316,6 +325,12 @@ const artwork: Record<string, string> = {
   'bens-grandpa': bensGrandpa,
   'bens-friend': bensFriend,
   'bens-teacher': bensTeacher,
+  'mia-looks-for-drawing': miaLooksForDrawing,
+  'mia-finds-drawing': miaFindsDrawing,
+  'mia-feeling-worried': miaFeelingWorried,
+  'mia-feeling-excited': miaFeelingExcited,
+  'leo-feeling-sad': leoFeelingSad,
+  'ben-feeling-happy': benFeelingHappy,
 };
 
 interface LessonOptions {
