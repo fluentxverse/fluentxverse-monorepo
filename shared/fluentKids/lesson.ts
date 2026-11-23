@@ -50,6 +50,7 @@ import interviewAFriend from './interview-a-friend.html?raw';
 import ourWeekInPictures from './our-week-in-pictures.html?raw';
 import whereDoAnimalsLive from './where-do-animals-live.html?raw';
 import whatDoTheyEat from './what-do-they-eat.html?raw';
+import readAnAnimalFactCard from './read-an-animal-fact-card.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -225,6 +226,7 @@ import animalFoodSeeds from './art/animal-food-seeds.webp';
 import animalFoodInsects from './art/animal-food-insects.webp';
 import animalFoodFish from './art/animal-food-fish.webp';
 import animalFoodLeaves from './art/animal-food-leaves.webp';
+import miaBenReadFrogCard from './art/mia-ben-read-frog-card.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -259,6 +261,7 @@ import {
   PICK_A_GAME_TOGETHER_LESSON_ID,
   PLACES_IN_MY_TOWN_LESSON_ID,
   PLAYGROUND_PARTNERS_LESSON_ID,
+  READ_AN_ANIMAL_FACT_CARD_LESSON_ID,
   READY_FOR_SCHOOL_LESSON_ID,
   SCHOOL_BAG_LESSON_ID,
   SNACK_STAND_LESSON_ID,
@@ -335,6 +338,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [OUR_WEEK_IN_PICTURES_LESSON_ID]: ourWeekInPictures,
   [WHERE_DO_ANIMALS_LIVE_LESSON_ID]: whereDoAnimalsLive,
   [WHAT_DO_THEY_EAT_LESSON_ID]: whatDoTheyEat,
+  [READ_AN_ANIMAL_FACT_CARD_LESSON_ID]: readAnAnimalFactCard,
 };
 
 const artwork: Record<string, string> = {
@@ -506,6 +510,7 @@ const artwork: Record<string, string> = {
   'animal-food-insects': animalFoodInsects,
   'animal-food-fish': animalFoodFish,
   'animal-food-leaves': animalFoodLeaves,
+  'mia-ben-read-frog-card': miaBenReadFrogCard,
 };
 
 interface LessonOptions {

@@ -667,7 +667,8 @@
   [data-lesson="interview-a-friend"],
   [data-lesson="our-week-in-pictures"],
   [data-lesson="where-do-animals-live"],
-  [data-lesson="what-do-they-eat"]
+  [data-lesson="what-do-they-eat"],
+  [data-lesson="read-an-animal-fact-card"]
 ) .kf-picture-question .kf-feedback {
   flex-basis: auto;
 }
@@ -693,6 +694,15 @@
   aspect-ratio: 1;
   margin-bottom: 0;
 }
+
+#kids-full-lesson .kf-fact-card dl { display: grid; gap: 8px; margin: 0; }
+#kids-full-lesson .kf-fact-card dl > div {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--kf-soft);
+}
+#kids-full-lesson .kf-fact-card dt { font-weight: 700; }
+#kids-full-lesson .kf-fact-card dd { margin: 4px 0 0; }
 
 #kids-full-lesson .kf-interview-notes label { display: grid; gap: 6px; font-weight: 700; }
 #kids-full-lesson .kf-interview-notes input {
