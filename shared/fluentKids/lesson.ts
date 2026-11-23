@@ -35,6 +35,7 @@ import whatDoTheyLike from './what-do-they-like.html?raw';
 import meetTheCharacters from './meet-the-characters.html?raw';
 import welcomeToMyHome from './welcome-to-my-home.html?raw';
 import whatsInThisRoom from './whats-in-this-room.html?raw';
+import whereAreMyShoes from './where-are-my-shoes.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -168,6 +169,12 @@ import homeSofaCard from './art/home-sofa-card.webp';
 import homeLampCard from './art/home-lamp-card.webp';
 import homeRugCard from './art/home-rug-card.webp';
 import homeCushionsCard from './art/home-cushions-card.webp';
+import miasEntrywaySearch from './art/mias-entryway-search.webp';
+import miaFindsBlueShoes from './art/mia-finds-blue-shoes.webp';
+import entrywayShoesUnderBench from './art/entryway-shoes-under-bench.webp';
+import entrywayKeyOnTable from './art/entryway-key-on-table.webp';
+import entrywayHatInBasket from './art/entryway-hat-in-basket.webp';
+import entrywayBagNextToDoor from './art/entryway-bag-next-to-door.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -204,6 +211,7 @@ import {
   WHAT_DO_THEY_LIKE_LESSON_ID,
   WHAT_DO_YOU_LIKE_TO_PLAY_LESSON_ID,
   WHAT_SHOULD_I_WEAR_LESSON_ID,
+  WHERE_ARE_MY_SHOES_LESSON_ID,
   WHERES_THE_BALL_LESSON_ID,
   WHOS_IN_THE_PICTURE_LESSON_ID,
   type FluentKidsLessonId,
@@ -248,6 +256,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [MEET_THE_CHARACTERS_LESSON_ID]: meetTheCharacters,
   [WELCOME_TO_MY_HOME_LESSON_ID]: welcomeToMyHome,
   [WHATS_IN_THIS_ROOM_LESSON_ID]: whatsInThisRoom,
+  [WHERE_ARE_MY_SHOES_LESSON_ID]: whereAreMyShoes,
 };
 
 const artwork: Record<string, string> = {
@@ -377,6 +386,12 @@ const artwork: Record<string, string> = {
   'home-lamp-card': homeLampCard,
   'home-rug-card': homeRugCard,
   'home-cushions-card': homeCushionsCard,
+  'mias-entryway-search': miasEntrywaySearch,
+  'mia-finds-blue-shoes': miaFindsBlueShoes,
+  'entryway-shoes-under-bench': entrywayShoesUnderBench,
+  'entryway-key-on-table': entrywayKeyOnTable,
+  'entryway-hat-in-basket': entrywayHatInBasket,
+  'entryway-bag-next-to-door': entrywayBagNextToDoor,
 };
 
 interface LessonOptions {
