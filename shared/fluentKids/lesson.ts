@@ -53,6 +53,7 @@ import whatDoTheyEat from './what-do-they-eat.html?raw';
 import readAnAnimalFactCard from './read-an-animal-fact-card.html?raw';
 import compareTwoAnimals from './compare-two-animals.html?raw';
 import habitatMatch from './habitat-match.html?raw';
+import readTheMenu from './read-the-menu.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -235,6 +236,11 @@ import matchForest from './art/match-forest.webp';
 import matchPond from './art/match-pond.webp';
 import matchOcean from './art/match-ocean.webp';
 import matchDesert from './art/match-desert.webp';
+import miaBenReadMenu from './art/mia-ben-read-menu.webp';
+import cafeCheeseSandwich from './art/cafe-cheese-sandwich.webp';
+import cafeFruitCup from './art/cafe-fruit-cup.webp';
+import cafeAppleJuice from './art/cafe-apple-juice.webp';
+import cafeWater from './art/cafe-water.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -272,6 +278,7 @@ import {
   PLACES_IN_MY_TOWN_LESSON_ID,
   PLAYGROUND_PARTNERS_LESSON_ID,
   READ_AN_ANIMAL_FACT_CARD_LESSON_ID,
+  READ_THE_MENU_LESSON_ID,
   READY_FOR_SCHOOL_LESSON_ID,
   SCHOOL_BAG_LESSON_ID,
   SNACK_STAND_LESSON_ID,
@@ -351,6 +358,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [READ_AN_ANIMAL_FACT_CARD_LESSON_ID]: readAnAnimalFactCard,
   [COMPARE_TWO_ANIMALS_LESSON_ID]: compareTwoAnimals,
   [HABITAT_MATCH_LESSON_ID]: habitatMatch,
+  [READ_THE_MENU_LESSON_ID]: readTheMenu,
 };
 
 const artwork: Record<string, string> = {
@@ -529,6 +537,11 @@ const artwork: Record<string, string> = {
   'match-pond': matchPond,
   'match-ocean': matchOcean,
   'match-desert': matchDesert,
+  'mia-ben-read-menu': miaBenReadMenu,
+  'cafe-cheese-sandwich': cafeCheeseSandwich,
+  'cafe-fruit-cup': cafeFruitCup,
+  'cafe-apple-juice': cafeAppleJuice,
+  'cafe-water': cafeWater,
 };
 
 interface LessonOptions {
