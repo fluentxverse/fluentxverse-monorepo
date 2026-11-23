@@ -48,6 +48,7 @@ import mySchoolDayRoutine from './my-school-day-routine.html?raw';
 import howOftenDoYouPlay from './how-often-do-you-play.html?raw';
 import interviewAFriend from './interview-a-friend.html?raw';
 import ourWeekInPictures from './our-week-in-pictures.html?raw';
+import whereDoAnimalsLive from './where-do-animals-live.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -213,6 +214,11 @@ import benDrawsAPicture from './art/ben-draws-a-picture.webp';
 import benReadsABook from './art/ben-reads-a-book.webp';
 import miaInterviewsHana from './art/mia-interviews-hana.webp';
 import ourWeekPresentation from './art/our-week-presentation.webp';
+import miaBenHabitatGallery from './art/mia-ben-habitat-gallery.webp';
+import habitatForestSquirrel from './art/habitat-forest-squirrel.webp';
+import habitatPondFrog from './art/habitat-pond-frog.webp';
+import habitatOceanDolphin from './art/habitat-ocean-dolphin.webp';
+import habitatDesertCamel from './art/habitat-desert-camel.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -262,6 +268,7 @@ import {
   WHAT_SHOULD_I_WEAR_LESSON_ID,
   WHAT_TIME_DO_YOU_GET_UP_LESSON_ID,
   WHERE_ARE_MY_SHOES_LESSON_ID,
+  WHERE_DO_ANIMALS_LIVE_LESSON_ID,
   WHERES_THE_BALL_LESSON_ID,
   WHOS_IN_THE_PICTURE_LESSON_ID,
   type FluentKidsLessonId,
@@ -319,6 +326,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [HOW_OFTEN_DO_YOU_PLAY_LESSON_ID]: howOftenDoYouPlay,
   [INTERVIEW_A_FRIEND_LESSON_ID]: interviewAFriend,
   [OUR_WEEK_IN_PICTURES_LESSON_ID]: ourWeekInPictures,
+  [WHERE_DO_ANIMALS_LIVE_LESSON_ID]: whereDoAnimalsLive,
 };
 
 const artwork: Record<string, string> = {
@@ -480,6 +488,11 @@ const artwork: Record<string, string> = {
   'ben-reads-a-book': benReadsABook,
   'mia-interviews-hana': miaInterviewsHana,
   'our-week-presentation': ourWeekPresentation,
+  'mia-ben-habitat-gallery': miaBenHabitatGallery,
+  'habitat-forest-squirrel': habitatForestSquirrel,
+  'habitat-pond-frog': habitatPondFrog,
+  'habitat-ocean-dolphin': habitatOceanDolphin,
+  'habitat-desert-camel': habitatDesertCamel,
 };
 
 interface LessonOptions {

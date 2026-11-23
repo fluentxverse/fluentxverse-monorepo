@@ -665,7 +665,8 @@
   [data-lesson="my-school-day-routine"],
   [data-lesson="how-often-do-you-play"],
   [data-lesson="interview-a-friend"],
-  [data-lesson="our-week-in-pictures"]
+  [data-lesson="our-week-in-pictures"],
+  [data-lesson="where-do-animals-live"]
 ) .kf-picture-question .kf-feedback {
   flex-basis: auto;
 }
