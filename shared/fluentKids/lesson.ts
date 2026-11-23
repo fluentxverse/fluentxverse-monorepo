@@ -33,6 +33,7 @@ import whosInThePicture from './whos-in-the-picture.html?raw';
 import howAreTheyFeeling from './how-are-they-feeling.html?raw';
 import whatDoTheyLike from './what-do-they-like.html?raw';
 import meetTheCharacters from './meet-the-characters.html?raw';
+import welcomeToMyHome from './welcome-to-my-home.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -154,6 +155,12 @@ import hanaReadsBook from './art/hana-reads-book.webp';
 import grandpaTendsGarden from './art/grandpa-tends-garden.webp';
 import classCharacterGallery from './art/class-character-gallery.webp';
 import miaSharesHanaPicture from './art/mia-shares-hana-picture.webp';
+import miasHomeCutaway from './art/mias-home-cutaway.webp';
+import miaWelcomesBenHome from './art/mia-welcomes-ben-home.webp';
+import homeBedroom from './art/home-bedroom.webp';
+import homeBathroom from './art/home-bathroom.webp';
+import homeLivingRoom from './art/home-living-room.webp';
+import homeKitchen from './art/home-kitchen.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -183,6 +190,7 @@ import {
   SCHOOL_BAG_LESSON_ID,
   SNACK_STAND_LESSON_ID,
   WEATHER_HELPER_LESSON_ID,
+  WELCOME_TO_MY_HOME_LESSON_ID,
   WHATS_THE_WEATHER_LIKE_LESSON_ID,
   WHAT_ARE_YOU_WEARING_LESSON_ID,
   WHAT_DO_THEY_LIKE_LESSON_ID,
@@ -230,6 +238,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [HOW_ARE_THEY_FEELING_LESSON_ID]: howAreTheyFeeling,
   [WHAT_DO_THEY_LIKE_LESSON_ID]: whatDoTheyLike,
   [MEET_THE_CHARACTERS_LESSON_ID]: meetTheCharacters,
+  [WELCOME_TO_MY_HOME_LESSON_ID]: welcomeToMyHome,
 };
 
 const artwork: Record<string, string> = {
@@ -347,6 +356,12 @@ const artwork: Record<string, string> = {
   'grandpa-tends-garden': grandpaTendsGarden,
   'class-character-gallery': classCharacterGallery,
   'mia-shares-hana-picture': miaSharesHanaPicture,
+  'mias-home-cutaway': miasHomeCutaway,
+  'mia-welcomes-ben-home': miaWelcomesBenHome,
+  'home-bedroom': homeBedroom,
+  'home-bathroom': homeBathroom,
+  'home-living-room': homeLivingRoom,
+  'home-kitchen': homeKitchen,
 };
 
 interface LessonOptions {
