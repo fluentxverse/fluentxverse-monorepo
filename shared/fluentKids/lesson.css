@@ -523,25 +523,28 @@
   background: #eaf1e2;
 }
 #kids-full-lesson .kf-path-grid {
+  --kf-path-row-gap: 12px;
   display: grid;
   isolation: isolate;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(3, auto);
-  gap: 12px 8px;
+  gap: var(--kf-path-row-gap) 8px;
   align-items: center;
   text-align: center;
 }
 #kids-full-lesson .kf-path-grid::before,
-#kids-full-lesson .kf-path-grid::after {
-  content: '';
-  background: #92ae99;
+#kids-full-lesson .kf-path-grid::after,
+#kids-full-lesson .kf-route-bend {
+  background: var(--kf-path-color, #92ae99);
   border-radius: 10px;
 }
 #kids-full-lesson .kf-path-grid::before {
+  content: '';
   grid-area: 2 / 1 / 3 / 4;
   height: 10px;
 }
 #kids-full-lesson .kf-path-grid::after {
+  content: '';
   grid-area: 1 / 2 / 4 / 3;
   justify-self: center;
   align-self: stretch;
@@ -580,6 +583,22 @@
   line-height: 1;
 }
 #kids-full-lesson .kf-path-map figcaption { margin-top: 10px; }
+#kids-full-lesson .kf-route-grid {
+  --kf-path-color: #658772;
+  grid-template-rows: repeat(3, 1fr);
+}
+#kids-full-lesson .kf-route-grid::after {
+  align-self: center;
+  height: calc((100% + var(--kf-path-row-gap)) * 2 / 3);
+}
+#kids-full-lesson .kf-route-grid .kf-path-stop { padding-inline: 2px; }
+#kids-full-lesson .kf-route-bend {
+  grid-area: 1 / 3 / 3 / 4;
+  justify-self: center;
+  width: 10px;
+  height: calc(50% + var(--kf-path-row-gap) / 2);
+}
+#kids-full-lesson .kf-route-bakery { grid-area: 1 / 3; }
 
 @media print {
   #kids-full-lesson .kf-example-body .kf-direction-symbol { min-height: 138px; }

@@ -40,6 +40,7 @@ import whatAreTheyDoing from './what-are-they-doing.html?raw';
 import theHomeTour from './the-home-tour.html?raw';
 import placesInMyTown from './places-in-my-town.html?raw';
 import goStraightTurnLeft from './go-straight-turn-left.html?raw';
+import followTheMap from './follow-the-map.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -191,6 +192,8 @@ import townBakeryCard from './art/town-bakery-card.webp';
 import townParkCard from './art/town-park-card.webp';
 import townBusStopCard from './art/town-bus-stop-card.webp';
 import miaBenAtTheCorner from './art/mia-ben-at-the-corner.webp';
+import miaBenReadTownMap from './art/mia-ben-read-town-map.webp';
+import townFountainCard from './art/town-fountain-card.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -200,6 +203,7 @@ import {
   CAN_IT_SWIM_LESSON_ID,
   CAN_YOU_PLAY_WITH_ME_LESSON_ID,
   COLOR_HUNT_LESSON_ID,
+  FOLLOW_THE_MAP_LESSON_ID,
   GO_STRAIGHT_TURN_LEFT_LESSON_ID,
   GUESS_MY_ANIMAL_LESSON_ID,
   HOW_ARE_THEY_FEELING_LESSON_ID,
@@ -281,6 +285,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [THE_HOME_TOUR_LESSON_ID]: theHomeTour,
   [PLACES_IN_MY_TOWN_LESSON_ID]: placesInMyTown,
   [GO_STRAIGHT_TURN_LEFT_LESSON_ID]: goStraightTurnLeft,
+  [FOLLOW_THE_MAP_LESSON_ID]: followTheMap,
 };
 
 const artwork: Record<string, string> = {
@@ -428,6 +433,8 @@ const artwork: Record<string, string> = {
   'town-park-card': townParkCard,
   'town-bus-stop-card': townBusStopCard,
   'mia-ben-at-the-corner': miaBenAtTheCorner,
+  'mia-ben-read-town-map': miaBenReadTownMap,
+  'town-fountain-card': townFountainCard,
 };
 
 interface LessonOptions {
