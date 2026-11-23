@@ -37,6 +37,7 @@ import welcomeToMyHome from './welcome-to-my-home.html?raw';
 import whatsInThisRoom from './whats-in-this-room.html?raw';
 import whereAreMyShoes from './where-are-my-shoes.html?raw';
 import whatAreTheyDoing from './what-are-they-doing.html?raw';
+import theHomeTour from './the-home-tour.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -180,6 +181,8 @@ import miaBenPlayAtHome from './art/mia-ben-play-at-home.webp';
 import momCookingLunch from './art/mom-cooking-lunch.webp';
 import dadReadingAtHome from './art/dad-reading-at-home.webp';
 import miaDrawingAtHome from './art/mia-drawing-at-home.webp';
+import miaWelcomesHanaHome from './art/mia-welcomes-hana-home.webp';
+import miaShowsHanaLivingRoom from './art/mia-shows-hana-living-room.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -208,6 +211,7 @@ import {
   READY_FOR_SCHOOL_LESSON_ID,
   SCHOOL_BAG_LESSON_ID,
   SNACK_STAND_LESSON_ID,
+  THE_HOME_TOUR_LESSON_ID,
   WEATHER_HELPER_LESSON_ID,
   WELCOME_TO_MY_HOME_LESSON_ID,
   WHATS_THE_WEATHER_LIKE_LESSON_ID,
@@ -264,6 +268,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [WHATS_IN_THIS_ROOM_LESSON_ID]: whatsInThisRoom,
   [WHERE_ARE_MY_SHOES_LESSON_ID]: whereAreMyShoes,
   [WHAT_ARE_THEY_DOING_LESSON_ID]: whatAreTheyDoing,
+  [THE_HOME_TOUR_LESSON_ID]: theHomeTour,
 };
 
 const artwork: Record<string, string> = {
@@ -403,6 +408,8 @@ const artwork: Record<string, string> = {
   'mom-cooking-lunch': momCookingLunch,
   'dad-reading-at-home': dadReadingAtHome,
   'mia-drawing-at-home': miaDrawingAtHome,
+  'mia-welcomes-hana-home': miaWelcomesHanaHome,
+  'mia-shows-hana-living-room': miaShowsHanaLivingRoom,
 };
 
 interface LessonOptions {
