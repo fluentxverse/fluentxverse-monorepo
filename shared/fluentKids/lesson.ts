@@ -58,6 +58,7 @@ import idLikeASandwich from './id-like-a-sandwich.html?raw';
 import whatWouldYouLikeToDrink from './what-would-you-like-to-drink.html?raw';
 import sorryWereOutOfThat from './sorry-were-out-of-that.html?raw';
 import cafeRoleplay from './cafe-roleplay.html?raw';
+import whatAreYouDoingOnSaturday from './what-are-you-doing-on-saturday.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -249,6 +250,7 @@ import miaBenOrderSandwich from './art/mia-ben-order-sandwich.webp';
 import miaBenChooseDrinks from './art/mia-ben-choose-drinks.webp';
 import miaBenSoldOut from './art/mia-ben-sold-out.webp';
 import miaBenCafeRoleplay from './art/mia-ben-cafe-roleplay.webp';
+import miaBenSaturdayPlans from './art/mia-ben-saturday-plans.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -301,6 +303,7 @@ import {
   WHAT_ARE_YOU_WEARING_LESSON_ID,
   WHAT_ARE_THEY_DOING_LESSON_ID,
   WHAT_DO_THEY_LIKE_LESSON_ID,
+  WHAT_ARE_YOU_DOING_ON_SATURDAY_LESSON_ID,
   WHAT_DO_THEY_EAT_LESSON_ID,
   WHAT_WOULD_YOU_LIKE_TO_DRINK_LESSON_ID,
   WHAT_DO_YOU_LIKE_TO_PLAY_LESSON_ID,
@@ -375,6 +378,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [WHAT_WOULD_YOU_LIKE_TO_DRINK_LESSON_ID]: whatWouldYouLikeToDrink,
   [SORRY_WERE_OUT_OF_THAT_LESSON_ID]: sorryWereOutOfThat,
   [CAFE_ROLEPLAY_LESSON_ID]: cafeRoleplay,
+  [WHAT_ARE_YOU_DOING_ON_SATURDAY_LESSON_ID]: whatAreYouDoingOnSaturday,
 };
 
 const artwork: Record<string, string> = {
@@ -562,6 +566,7 @@ const artwork: Record<string, string> = {
   'mia-ben-choose-drinks': miaBenChooseDrinks,
   'mia-ben-sold-out': miaBenSoldOut,
   'mia-ben-cafe-roleplay': miaBenCafeRoleplay,
+  'mia-ben-saturday-plans': miaBenSaturdayPlans,
 };
 
 interface LessonOptions {

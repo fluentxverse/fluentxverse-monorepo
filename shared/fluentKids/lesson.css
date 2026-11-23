@@ -742,7 +742,7 @@
   outline-offset: 2px;
 }
 
-#kids-full-lesson :is(.kf-week-chart, .kf-animal-compare, .kf-cafe-menu) {
+#kids-full-lesson :is(.kf-week-chart, .kf-animal-compare, .kf-cafe-menu, .kf-saturday-schedule) {
   width: 100%;
   table-layout: fixed;
   border-collapse: separate;
@@ -750,7 +750,7 @@
   font-size: clamp(10px, 1.4vw, 14px);
   line-height: 1.3;
 }
-#kids-full-lesson :is(.kf-week-chart, .kf-animal-compare, .kf-cafe-menu) caption {
+#kids-full-lesson :is(.kf-week-chart, .kf-animal-compare, .kf-cafe-menu, .kf-saturday-schedule) caption {
   padding-bottom: 8px;
   text-align: left;
   color: var(--kf-ink);
@@ -800,7 +800,7 @@
   margin-bottom: 5px;
 }
 
-#kids-full-lesson .kf-cafe-menu {
+#kids-full-lesson :is(.kf-cafe-menu, .kf-saturday-schedule) {
   font-size: 15px;
 }
 #kids-full-lesson .kf-stock-status {
@@ -841,27 +841,26 @@
     font-size: 13px;
   }
 }
-#kids-full-lesson .kf-cafe-menu caption {
+#kids-full-lesson :is(.kf-cafe-menu, .kf-saturday-schedule) caption {
   font-size: 19px;
 }
-#kids-full-lesson .kf-cafe-menu th,
-#kids-full-lesson .kf-cafe-menu td {
+#kids-full-lesson :is(.kf-cafe-menu, .kf-saturday-schedule) :is(th, td) {
   padding: 6px 9px;
   border-radius: 6px;
   text-align: left;
 }
-#kids-full-lesson .kf-cafe-menu thead th {
+#kids-full-lesson :is(.kf-cafe-menu, .kf-saturday-schedule) thead th {
   background: var(--kf-soft);
 }
-#kids-full-lesson .kf-cafe-menu th[scope="rowgroup"] {
+#kids-full-lesson :is(.kf-cafe-menu, .kf-saturday-schedule) th[scope="rowgroup"] {
   padding-block: 9px 4px;
   color: var(--kf-green);
   font-size: 13px;
 }
-#kids-full-lesson .kf-cafe-menu tbody :is(th[scope="row"], td) {
+#kids-full-lesson :is(.kf-cafe-menu, .kf-saturday-schedule) tbody :is(th[scope="row"], td) {
   background: #f4f2e9;
 }
-#kids-full-lesson .kf-cafe-menu :is(th:last-child:not([colspan]), td) {
+#kids-full-lesson :is(.kf-cafe-menu, .kf-saturday-schedule) :is(th:last-child:not([colspan]), td) {
   text-align: center;
 }
 #kids-full-lesson .kf-cafe-menu thead th:last-child {
@@ -872,13 +871,21 @@
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
-#kids-full-lesson .kf-menu-item {
+#kids-full-lesson .kf-saturday-schedule thead th:last-child {
+  width: 82px;
+}
+#kids-full-lesson .kf-saturday-schedule td {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+#kids-full-lesson :is(.kf-menu-item, .kf-schedule-item) {
   display: flex;
   align-items: center;
   gap: 8px;
   overflow-wrap: anywhere;
 }
-#kids-full-lesson .kf-menu-item img {
+#kids-full-lesson :is(.kf-menu-item, .kf-schedule-item) img {
   width: 48px;
   aspect-ratio: 1;
   border-radius: 6px;
@@ -886,15 +893,16 @@
 }
 
 @media screen and (max-width: 450px) {
-  #kids-full-lesson .kf-cafe-menu thead th:last-child {
+  #kids-full-lesson :is(.kf-cafe-menu, .kf-saturday-schedule) thead th:last-child {
     width: 56px;
     padding-inline: 4px;
   }
-  #kids-full-lesson .kf-menu-item img { width: 42px; }
+  #kids-full-lesson :is(.kf-menu-item, .kf-schedule-item) img { width: 42px; }
+  #kids-full-lesson .kf-saturday-schedule td { padding-inline: 4px; }
 }
 
 @media screen and (min-width: 900px) and (min-height: 700px) {
-  #kids-full-lesson .kf-cafe-reference {
+  #kids-full-lesson :is(.kf-cafe-reference, .kf-saturday-reference) {
     position: sticky;
     top: 16px;
   }
@@ -905,7 +913,7 @@
 }
 
 @media print {
-  #kids-full-lesson :is(.kf-week-chart, .kf-animal-compare, .kf-cafe-menu) { break-inside: avoid; }
+  #kids-full-lesson :is(.kf-week-chart, .kf-animal-compare, .kf-cafe-menu, .kf-saturday-schedule) { break-inside: avoid; }
   #kids-full-lesson .kf-picture-question .kf-clock-art { height: 94px; }
   #kids-full-lesson .kf-clock {
     width: 86px;
