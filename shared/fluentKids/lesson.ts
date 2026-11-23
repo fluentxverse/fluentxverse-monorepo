@@ -38,6 +38,7 @@ import whatsInThisRoom from './whats-in-this-room.html?raw';
 import whereAreMyShoes from './where-are-my-shoes.html?raw';
 import whatAreTheyDoing from './what-are-they-doing.html?raw';
 import theHomeTour from './the-home-tour.html?raw';
+import placesInMyTown from './places-in-my-town.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -183,6 +184,11 @@ import dadReadingAtHome from './art/dad-reading-at-home.webp';
 import miaDrawingAtHome from './art/mia-drawing-at-home.webp';
 import miaWelcomesHanaHome from './art/mia-welcomes-hana-home.webp';
 import miaShowsHanaLivingRoom from './art/mia-shows-hana-living-room.webp';
+import miaBenTownWalk from './art/mia-ben-town-walk.webp';
+import townLibraryCard from './art/town-library-card.webp';
+import townBakeryCard from './art/town-bakery-card.webp';
+import townParkCard from './art/town-park-card.webp';
+import townBusStopCard from './art/town-bus-stop-card.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -207,6 +213,7 @@ import {
   PARK_GUIDE_LESSON_ID,
   PARK_LESSON_ID,
   PICK_A_GAME_TOGETHER_LESSON_ID,
+  PLACES_IN_MY_TOWN_LESSON_ID,
   PLAYGROUND_PARTNERS_LESSON_ID,
   READY_FOR_SCHOOL_LESSON_ID,
   SCHOOL_BAG_LESSON_ID,
@@ -269,6 +276,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [WHERE_ARE_MY_SHOES_LESSON_ID]: whereAreMyShoes,
   [WHAT_ARE_THEY_DOING_LESSON_ID]: whatAreTheyDoing,
   [THE_HOME_TOUR_LESSON_ID]: theHomeTour,
+  [PLACES_IN_MY_TOWN_LESSON_ID]: placesInMyTown,
 };
 
 const artwork: Record<string, string> = {
@@ -410,6 +418,11 @@ const artwork: Record<string, string> = {
   'mia-drawing-at-home': miaDrawingAtHome,
   'mia-welcomes-hana-home': miaWelcomesHanaHome,
   'mia-shows-hana-living-room': miaShowsHanaLivingRoom,
+  'mia-ben-town-walk': miaBenTownWalk,
+  'town-library-card': townLibraryCard,
+  'town-bakery-card': townBakeryCard,
+  'town-park-card': townParkCard,
+  'town-bus-stop-card': townBusStopCard,
 };
 
 interface LessonOptions {

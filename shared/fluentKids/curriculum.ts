@@ -44,6 +44,7 @@ export const WHATS_IN_THIS_ROOM_LESSON_ID = 'fluent-kids-l1-u8-l2';
 export const WHERE_ARE_MY_SHOES_LESSON_ID = 'fluent-kids-l1-u8-l3';
 export const WHAT_ARE_THEY_DOING_LESSON_ID = 'fluent-kids-l1-u8-l4';
 export const THE_HOME_TOUR_LESSON_ID = 'fluent-kids-l1-u8-l5';
+export const PLACES_IN_MY_TOWN_LESSON_ID = 'fluent-kids-l2-u1-l1';
 
 const availableLessons = [
   { id: PARK_LESSON_ID, goalTextEn: 'I can name things I see and ask, “What do you see?”' },
@@ -86,6 +87,7 @@ const availableLessons = [
   { id: WHERE_ARE_MY_SHOES_LESSON_ID, goalTextEn: 'I can ask where things are and give a clue to help someone find them.' },
   { id: WHAT_ARE_THEY_DOING_LESSON_ID, goalTextEn: 'I can ask what someone is doing and describe what one or more people are doing right now.' },
   { id: THE_HOME_TOUR_LESSON_ID, goalTextEn: 'I can give a home tour, describe rooms, help a visitor find something, and say what people are doing.' },
+  { id: PLACES_IN_MY_TOWN_LESSON_ID, goalTextEn: 'I can name places in town and tell a visitor what they can do there.' },
 ] as const;
 
 export type FluentKidsLessonId = typeof availableLessons[number]['id'];
