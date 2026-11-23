@@ -45,6 +45,7 @@ import askALocal from './ask-a-local.html?raw';
 import helpAVisitor from './help-a-visitor.html?raw';
 import whatTimeDoYouGetUp from './what-time-do-you-get-up.html?raw';
 import mySchoolDayRoutine from './my-school-day-routine.html?raw';
+import howOftenDoYouPlay from './how-often-do-you-play.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -205,6 +206,9 @@ import miaBenSchoolMorningChat from './art/mia-ben-school-morning-chat.webp';
 import miaBenSchoolDayChart from './art/mia-ben-school-day-chart.webp';
 import benDoesHomework from './art/ben-does-homework.webp';
 import benGoesToBed from './art/ben-goes-to-bed.webp';
+import miaBenWeeklyActivities from './art/mia-ben-weekly-activities.webp';
+import benDrawsAPicture from './art/ben-draws-a-picture.webp';
+import benReadsABook from './art/ben-reads-a-book.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -221,6 +225,7 @@ import {
   HELP_A_VISITOR_LESSON_ID,
   HOW_ARE_THEY_FEELING_LESSON_ID,
   HOW_MANY_PENCILS_LESSON_ID,
+  HOW_OFTEN_DO_YOU_PLAY_LESSON_ID,
   I_LIKE_APPLES_LESSON_ID,
   LUNCHBOX_LESSON_ID,
   MEET_MY_FAMILY_LESSON_ID,
@@ -305,6 +310,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [HELP_A_VISITOR_LESSON_ID]: helpAVisitor,
   [WHAT_TIME_DO_YOU_GET_UP_LESSON_ID]: whatTimeDoYouGetUp,
   [MY_SCHOOL_DAY_ROUTINE_LESSON_ID]: mySchoolDayRoutine,
+  [HOW_OFTEN_DO_YOU_PLAY_LESSON_ID]: howOftenDoYouPlay,
 };
 
 const artwork: Record<string, string> = {
@@ -461,6 +467,9 @@ const artwork: Record<string, string> = {
   'mia-ben-school-day-chart': miaBenSchoolDayChart,
   'ben-does-homework': benDoesHomework,
   'ben-goes-to-bed': benGoesToBed,
+  'mia-ben-weekly-activities': miaBenWeeklyActivities,
+  'ben-draws-a-picture': benDrawsAPicture,
+  'ben-reads-a-book': benReadsABook,
 };
 
 interface LessonOptions {
