@@ -663,7 +663,8 @@
 #kids-full-lesson:is(
   [data-lesson="what-time-do-you-get-up"],
   [data-lesson="my-school-day-routine"],
-  [data-lesson="how-often-do-you-play"]
+  [data-lesson="how-often-do-you-play"],
+  [data-lesson="interview-a-friend"]
 ) .kf-picture-question .kf-feedback {
   flex-basis: auto;
 }
@@ -676,6 +677,26 @@
 #kids-full-lesson .kf-clock-extension .kf-clock { margin: 0; }
 
 #kids-full-lesson .kf-routine-sequence { list-style: none; padding: 0; }
+
+#kids-full-lesson .kf-interview-notes label { display: grid; gap: 6px; font-weight: 700; }
+#kids-full-lesson .kf-interview-notes input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid #a6bbae;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--kf-ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 400;
+}
+#kids-full-lesson .kf-interview-notes input:focus-visible {
+  outline: 2px solid var(--kf-green);
+  outline-offset: 2px;
+}
 
 #kids-full-lesson .kf-week-chart {
   width: 100%;
