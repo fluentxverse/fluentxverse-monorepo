@@ -52,6 +52,7 @@ import whereDoAnimalsLive from './where-do-animals-live.html?raw';
 import whatDoTheyEat from './what-do-they-eat.html?raw';
 import readAnAnimalFactCard from './read-an-animal-fact-card.html?raw';
 import compareTwoAnimals from './compare-two-animals.html?raw';
+import habitatMatch from './habitat-match.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -229,6 +230,11 @@ import animalFoodFish from './art/animal-food-fish.webp';
 import animalFoodLeaves from './art/animal-food-leaves.webp';
 import miaBenReadFrogCard from './art/mia-ben-read-frog-card.webp';
 import miaBenCompareAnimals from './art/mia-ben-compare-animals.webp';
+import miaBenHabitatMatch from './art/mia-ben-habitat-match.webp';
+import matchForest from './art/match-forest.webp';
+import matchPond from './art/match-pond.webp';
+import matchOcean from './art/match-ocean.webp';
+import matchDesert from './art/match-desert.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -243,6 +249,7 @@ import {
   FOLLOW_THE_MAP_LESSON_ID,
   GO_STRAIGHT_TURN_LEFT_LESSON_ID,
   GUESS_MY_ANIMAL_LESSON_ID,
+  HABITAT_MATCH_LESSON_ID,
   HELP_A_VISITOR_LESSON_ID,
   HOW_ARE_THEY_FEELING_LESSON_ID,
   HOW_MANY_PENCILS_LESSON_ID,
@@ -343,6 +350,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [WHAT_DO_THEY_EAT_LESSON_ID]: whatDoTheyEat,
   [READ_AN_ANIMAL_FACT_CARD_LESSON_ID]: readAnAnimalFactCard,
   [COMPARE_TWO_ANIMALS_LESSON_ID]: compareTwoAnimals,
+  [HABITAT_MATCH_LESSON_ID]: habitatMatch,
 };
 
 const artwork: Record<string, string> = {
@@ -516,6 +524,11 @@ const artwork: Record<string, string> = {
   'animal-food-leaves': animalFoodLeaves,
   'mia-ben-read-frog-card': miaBenReadFrogCard,
   'mia-ben-compare-animals': miaBenCompareAnimals,
+  'mia-ben-habitat-match': miaBenHabitatMatch,
+  'match-forest': matchForest,
+  'match-pond': matchPond,
+  'match-ocean': matchOcean,
+  'match-desert': matchDesert,
 };
 
 interface LessonOptions {

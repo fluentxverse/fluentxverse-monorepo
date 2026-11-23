@@ -669,7 +669,8 @@
   [data-lesson="where-do-animals-live"],
   [data-lesson="what-do-they-eat"],
   [data-lesson="read-an-animal-fact-card"],
-  [data-lesson="compare-two-animals"]
+  [data-lesson="compare-two-animals"],
+  [data-lesson="habitat-match"]
 ) .kf-picture-question .kf-feedback {
   flex-basis: auto;
 }
@@ -704,6 +705,19 @@
 }
 #kids-full-lesson .kf-fact-card dt { font-weight: 700; }
 #kids-full-lesson .kf-fact-card dd { margin: 4px 0 0; }
+
+#kids-full-lesson .kf-match-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#kids-full-lesson .kf-match-choice img {
+  display: block;
+  width: 56px;
+  aspect-ratio: 1;
+  flex: none;
+  border-radius: 6px;
+}
 
 #kids-full-lesson .kf-interview-notes label { display: grid; gap: 6px; font-weight: 700; }
 #kids-full-lesson .kf-interview-notes input {
