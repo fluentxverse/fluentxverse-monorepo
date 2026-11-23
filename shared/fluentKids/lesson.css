@@ -666,7 +666,8 @@
   [data-lesson="how-often-do-you-play"],
   [data-lesson="interview-a-friend"],
   [data-lesson="our-week-in-pictures"],
-  [data-lesson="where-do-animals-live"]
+  [data-lesson="where-do-animals-live"],
+  [data-lesson="what-do-they-eat"]
 ) .kf-picture-question .kf-feedback {
   flex-basis: auto;
 }
@@ -679,6 +680,19 @@
 #kids-full-lesson .kf-clock-extension .kf-clock { margin: 0; }
 
 #kids-full-lesson .kf-routine-sequence { list-style: none; padding: 0; }
+
+#kids-full-lesson .kf-food-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 145px));
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+#kids-full-lesson .kf-food-pair img {
+  height: auto;
+  aspect-ratio: 1;
+  margin-bottom: 0;
+}
 
 #kids-full-lesson .kf-interview-notes label { display: grid; gap: 6px; font-weight: 700; }
 #kids-full-lesson .kf-interview-notes input {

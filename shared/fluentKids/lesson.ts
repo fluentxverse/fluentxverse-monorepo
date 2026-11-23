@@ -49,6 +49,7 @@ import howOftenDoYouPlay from './how-often-do-you-play.html?raw';
 import interviewAFriend from './interview-a-friend.html?raw';
 import ourWeekInPictures from './our-week-in-pictures.html?raw';
 import whereDoAnimalsLive from './where-do-animals-live.html?raw';
+import whatDoTheyEat from './what-do-they-eat.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -219,6 +220,11 @@ import habitatForestSquirrel from './art/habitat-forest-squirrel.webp';
 import habitatPondFrog from './art/habitat-pond-frog.webp';
 import habitatOceanDolphin from './art/habitat-ocean-dolphin.webp';
 import habitatDesertCamel from './art/habitat-desert-camel.webp';
+import miaBenMatchAnimalFoods from './art/mia-ben-match-animal-foods.webp';
+import animalFoodSeeds from './art/animal-food-seeds.webp';
+import animalFoodInsects from './art/animal-food-insects.webp';
+import animalFoodFish from './art/animal-food-fish.webp';
+import animalFoodLeaves from './art/animal-food-leaves.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -264,6 +270,7 @@ import {
   WHAT_ARE_YOU_WEARING_LESSON_ID,
   WHAT_ARE_THEY_DOING_LESSON_ID,
   WHAT_DO_THEY_LIKE_LESSON_ID,
+  WHAT_DO_THEY_EAT_LESSON_ID,
   WHAT_DO_YOU_LIKE_TO_PLAY_LESSON_ID,
   WHAT_SHOULD_I_WEAR_LESSON_ID,
   WHAT_TIME_DO_YOU_GET_UP_LESSON_ID,
@@ -327,6 +334,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [INTERVIEW_A_FRIEND_LESSON_ID]: interviewAFriend,
   [OUR_WEEK_IN_PICTURES_LESSON_ID]: ourWeekInPictures,
   [WHERE_DO_ANIMALS_LIVE_LESSON_ID]: whereDoAnimalsLive,
+  [WHAT_DO_THEY_EAT_LESSON_ID]: whatDoTheyEat,
 };
 
 const artwork: Record<string, string> = {
@@ -493,6 +501,11 @@ const artwork: Record<string, string> = {
   'habitat-pond-frog': habitatPondFrog,
   'habitat-ocean-dolphin': habitatOceanDolphin,
   'habitat-desert-camel': habitatDesertCamel,
+  'mia-ben-match-animal-foods': miaBenMatchAnimalFoods,
+  'animal-food-seeds': animalFoodSeeds,
+  'animal-food-insects': animalFoodInsects,
+  'animal-food-fish': animalFoodFish,
+  'animal-food-leaves': animalFoodLeaves,
 };
 
 interface LessonOptions {
