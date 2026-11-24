@@ -25,6 +25,29 @@
       ]
     },
     {
+      "id": "FXV-20261115-001",
+      "date": "2026-11-15",
+      "apps": ["backend"],
+      "type": "fixed",
+      "title": "Corrected Level 8 score-range label",
+      "summary": "The backend now supplies the correct TOEIC 785–940 label for Level 8 Conversational Skills.",
+      "details": [
+        "The badge-only release was verified against the deployed API image. Lesson publication states and authored lesson content were unchanged."
+      ]
+    },
+    {
+      "id": "FXV-20261111-002",
+      "date": "2026-11-11",
+      "apps": ["engine"],
+      "type": "added",
+      "title": "Elysium Mainnet network support in Engine",
+      "summary": "Engine supports Elysium Mainnet in network selection, contract forms, and wallet balance reads, with HYPE shown as the native gas currency.",
+      "details": [
+        "The Engine API and dashboard release passed Go tests, dashboard type checks and unit tests, desktop/mobile contract-form checks, and live chain, block and native-balance reads.",
+        "This entry records network support, not a claim that connected applications or contracts were deployed by that release. Existing Arbitrum connectivity was also checked."
+      ]
+    },
+    {
       "id": "FXV-20261111-001",
       "date": "2026-11-11",
       "apps": ["student", "tutor", "dashboard"],
