@@ -716,6 +716,13 @@
   margin-top: 10px;
   text-align: left;
 }
+#kids-full-lesson .kf-notice-card .kf-notice-art {
+  width: min(104px, 100%);
+  aspect-ratio: 1;
+  object-fit: contain;
+  align-self: center;
+  border-radius: 8px;
+}
 
 #kids-full-lesson .kf-lost-bag-cards img:is([data-art="lost-bag-blue-star"], [data-art="lost-bag-red-star"]) {
   box-sizing: border-box;

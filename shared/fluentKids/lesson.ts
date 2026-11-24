@@ -65,6 +65,7 @@ import makeAPlanThatWorks from './make-a-plan-that-works.html?raw';
 import seeYouOnSaturday from './see-you-on-saturday.html?raw';
 import whatDoesItLookLike from './what-does-it-look-like.html?raw';
 import whereDidYouLastSeeIt from './where-did-you-last-see-it.html?raw';
+import readALostItemNotice from './read-a-lost-item-notice.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -267,6 +268,8 @@ import lostBagBluePlain from './art/lost-bag-blue-plain.webp';
 import lostBagRedStar from './art/lost-bag-red-star.webp';
 import benLibraryLastSighting from './art/ben-library-last-sighting.webp';
 import classroomBagByDesk from './art/classroom-bag-by-desk.webp';
+import miaBenLostNotice from './art/mia-ben-lost-notice.webp';
+import lostGreenPencilCase from './art/lost-green-pencil-case.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -306,6 +309,7 @@ import {
   PICK_A_GAME_TOGETHER_LESSON_ID,
   PLACES_IN_MY_TOWN_LESSON_ID,
   PLAYGROUND_PARTNERS_LESSON_ID,
+  READ_A_LOST_ITEM_NOTICE_LESSON_ID,
   READ_AN_ANIMAL_FACT_CARD_LESSON_ID,
   READ_THE_MENU_LESSON_ID,
   READY_FOR_SCHOOL_LESSON_ID,
@@ -407,6 +411,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [SEE_YOU_ON_SATURDAY_LESSON_ID]: seeYouOnSaturday,
   [WHAT_DOES_IT_LOOK_LIKE_LESSON_ID]: whatDoesItLookLike,
   [WHERE_DID_YOU_LAST_SEE_IT_LESSON_ID]: whereDidYouLastSeeIt,
+  [READ_A_LOST_ITEM_NOTICE_LESSON_ID]: readALostItemNotice,
 };
 
 const artwork: Record<string, string> = {
@@ -605,6 +610,8 @@ const artwork: Record<string, string> = {
   'lost-bag-red-star': lostBagRedStar,
   'ben-library-last-sighting': benLibraryLastSighting,
   'classroom-bag-by-desk': classroomBagByDesk,
+  'mia-ben-lost-notice': miaBenLostNotice,
+  'lost-green-pencil-case': lostGreenPencilCase,
 };
 
 interface LessonOptions {

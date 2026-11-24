@@ -71,6 +71,7 @@ export const MAKE_A_PLAN_THAT_WORKS_LESSON_ID = 'fluent-kids-l2-u5-l4';
 export const SEE_YOU_ON_SATURDAY_LESSON_ID = 'fluent-kids-l2-u5-l5';
 export const WHAT_DOES_IT_LOOK_LIKE_LESSON_ID = 'fluent-kids-l2-u6-l1';
 export const WHERE_DID_YOU_LAST_SEE_IT_LESSON_ID = 'fluent-kids-l2-u6-l2';
+export const READ_A_LOST_ITEM_NOTICE_LESSON_ID = 'fluent-kids-l2-u6-l3';
 
 const availableLessons = [
   { id: PARK_LESSON_ID, goalTextEn: 'I can name things I see and ask, “What do you see?”' },
@@ -140,6 +141,7 @@ const availableLessons = [
   { id: SEE_YOU_ON_SATURDAY_LESSON_ID, goalTextEn: 'I can invite a friend, find a time that works for both of us, and confirm where and when to meet.' },
   { id: WHAT_DOES_IT_LOOK_LIKE_LESSON_ID, goalTextEn: 'I can ask what a lost item looks like and use its color, size, and features to describe it.' },
   { id: WHERE_DID_YOU_LAST_SEE_IT_LESSON_ID, goalTextEn: 'I can ask where someone last saw an item and tell the place and time in order.' },
+  { id: READ_A_LOST_ITEM_NOTICE_LESSON_ID, goalTextEn: 'I can read a lost-item notice, find the important details, and say what to do if I find the item.' },
 ] as const;
 
 export type FluentKidsLessonId = typeof availableLessons[number]['id'];
