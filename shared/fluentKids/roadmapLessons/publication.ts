@@ -32,6 +32,16 @@ export const publishedRoadmapLessons = [
   { id: 'fluent-kids-l3-u4-l3', goalTextEn: 'I can make a short menu with sections, names, and prices.' },
   { id: 'fluent-kids-l3-u4-l4', goalTextEn: 'I can explain that an item is sold out and offer a choice within the budget.' },
   { id: 'fluent-kids-l3-u4-l5', goalTextEn: 'I can present a café with a clear menu, an affordable option, and a response to a customer.' },
+  { id: 'fluent-kids-l3-u5-l1', goalTextEn: 'I can tell someone what we planned to do, where, and when.' },
+  { id: 'fluent-kids-l3-u5-l2', goalTextEn: 'I can put three or more events in order and retell them.' },
+  { id: 'fluent-kids-l3-u5-l3', goalTextEn: 'I can explain a change by linking what happened and why.' },
+  { id: 'fluent-kids-l3-u5-l4', goalTextEn: 'I can suggest a backup plan and confirm where and when to meet.' },
+  { id: 'fluent-kids-l3-u5-l5', goalTextEn: 'I can retell a changed plan and recommend a backup for next time.' },
+  { id: 'fluent-kids-l3-u6-l1', goalTextEn: 'I can describe a missing item and tell where and when it was last seen.' },
+  { id: 'fluent-kids-l3-u6-l2', goalTextEn: 'I can ask two witnesses what they actually saw and record their answers.' },
+  { id: 'fluent-kids-l3-u6-l3', goalTextEn: 'I can order the clues by time and tell who saw each one.' },
+  { id: 'fluent-kids-l3-u6-l4', goalTextEn: 'I can explain which clue supports a guess and what I still need to check.' },
+  { id: 'fluent-kids-l3-u6-l5', goalTextEn: 'I can summarize the evidence, check the matching bag with an adult, and report where it was found.' },
 ] as const;
 
 export type PublishedRoadmapLessonId = typeof publishedRoadmapLessons[number]['id'];
