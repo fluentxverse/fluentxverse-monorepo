@@ -62,6 +62,7 @@ import whatAreYouDoingOnSaturday from './what-are-you-doing-on-saturday.html?raw
 import wouldYouLikeToCome from './would-you-like-to-come.html?raw';
 import whereAndWhen from './where-and-when.html?raw';
 import makeAPlanThatWorks from './make-a-plan-that-works.html?raw';
+import seeYouOnSaturday from './see-you-on-saturday.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -257,6 +258,7 @@ import miaBenSaturdayPlans from './art/mia-ben-saturday-plans.webp';
 import miaBenWeekendInvitation from './art/mia-ben-weekend-invitation.webp';
 import miaBenLibraryMeeting from './art/mia-ben-library-meeting.webp';
 import miaBenFindATime from './art/mia-ben-find-a-time.webp';
+import miaBenSaturdayCheckpoint from './art/mia-ben-saturday-checkpoint.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -299,6 +301,7 @@ import {
   READ_AN_ANIMAL_FACT_CARD_LESSON_ID,
   READ_THE_MENU_LESSON_ID,
   READY_FOR_SCHOOL_LESSON_ID,
+  SEE_YOU_ON_SATURDAY_LESSON_ID,
   SCHOOL_BAG_LESSON_ID,
   SNACK_STAND_LESSON_ID,
   SORRY_WERE_OUT_OF_THAT_LESSON_ID,
@@ -391,6 +394,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [WOULD_YOU_LIKE_TO_COME_LESSON_ID]: wouldYouLikeToCome,
   [WHERE_AND_WHEN_LESSON_ID]: whereAndWhen,
   [MAKE_A_PLAN_THAT_WORKS_LESSON_ID]: makeAPlanThatWorks,
+  [SEE_YOU_ON_SATURDAY_LESSON_ID]: seeYouOnSaturday,
 };
 
 const artwork: Record<string, string> = {
@@ -582,6 +586,7 @@ const artwork: Record<string, string> = {
   'mia-ben-weekend-invitation': miaBenWeekendInvitation,
   'mia-ben-library-meeting': miaBenLibraryMeeting,
   'mia-ben-find-a-time': miaBenFindATime,
+  'mia-ben-saturday-checkpoint': miaBenSaturdayCheckpoint,
 };
 
 interface LessonOptions {
