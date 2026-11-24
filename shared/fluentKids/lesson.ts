@@ -270,6 +270,8 @@ import benLibraryLastSighting from './art/ben-library-last-sighting.webp';
 import classroomBagByDesk from './art/classroom-bag-by-desk.webp';
 import miaBenLostNotice from './art/mia-ben-lost-notice.webp';
 import lostGreenPencilCase from './art/lost-green-pencil-case.webp';
+import benAsksSchoolOffice from './art/ben-asks-school-office.webp';
+import benGetsBackpackBack from './art/ben-gets-backpack-back.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -339,11 +341,16 @@ import {
   WHERES_THE_BALL_LESSON_ID,
   WHOS_IN_THE_PICTURE_LESSON_ID,
   WOULD_YOU_LIKE_TO_COME_LESSON_ID,
+  getFluentKidsLesson,
+  type AuthoredFluentKidsLessonId,
   type FluentKidsLessonId,
 } from './curriculum';
+import { roadmapLessons } from './roadmapLessons';
+import type { PublishedRoadmapLessonId } from './roadmapLessons/publication';
+import { renderRoadmapLesson } from './roadmapLessons/render';
 import './lesson.css';
 
-const templates: Record<FluentKidsLessonId, string> = {
+const templates: Record<AuthoredFluentKidsLessonId, string> = {
   [PARK_LESSON_ID]: park,
   [COLOR_HUNT_LESSON_ID]: colorHunt,
   [WHERES_THE_BALL_LESSON_ID]: wheresTheBall,
@@ -612,6 +619,8 @@ const artwork: Record<string, string> = {
   'classroom-bag-by-desk': classroomBagByDesk,
   'mia-ben-lost-notice': miaBenLostNotice,
   'lost-green-pencil-case': lostGreenPencilCase,
+  'ben-asks-school-office': benAsksSchoolOffice,
+  'ben-gets-backpack-back': benGetsBackpackBack,
 };
 
 interface LessonOptions {
@@ -626,7 +635,14 @@ function updateBilingualText(element: Element, english: string, japanese: string
 
 export function mountFluentKidsLesson(container: HTMLElement, id: FluentKidsLessonId, options: LessonOptions) {
   // This template is reviewed course content bundled with the app.
-  container.innerHTML = templates[id];
+  const template = (templates as Partial<Record<FluentKidsLessonId, string>>)[id];
+  if (template) {
+    container.innerHTML = template;
+  } else {
+    const heading = getFluentKidsLesson(id);
+    if (!heading) throw new Error(`Unknown Fluent Kids lesson: ${id}`);
+    container.innerHTML = renderRoadmapLesson(heading, roadmapLessons[id as PublishedRoadmapLessonId]);
+  }
   const lesson = container.firstElementChild as HTMLElement;
   lesson.querySelector<HTMLAnchorElement>('[data-course-link]')!.href = options.courseHref;
   for (const picture of lesson.querySelectorAll<HTMLImageElement>('img[data-art]')) {

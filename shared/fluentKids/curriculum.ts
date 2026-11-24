@@ -1,3 +1,5 @@
+import { publishedRoadmapLessons } from './roadmapLessons/publication';
+
 type LessonTitles = readonly [string, string, string, string, string];
 type Unit = readonly [name: string, lessons: LessonTitles];
 
@@ -73,7 +75,7 @@ export const WHAT_DOES_IT_LOOK_LIKE_LESSON_ID = 'fluent-kids-l2-u6-l1';
 export const WHERE_DID_YOU_LAST_SEE_IT_LESSON_ID = 'fluent-kids-l2-u6-l2';
 export const READ_A_LOST_ITEM_NOTICE_LESSON_ID = 'fluent-kids-l2-u6-l3';
 
-const availableLessons = [
+const authoredLessons = [
   { id: PARK_LESSON_ID, goalTextEn: 'I can name things I see and ask, “What do you see?”' },
   { id: COLOR_HUNT_LESSON_ID, goalTextEn: 'I can ask what color something is and describe it in English.' },
   { id: WHERES_THE_BALL_LESSON_ID, goalTextEn: 'I can ask where something is and say where it is.' },
@@ -144,6 +146,8 @@ const availableLessons = [
   { id: READ_A_LOST_ITEM_NOTICE_LESSON_ID, goalTextEn: 'I can read a lost-item notice, find the important details, and say what to do if I find the item.' },
 ] as const;
 
+export type AuthoredFluentKidsLessonId = typeof authoredLessons[number]['id'];
+const availableLessons = [...authoredLessons, ...publishedRoadmapLessons];
 export type FluentKidsLessonId = typeof availableLessons[number]['id'];
 
 const levels: readonly { name: string; goal: string; units: readonly Unit[] }[] = [
