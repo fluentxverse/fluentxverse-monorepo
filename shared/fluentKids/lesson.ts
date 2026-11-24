@@ -272,6 +272,8 @@ import miaBenLostNotice from './art/mia-ben-lost-notice.webp';
 import lostGreenPencilCase from './art/lost-green-pencil-case.webp';
 import benAsksSchoolOffice from './art/ben-asks-school-office.webp';
 import benGetsBackpackBack from './art/ben-gets-backpack-back.webp';
+import miaBenMarketStall from './art/mia-ben-market-stall.webp';
+import miaBenAtBusStop from './art/mia-ben-at-bus-stop.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -621,6 +623,8 @@ const artwork: Record<string, string> = {
   'lost-green-pencil-case': lostGreenPencilCase,
   'ben-asks-school-office': benAsksSchoolOffice,
   'ben-gets-backpack-back': benGetsBackpackBack,
+  'mia-ben-market-stall': miaBenMarketStall,
+  'mia-ben-at-bus-stop': miaBenAtBusStop,
 };
 
 interface LessonOptions {
