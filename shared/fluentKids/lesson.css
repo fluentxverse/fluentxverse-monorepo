@@ -674,7 +674,8 @@
   [data-lesson="id-like-a-sandwich"],
   [data-lesson="what-would-you-like-to-drink"],
   [data-lesson="sorry-were-out-of-that"],
-  [data-lesson="would-you-like-to-come"]
+  [data-lesson="would-you-like-to-come"],
+  [data-lesson="where-and-when"]
 ) .kf-picture-question .kf-feedback {
   flex-basis: auto;
 }
@@ -709,6 +710,10 @@
 }
 #kids-full-lesson .kf-fact-card dt { font-weight: 700; }
 #kids-full-lesson .kf-fact-card dd { margin: 4px 0 0; }
+#kids-full-lesson .kf-look-card.kf-fact-card dl {
+  margin-top: 10px;
+  text-align: left;
+}
 
 #kids-full-lesson .kf-match-choice {
   display: flex;

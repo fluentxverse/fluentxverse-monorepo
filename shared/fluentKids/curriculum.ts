@@ -66,6 +66,7 @@ export const SORRY_WERE_OUT_OF_THAT_LESSON_ID = 'fluent-kids-l2-u4-l4';
 export const CAFE_ROLEPLAY_LESSON_ID = 'fluent-kids-l2-u4-l5';
 export const WHAT_ARE_YOU_DOING_ON_SATURDAY_LESSON_ID = 'fluent-kids-l2-u5-l1';
 export const WOULD_YOU_LIKE_TO_COME_LESSON_ID = 'fluent-kids-l2-u5-l2';
+export const WHERE_AND_WHEN_LESSON_ID = 'fluent-kids-l2-u5-l3';
 
 const availableLessons = [
   { id: PARK_LESSON_ID, goalTextEn: 'I can name things I see and ask, “What do you see?”' },
@@ -130,6 +131,7 @@ const availableLessons = [
   { id: CAFE_ROLEPLAY_LESSON_ID, goalTextEn: 'I can use a menu, order politely, and work out a different choice when an item is sold out.' },
   { id: WHAT_ARE_YOU_DOING_ON_SATURDAY_LESSON_ID, goalTextEn: 'I can ask about Saturday plans and say what I’m doing and when.' },
   { id: WOULD_YOU_LIKE_TO_COME_LESSON_ID, goalTextEn: 'I can invite a friend to a weekend plan and accept or decline politely.' },
+  { id: WHERE_AND_WHEN_LESSON_ID, goalTextEn: 'I can ask where and when to meet and repeat both details to check the plan.' },
 ] as const;
 
 export type FluentKidsLessonId = typeof availableLessons[number]['id'];

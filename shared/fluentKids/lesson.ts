@@ -60,6 +60,7 @@ import sorryWereOutOfThat from './sorry-were-out-of-that.html?raw';
 import cafeRoleplay from './cafe-roleplay.html?raw';
 import whatAreYouDoingOnSaturday from './what-are-you-doing-on-saturday.html?raw';
 import wouldYouLikeToCome from './would-you-like-to-come.html?raw';
+import whereAndWhen from './where-and-when.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -253,6 +254,7 @@ import miaBenSoldOut from './art/mia-ben-sold-out.webp';
 import miaBenCafeRoleplay from './art/mia-ben-cafe-roleplay.webp';
 import miaBenSaturdayPlans from './art/mia-ben-saturday-plans.webp';
 import miaBenWeekendInvitation from './art/mia-ben-weekend-invitation.webp';
+import miaBenLibraryMeeting from './art/mia-ben-library-meeting.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -311,6 +313,7 @@ import {
   WHAT_DO_YOU_LIKE_TO_PLAY_LESSON_ID,
   WHAT_SHOULD_I_WEAR_LESSON_ID,
   WHAT_TIME_DO_YOU_GET_UP_LESSON_ID,
+  WHERE_AND_WHEN_LESSON_ID,
   WHERE_ARE_MY_SHOES_LESSON_ID,
   WHERE_DO_ANIMALS_LIVE_LESSON_ID,
   WHERES_THE_BALL_LESSON_ID,
@@ -383,6 +386,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [CAFE_ROLEPLAY_LESSON_ID]: cafeRoleplay,
   [WHAT_ARE_YOU_DOING_ON_SATURDAY_LESSON_ID]: whatAreYouDoingOnSaturday,
   [WOULD_YOU_LIKE_TO_COME_LESSON_ID]: wouldYouLikeToCome,
+  [WHERE_AND_WHEN_LESSON_ID]: whereAndWhen,
 };
 
 const artwork: Record<string, string> = {
@@ -572,6 +576,7 @@ const artwork: Record<string, string> = {
   'mia-ben-cafe-roleplay': miaBenCafeRoleplay,
   'mia-ben-saturday-plans': miaBenSaturdayPlans,
   'mia-ben-weekend-invitation': miaBenWeekendInvitation,
+  'mia-ben-library-meeting': miaBenLibraryMeeting,
 };
 
 interface LessonOptions {
