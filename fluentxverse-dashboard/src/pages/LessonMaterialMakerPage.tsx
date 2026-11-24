@@ -325,7 +325,7 @@ function TemplateSelector({
                 <div className="lmm-template-meta">
                   <span className="lmm-template-sections">
                     <i className="ri-stack-line" />
-                    {t.id === 'young-learners' ? `${fluentKidsLessonCount} lessons planned` : `${t.sections} sections`}
+                    {t.id === 'young-learners' ? `${fluentKidsLessonCount} lessons` : `${t.sections} sections`}
                   </span>
                   <span className="lmm-template-category">{t.category}</span>
                 </div>

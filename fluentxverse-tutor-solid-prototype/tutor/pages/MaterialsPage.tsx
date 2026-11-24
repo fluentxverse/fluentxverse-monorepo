@@ -166,7 +166,7 @@ const MaterialsPage = () => {
                     <p class="course-description">{course.description}</p>
                     <div class="course-meta">
                       <span class="course-lessons">
-                        <TutorIcon name="fas fa-file-alt"/> {course.lessons} {course.id === 'fluent-kids' ? 'lessons planned' : 'Lessons'}
+                        <TutorIcon name="fas fa-file-alt"/> {course.lessons} Lessons
                       </span>
                     </div>
                     <div class="course-footer">

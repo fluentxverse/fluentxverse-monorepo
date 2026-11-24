@@ -11,7 +11,7 @@ export function fluentKidsRoadmap(courseHref: string, legacyHref?: string) {
       <p class="fk-roadmap-label">English for ages 6–12</p>
       <h1>${FLUENT_KIDS_NAME}</h1>
       <p>Build confidence in English through illustrated stories, games, and conversations.</p>
-      <p class="fk-roadmap-plan">3 levels · 24 units · ${fluentKidsLessonCount} lessons planned</p>
+      <p class="fk-roadmap-plan">3 levels · 24 units · ${fluentKidsLessonCount} lessons</p>
     </header>
     ${fluentKidsLevels.map(level => `
       <details class="fk-level"${level.number === 1 ? ' open' : ''}>
