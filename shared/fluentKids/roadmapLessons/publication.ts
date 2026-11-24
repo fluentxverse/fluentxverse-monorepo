@@ -12,6 +12,16 @@ export const publishedRoadmapLessons = [
   { id: 'fluent-kids-l2-u8-l3', goalTextEn: 'I can choose a bus by checking the destination, departure time, and arrival time.' },
   { id: 'fluent-kids-l2-u8-l4', goalTextEn: 'I can explain that I missed a bus and ask about the next one.' },
   { id: 'fluent-kids-l2-u8-l5', goalTextEn: 'I can compare travel options, choose one that arrives on time, and confirm a backup plan.' },
+  { id: 'fluent-kids-l3-u1-l1', goalTextEn: 'I can find an activity, a time, and a cost on a place card.' },
+  { id: 'fluent-kids-l3-u1-l2', goalTextEn: 'I can compare two places using the same details from both cards.' },
+  { id: 'fluent-kids-l3-u1-l3', goalTextEn: 'I can recommend a place and give a reason that meets a group’s needs.' },
+  { id: 'fluent-kids-l3-u1-l4', goalTextEn: 'I can put activities in time order and agree on a change to a schedule.' },
+  { id: 'fluent-kids-l3-u1-l5', goalTextEn: 'I can present an outing with a reason, a cost, and a schedule, then answer a question.' },
+  { id: 'fluent-kids-l3-u2-l1', goalTextEn: 'I can find what a club does and when and where it meets.' },
+  { id: 'fluent-kids-l3-u2-l2', goalTextEn: 'I can ask a friend about their interests and find a club activity that matches.' },
+  { id: 'fluent-kids-l3-u2-l3', goalTextEn: 'I can ask a club member about activities and meeting details, then check one answer.' },
+  { id: 'fluent-kids-l3-u2-l4', goalTextEn: 'I can recommend a club using a friend’s interests and free days.' },
+  { id: 'fluent-kids-l3-u2-l5', goalTextEn: 'I can interview a friend, find a club that fits, and share its meeting details.' },
 ] as const;
 
 export type PublishedRoadmapLessonId = typeof publishedRoadmapLessons[number]['id'];

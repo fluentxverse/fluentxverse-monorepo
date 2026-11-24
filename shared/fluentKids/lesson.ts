@@ -274,6 +274,8 @@ import benAsksSchoolOffice from './art/ben-asks-school-office.webp';
 import benGetsBackpackBack from './art/ben-gets-backpack-back.webp';
 import miaBenMarketStall from './art/mia-ben-market-stall.webp';
 import miaBenAtBusStop from './art/mia-ben-at-bus-stop.webp';
+import miaBenDayOutPlan from './art/mia-ben-day-out-plan.webp';
+import miaBenClubFair from './art/mia-ben-club-fair.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -625,6 +627,8 @@ const artwork: Record<string, string> = {
   'ben-gets-backpack-back': benGetsBackpackBack,
   'mia-ben-market-stall': miaBenMarketStall,
   'mia-ben-at-bus-stop': miaBenAtBusStop,
+  'mia-ben-day-out-plan': miaBenDayOutPlan,
+  'mia-ben-club-fair': miaBenClubFair,
 };
 
 interface LessonOptions {
