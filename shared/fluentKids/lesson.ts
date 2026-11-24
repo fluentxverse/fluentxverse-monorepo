@@ -63,6 +63,7 @@ import wouldYouLikeToCome from './would-you-like-to-come.html?raw';
 import whereAndWhen from './where-and-when.html?raw';
 import makeAPlanThatWorks from './make-a-plan-that-works.html?raw';
 import seeYouOnSaturday from './see-you-on-saturday.html?raw';
+import whatDoesItLookLike from './what-does-it-look-like.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -259,6 +260,10 @@ import miaBenWeekendInvitation from './art/mia-ben-weekend-invitation.webp';
 import miaBenLibraryMeeting from './art/mia-ben-library-meeting.webp';
 import miaBenFindATime from './art/mia-ben-find-a-time.webp';
 import miaBenSaturdayCheckpoint from './art/mia-ben-saturday-checkpoint.webp';
+import miaBenLostBag from './art/mia-ben-lost-bag.webp';
+import lostBagBlueStar from './art/lost-bag-blue-star.webp';
+import lostBagBluePlain from './art/lost-bag-blue-plain.webp';
+import lostBagRedStar from './art/lost-bag-red-star.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -315,6 +320,7 @@ import {
   WHAT_DO_THEY_LIKE_LESSON_ID,
   WHAT_ARE_YOU_DOING_ON_SATURDAY_LESSON_ID,
   WHAT_DO_THEY_EAT_LESSON_ID,
+  WHAT_DOES_IT_LOOK_LIKE_LESSON_ID,
   WHAT_WOULD_YOU_LIKE_TO_DRINK_LESSON_ID,
   WHAT_DO_YOU_LIKE_TO_PLAY_LESSON_ID,
   WHAT_SHOULD_I_WEAR_LESSON_ID,
@@ -395,6 +401,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [WHERE_AND_WHEN_LESSON_ID]: whereAndWhen,
   [MAKE_A_PLAN_THAT_WORKS_LESSON_ID]: makeAPlanThatWorks,
   [SEE_YOU_ON_SATURDAY_LESSON_ID]: seeYouOnSaturday,
+  [WHAT_DOES_IT_LOOK_LIKE_LESSON_ID]: whatDoesItLookLike,
 };
 
 const artwork: Record<string, string> = {
@@ -587,6 +594,10 @@ const artwork: Record<string, string> = {
   'mia-ben-library-meeting': miaBenLibraryMeeting,
   'mia-ben-find-a-time': miaBenFindATime,
   'mia-ben-saturday-checkpoint': miaBenSaturdayCheckpoint,
+  'mia-ben-lost-bag': miaBenLostBag,
+  'lost-bag-blue-star': lostBagBlueStar,
+  'lost-bag-blue-plain': lostBagBluePlain,
+  'lost-bag-red-star': lostBagRedStar,
 };
 
 interface LessonOptions {

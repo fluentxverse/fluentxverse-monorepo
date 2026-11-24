@@ -675,7 +675,8 @@
   [data-lesson="what-would-you-like-to-drink"],
   [data-lesson="sorry-were-out-of-that"],
   [data-lesson="would-you-like-to-come"],
-  [data-lesson="where-and-when"]
+  [data-lesson="where-and-when"],
+  [data-lesson="what-does-it-look-like"]
 ) .kf-picture-question .kf-feedback {
   flex-basis: auto;
 }
@@ -713,6 +714,36 @@
 #kids-full-lesson .kf-look-card.kf-fact-card dl {
   margin-top: 10px;
   text-align: left;
+}
+
+#kids-full-lesson .kf-lost-bag-cards img:is([data-art="lost-bag-blue-star"], [data-art="lost-bag-red-star"]) {
+  box-sizing: border-box;
+  padding: 10px;
+}
+@media screen and (min-width: 651px) {
+  #kids-full-lesson .kf-lost-bag-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media screen and (max-width: 650px) {
+  #kids-full-lesson #kf-mission .kf-lost-bag-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  #kids-full-lesson #kf-mission .kf-lost-bag-cards .kf-look-card {
+    padding: 6px;
+  }
+  #kids-full-lesson #kf-mission .kf-lost-bag-cards img {
+    height: auto;
+    aspect-ratio: 1;
+    margin-bottom: 5px;
+  }
+  #kids-full-lesson #kf-mission .kf-lost-bag-cards img:is([data-art="lost-bag-blue-star"], [data-art="lost-bag-red-star"]) {
+    padding: 4px;
+  }
+  #kids-full-lesson #kf-mission .kf-lost-bag-cards .kf-frame {
+    font-size: 14px;
+  }
 }
 
 #kids-full-lesson .kf-match-choice {
