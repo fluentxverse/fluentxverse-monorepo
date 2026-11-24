@@ -276,6 +276,8 @@ import miaBenMarketStall from './art/mia-ben-market-stall.webp';
 import miaBenAtBusStop from './art/mia-ben-at-bus-stop.webp';
 import miaBenDayOutPlan from './art/mia-ben-day-out-plan.webp';
 import miaBenClubFair from './art/mia-ben-club-fair.webp';
+import miaBenWildlifeReport from './art/mia-ben-wildlife-report.webp';
+import miaBenDesignCafe from './art/mia-ben-design-cafe.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -629,6 +631,8 @@ const artwork: Record<string, string> = {
   'mia-ben-at-bus-stop': miaBenAtBusStop,
   'mia-ben-day-out-plan': miaBenDayOutPlan,
   'mia-ben-club-fair': miaBenClubFair,
+  'mia-ben-wildlife-report': miaBenWildlifeReport,
+  'mia-ben-design-cafe': miaBenDesignCafe,
 };
 
 interface LessonOptions {

@@ -22,6 +22,16 @@ export const publishedRoadmapLessons = [
   { id: 'fluent-kids-l3-u2-l3', goalTextEn: 'I can ask a club member about activities and meeting details, then check one answer.' },
   { id: 'fluent-kids-l3-u2-l4', goalTextEn: 'I can recommend a club using a friend’s interests and free days.' },
   { id: 'fluent-kids-l3-u2-l5', goalTextEn: 'I can interview a friend, find a club that fits, and share its meeting details.' },
+  { id: 'fluent-kids-l3-u3-l1', goalTextEn: 'I can pick an animal and ask a question for my report.' },
+  { id: 'fluent-kids-l3-u3-l2', goalTextEn: 'I can tell what a short report is mostly about.' },
+  { id: 'fluent-kids-l3-u3-l3', goalTextEn: 'I can choose three facts that fit my report and show where I found them.' },
+  { id: 'fluent-kids-l3-u3-l4', goalTextEn: 'I can rehearse my report, answer a question, and say when I need to check.' },
+  { id: 'fluent-kids-l3-u3-l5', goalTextEn: 'I can share a short wildlife report with a main idea, facts, and one answer.' },
+  { id: 'fluent-kids-l3-u4-l1', goalTextEn: 'I can compare what two cafés sell and how much things cost.' },
+  { id: 'fluent-kids-l3-u4-l2', goalTextEn: 'I can make a menu choice based on a customer’s needs and budget.' },
+  { id: 'fluent-kids-l3-u4-l3', goalTextEn: 'I can make a short menu with sections, names, and prices.' },
+  { id: 'fluent-kids-l3-u4-l4', goalTextEn: 'I can explain that an item is sold out and offer a choice within the budget.' },
+  { id: 'fluent-kids-l3-u4-l5', goalTextEn: 'I can present a café with a clear menu, an affordable option, and a response to a customer.' },
 ] as const;
 
 export type PublishedRoadmapLessonId = typeof publishedRoadmapLessons[number]['id'];
