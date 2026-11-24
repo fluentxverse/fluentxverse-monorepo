@@ -64,6 +64,7 @@ import whereAndWhen from './where-and-when.html?raw';
 import makeAPlanThatWorks from './make-a-plan-that-works.html?raw';
 import seeYouOnSaturday from './see-you-on-saturday.html?raw';
 import whatDoesItLookLike from './what-does-it-look-like.html?raw';
+import whereDidYouLastSeeIt from './where-did-you-last-see-it.html?raw';
 import bird from './art/bird.webp';
 import tree from './art/tree.webp';
 import ball from './art/ball.webp';
@@ -264,6 +265,8 @@ import miaBenLostBag from './art/mia-ben-lost-bag.webp';
 import lostBagBlueStar from './art/lost-bag-blue-star.webp';
 import lostBagBluePlain from './art/lost-bag-blue-plain.webp';
 import lostBagRedStar from './art/lost-bag-red-star.webp';
+import benLibraryLastSighting from './art/ben-library-last-sighting.webp';
+import classroomBagByDesk from './art/classroom-bag-by-desk.webp';
 import {
   A_SNACK_FOR_MY_FRIEND_LESSON_ID,
   ANIMAL_KEEPER_LESSON_ID,
@@ -327,6 +330,7 @@ import {
   WHAT_TIME_DO_YOU_GET_UP_LESSON_ID,
   WHERE_AND_WHEN_LESSON_ID,
   WHERE_ARE_MY_SHOES_LESSON_ID,
+  WHERE_DID_YOU_LAST_SEE_IT_LESSON_ID,
   WHERE_DO_ANIMALS_LIVE_LESSON_ID,
   WHERES_THE_BALL_LESSON_ID,
   WHOS_IN_THE_PICTURE_LESSON_ID,
@@ -402,6 +406,7 @@ const templates: Record<FluentKidsLessonId, string> = {
   [MAKE_A_PLAN_THAT_WORKS_LESSON_ID]: makeAPlanThatWorks,
   [SEE_YOU_ON_SATURDAY_LESSON_ID]: seeYouOnSaturday,
   [WHAT_DOES_IT_LOOK_LIKE_LESSON_ID]: whatDoesItLookLike,
+  [WHERE_DID_YOU_LAST_SEE_IT_LESSON_ID]: whereDidYouLastSeeIt,
 };
 
 const artwork: Record<string, string> = {
@@ -598,6 +603,8 @@ const artwork: Record<string, string> = {
   'lost-bag-blue-star': lostBagBlueStar,
   'lost-bag-blue-plain': lostBagBluePlain,
   'lost-bag-red-star': lostBagRedStar,
+  'ben-library-last-sighting': benLibraryLastSighting,
+  'classroom-bag-by-desk': classroomBagByDesk,
 };
 
 interface LessonOptions {

@@ -676,7 +676,8 @@
   [data-lesson="sorry-were-out-of-that"],
   [data-lesson="would-you-like-to-come"],
   [data-lesson="where-and-when"],
-  [data-lesson="what-does-it-look-like"]
+  [data-lesson="what-does-it-look-like"],
+  [data-lesson="where-did-you-last-see-it"]
 ) .kf-picture-question .kf-feedback {
   flex-basis: auto;
 }
@@ -721,7 +722,7 @@
   padding: 10px;
 }
 @media screen and (min-width: 651px) {
-  #kids-full-lesson .kf-lost-bag-cards {
+  #kids-full-lesson :is(.kf-lost-bag-cards, .kf-lost-timeline) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
