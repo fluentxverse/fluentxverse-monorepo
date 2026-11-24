@@ -723,6 +723,7 @@
   align-self: center;
   border-radius: 8px;
 }
+#kids-full-lesson.kf-roadmap-lesson { overflow-wrap: anywhere; }
 #kids-full-lesson.kf-roadmap-lesson .kf-picture-question .kf-feedback { flex-basis: auto; }
 #kids-full-lesson.kf-roadmap-lesson .kf-picture-question h3 { font-size: 15px; }
 #kids-full-lesson .kf-roadmap-table {
@@ -746,9 +747,22 @@
 }
 #kids-full-lesson .kf-roadmap-table th { background: var(--kf-soft); }
 #kids-full-lesson .kf-roadmap-table td { background: #f4f2e9; }
+#kids-full-lesson .kf-park-map :is(th, td) { text-align: center; }
+#kids-full-lesson .kf-park-map thead th:first-child { width: 24%; }
+#kids-full-lesson .kf-park-map td {
+  height: 72px;
+  padding: 10px 6px;
+  font-weight: 650;
+}
+#kids-full-lesson .kf-park-map tbody tr:first-child td:nth-child(2) { background: #dcecf4; }
+#kids-full-lesson .kf-park-map tbody tr:first-child td:last-child { background: #e5eed7; }
+#kids-full-lesson .kf-park-map tbody tr:last-child td:last-child { background: #f5e6ce; }
 #kids-full-lesson .kf-roadmap-answers { padding-inline-start: 1.65em; margin-top: 8px; }
 @media screen and (min-width: 651px) {
   #kids-full-lesson .kf-roadmap-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media screen and (max-width: 380px) {
+  #kids-full-lesson.kf-roadmap-lesson h1 { font-size: clamp(25px, 8vw, 32px); }
 }
 @media print {
   #kids-full-lesson .kf-roadmap-table { break-inside: avoid; }

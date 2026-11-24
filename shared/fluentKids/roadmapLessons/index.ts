@@ -7,6 +7,8 @@ import { wildlifeReport } from './wildlifeReport';
 import { designCafe } from './designCafe';
 import { planChanged } from './planChanged';
 import { missingBag } from './missingBag';
+import { betterPark } from './betterPark';
+import { kidsNews } from './kidsNews';
 import type { RoadmapLesson } from './content';
 import type { PublishedRoadmapLessonId } from './publication';
 
@@ -20,4 +22,6 @@ export const roadmapLessons = {
   ...designCafe,
   ...planChanged,
   ...missingBag,
+  ...betterPark,
+  ...kidsNews,
 } satisfies Record<PublishedRoadmapLessonId, RoadmapLesson>;

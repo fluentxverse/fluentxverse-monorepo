@@ -49,7 +49,7 @@ function studyCards(cards: readonly StudyCard[]) {
 }
 
 function studyTable(table: StudyTable) {
-  return `<table class="kf-roadmap-table">
+  return `<table class="kf-roadmap-table${table.layout === 'map' ? ' kf-park-map' : ''}">
     <caption>${bilingual(table.title)}</caption>
     <thead><tr>${table.columns.map(header => `<th scope="col">${bilingual(header)}</th>`).join('')}</tr></thead>
     <tbody>${table.rows.map(([name, ...values]) => `<tr>

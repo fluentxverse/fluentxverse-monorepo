@@ -15,6 +15,7 @@ export interface StudyTable {
   title: Bilingual;
   columns: readonly Bilingual[];
   rows: readonly (readonly Bilingual[])[];
+  layout?: 'map';
 }
 
 export type Question = readonly [prompt: Bilingual, answer: Bilingual, other: Bilingual, why: Bilingual, picture?: Picture];

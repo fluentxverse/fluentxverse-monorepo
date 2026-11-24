@@ -42,6 +42,16 @@ export const publishedRoadmapLessons = [
   { id: 'fluent-kids-l3-u6-l3', goalTextEn: 'I can order the clues by time and tell who saw each one.' },
   { id: 'fluent-kids-l3-u6-l4', goalTextEn: 'I can explain which clue supports a guess and what I still need to check.' },
   { id: 'fluent-kids-l3-u6-l5', goalTextEn: 'I can summarize the evidence, check the matching bag with an adult, and report where it was found.' },
+  { id: 'fluent-kids-l3-u7-l1', goalTextEn: 'I can use a simple map to tell where things are and give directions.' },
+  { id: 'fluent-kids-l3-u7-l2', goalTextEn: 'I can listen for a visitor’s problem and describe what would help.' },
+  { id: 'fluent-kids-l3-u7-l3', goalTextEn: 'I can compare improvements by saying what they do and what they cost.' },
+  { id: 'fluent-kids-l3-u7-l4', goalTextEn: 'I can agree on two changes that help both visitors and fit an eight-dollar budget.' },
+  { id: 'fluent-kids-l3-u7-l5', goalTextEn: 'I can present two changes, explain who they help, and answer a question about the plan.' },
+  { id: 'fluent-kids-l3-u8-l1', goalTextEn: 'I can choose a school story and say why my listeners might care.' },
+  { id: 'fluent-kids-l3-u8-l2', goalTextEn: 'I can write clear interview questions about a school event.' },
+  { id: 'fluent-kids-l3-u8-l3', goalTextEn: 'I can ask a guest questions, take notes, and repeat back one fact to check it.' },
+  { id: 'fluent-kids-l3-u8-l4', goalTextEn: 'I can write a short show outline and rehearse a clear handoff between speakers.' },
+  { id: 'fluent-kids-l3-u8-l5', goalTextEn: 'I can present a short news show with confirmed facts, a guest question, and a clear closing.' },
 ] as const;
 
 export type PublishedRoadmapLessonId = typeof publishedRoadmapLessons[number]['id'];
